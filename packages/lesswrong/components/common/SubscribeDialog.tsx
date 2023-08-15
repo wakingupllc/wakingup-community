@@ -102,6 +102,11 @@ const postsPerWeek = forumSelect<Record<string, number>>({
     '30': 2,
     '45': 1,
   },
+  // I'm so sorry about this
+  WakingUp: {
+    '2': 5,
+    '30': 1,
+  },
 });
 
 const viewNames = {
