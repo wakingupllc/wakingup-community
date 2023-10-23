@@ -135,7 +135,9 @@ getCollectionHooks("Users").editAsync.add(async function approveUnreviewedSubmis
         documentId: post._id,
         set: {
           authorIsUnreviewed: false,
-          postedAt: new Date(),
+          // Waking Up Forum doesn't care about unreviewed users because it's not open-access, so unreviewed posts are already
+          // posted. So, don't update postedAt for Waking Up Forum.
+          // postedAt: new Date(),
         },
         validate: false
       });

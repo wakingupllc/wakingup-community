@@ -184,7 +184,7 @@ Posts.addDefaultView((terms: PostsViewTerms, _, context: ResolverContext) => {
       isFuture: false,
       unlisted: false,
       shortform: false,
-      authorIsUnreviewed: false,
+      // authorIsUnreviewed: false, // Waking Up Forum doesn't care about unreviewed users because it's not open-access
       rejected: { $ne: true },
       hiddenRelatedQuestion: false,
       groupId: viewFieldNullOrMissing,
