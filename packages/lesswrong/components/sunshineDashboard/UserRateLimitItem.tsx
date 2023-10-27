@@ -75,10 +75,7 @@ const DEFAULT_RATE_LIMITS: Record<string, (userId: string) => NullablePartial<Db
     intervalLength: 1,
     intervalUnit: 'days',
     actionsPerInterval: 3,
-    // this and subsequent rate limits are set far in the future because we (think we) want them to be permanent,
-    // but the codebase relies on there being a value for endedAt. We could fix that, but I'm not sure we'll
-    // continue to want permanent rate limits, so post-singularity ones seem fine for now.
-    endedAt: moment().add(30, 'years').toDate()
+    endedAt: moment().add(3, 'weeks').toDate()
   }),
   [COMMENTS_ONE_PER_DAY]: (userId: string) => ({
     userId,
@@ -86,7 +83,7 @@ const DEFAULT_RATE_LIMITS: Record<string, (userId: string) => NullablePartial<Db
     intervalLength: 1,
     intervalUnit: 'days',
     actionsPerInterval: 1,
-    endedAt: moment().add(30, 'years').toDate()
+    endedAt: moment().add(3, 'weeks').toDate()
   }),
   [COMMENTS_ONE_PER_THREE_DAYS]: (userId: string) => ({
     userId,
@@ -94,7 +91,7 @@ const DEFAULT_RATE_LIMITS: Record<string, (userId: string) => NullablePartial<Db
     intervalLength: 3,
     intervalUnit: 'days',
     actionsPerInterval: 1,
-    endedAt: moment().add(30, 'years').toDate()
+    endedAt: moment().add(3, 'weeks').toDate()
   }),
   [POSTS_ONE_PER_WEEK]: (userId: string) => ({
     userId,
@@ -102,7 +99,7 @@ const DEFAULT_RATE_LIMITS: Record<string, (userId: string) => NullablePartial<Db
     intervalLength: 1,
     intervalUnit: 'weeks',
     actionsPerInterval: 1,
-    endedAt: moment().add(60, 'years').toDate()
+    endedAt: moment().add(6, 'weeks').toDate()
   })
 };
 
@@ -182,16 +179,16 @@ export const UserRateLimitItem = ({userId, classes}: {
         className={classes.newRateLimit}
       >
         <MenuItem value={COMMENTS_THREE_PER_DAY}>
-          Comments (3 per day)
+          Comments (3 per day for 3 weeks)
         </MenuItem>
         <MenuItem value={COMMENTS_ONE_PER_DAY}>
-          Comments (1 per day)
+          Comments (1 per day for 3 weeks)
         </MenuItem>
         <MenuItem value={COMMENTS_ONE_PER_THREE_DAYS}>
-          Comments (1 per 3 days)
+          Comments (1 per 3 days for 3 weeks)
         </MenuItem>
         <MenuItem value={POSTS_ONE_PER_WEEK}>
-          Posts (1 per week)
+          Posts (1 per week for 6 weeks)
         </MenuItem>
         <MenuItem value='custom'>Custom</MenuItem>
       </Select>
