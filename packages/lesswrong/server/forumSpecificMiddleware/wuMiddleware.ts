@@ -26,7 +26,7 @@ const AuthorizationError = createError(
 function urlDisallowedForLoggedOutUsers(req: express.Request) {
   if (req.user) return false;
 
-  const whiteListPaths = ['/', '/WakingUpLogo.png', '/SplashLogo.png', '/graphql', '/analyticsEvent', '/android-chrome-192x192.png', '/android-chrome-512x512.png', '/apple-touch-icon.png', '/browserconfig.xml', '/favicon-16x16.png', '/favicon-32x32.png', '/favicon.ico', '/mstile-150x150.png', '/safari-pinned-tab.svg', '/site.webmanifest']
+  const whiteListPaths = ['/', '/WakingUpLogo.png', '/SplashLogo.png', '/graphql', '/analyticsEvent', '/android-chrome-192x192.png', '/android-chrome-512x512.png', '/apple-touch-icon.png', '/browserconfig.xml', '/favicon-16x16.png', '/favicon-32x32.png', '/favicon.ico', '/favicon.svg', '/mstile-150x150.png', '/safari-pinned-tab.svg', '/site.webmanifest']
   if (whiteListPaths.includes(req.path)) return false
   if (req.path.startsWith('/js/bundle.js')) return false
   if (req.path.startsWith('/allStyles')) return false
