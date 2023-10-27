@@ -75,7 +75,7 @@ const DEFAULT_RATE_LIMITS: Record<string, (userId: string) => NullablePartial<Db
     intervalLength: 1,
     intervalUnit: 'days',
     actionsPerInterval: 3,
-    endedAt: moment().add(3, 'weeks').toDate()
+    endedAt: moment().add(30, 'years').toDate()
   }),
   [COMMENTS_ONE_PER_DAY]: (userId: string) => ({
     userId,
@@ -83,7 +83,7 @@ const DEFAULT_RATE_LIMITS: Record<string, (userId: string) => NullablePartial<Db
     intervalLength: 1,
     intervalUnit: 'days',
     actionsPerInterval: 1,
-    endedAt: moment().add(3, 'weeks').toDate()
+    endedAt: moment().add(30, 'years').toDate()
   }),
   [COMMENTS_ONE_PER_THREE_DAYS]: (userId: string) => ({
     userId,
@@ -91,7 +91,7 @@ const DEFAULT_RATE_LIMITS: Record<string, (userId: string) => NullablePartial<Db
     intervalLength: 3,
     intervalUnit: 'days',
     actionsPerInterval: 1,
-    endedAt: moment().add(3, 'weeks').toDate()
+    endedAt: moment().add(30, 'years').toDate()
   }),
   [POSTS_ONE_PER_WEEK]: (userId: string) => ({
     userId,
@@ -99,7 +99,7 @@ const DEFAULT_RATE_LIMITS: Record<string, (userId: string) => NullablePartial<Db
     intervalLength: 1,
     intervalUnit: 'weeks',
     actionsPerInterval: 1,
-    endedAt: moment().add(6, 'weeks').toDate()
+    endedAt: moment().add(60, 'years').toDate()
   })
 };
 
@@ -179,16 +179,16 @@ export const UserRateLimitItem = ({userId, classes}: {
         className={classes.newRateLimit}
       >
         <MenuItem value={COMMENTS_THREE_PER_DAY}>
-          Comments (3 per day for 3 weeks)
+          Comments (3 per day)
         </MenuItem>
         <MenuItem value={COMMENTS_ONE_PER_DAY}>
-          Comments (1 per day for 3 weeks)
+          Comments (1 per day)
         </MenuItem>
         <MenuItem value={COMMENTS_ONE_PER_THREE_DAYS}>
-          Comments (1 per 3 days for 3 weeks)
+          Comments (1 per 3 days)
         </MenuItem>
         <MenuItem value={POSTS_ONE_PER_WEEK}>
-          Posts (1 per week for 6 weeks)
+          Posts (1 per week)
         </MenuItem>
         <MenuItem value='custom'>Custom</MenuItem>
       </Select>
