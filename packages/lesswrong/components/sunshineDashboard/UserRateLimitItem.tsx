@@ -75,6 +75,9 @@ const DEFAULT_RATE_LIMITS: Record<string, (userId: string) => NullablePartial<Db
     intervalLength: 1,
     intervalUnit: 'days',
     actionsPerInterval: 3,
+    // this and subsequent rate limits are set far in the future because we (think we) want them to be permanent,
+    // but the codebase relies on there being a value for endedAt. We could fix that, but I'm not sure we'll
+    // continue to want permanent rate limits, so post-singularity ones seem fine for now.
     endedAt: moment().add(30, 'years').toDate()
   }),
   [COMMENTS_ONE_PER_DAY]: (userId: string) => ({
