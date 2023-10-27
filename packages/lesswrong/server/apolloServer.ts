@@ -112,28 +112,37 @@ export function startWebserver() {
   app.use(botRedirectMiddleware);
   app.use(hstsMiddleware);
 
+  // Most errors shouldn't be shown to the user. Only a few specific ones should,
+  // and they're whitelisted here.
+  const shouldHideErrorDetailsFromUser = (e: GraphQLError) => {
+    if (!e?.extensions?.code) return false;
+    if (e.extensions.code === 'BAD_USER_INPUT') return false;
+    if (e.extensions.code === 'UNAUTHENTICATED') return false;
+    if (e?.extensions?.exception?.name == 'AuthorizationError') return false;
+
+    return true
+  }
+
   // formatErrorShim does two useful things:
   // 1. It fixes the slight incompatibility between the ErrorInfo type returned
   // by formatError from apollo-errors, and the GraphQLFormattedError that
   // apolloServer.formatError needs to return.
   // 2. It conceals the specific error message of internal server errors that we
-  // don't want to expose to the client. So we replace the error message with
-  // a generic one, unless the code is missing (as in the case of custom errors
-  // made with apollo-errors) or the code is BAD_USER_INPUT (i.e. validation errors
-  // the user should know about).
-  // (To send an error message to the client, use createError from 'apollo-errors'.)
+  // don't want to expose to the client.
   const formatErrorShim = (e: GraphQLError) => {
     const formattedError = formatError(e);
     let message;
-    // Keenan: AuthorizationErrors weren't supposed to arrive here with a code, but now they do? For now, we'll check for them
-    // specifically, but there's probably a deeper problem somewhere.
-    if (e?.extensions?.code && e.extensions.code != 'BAD_USER_INPUT' && e?.extensions?.exception?.name != 'AuthorizationError') {
-      message = `An unexpected error occurred.`;
+
+    if (shouldHideErrorDetailsFromUser(e)) {
+      message = `Something went wrong. Please try again later or contact us for assistance.`;
+    } else {
+      message = formattedError.message;
     }
+
     return {
       ...formattedError,
       path: [formattedError?.path || ""],
-      message: message || formattedError.message,
+      message: message
     };
   }
 
