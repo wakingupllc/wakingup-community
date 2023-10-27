@@ -125,7 +125,9 @@ export function startWebserver() {
   const formatErrorShim = (e: GraphQLError) => {
     const formattedError = formatError(e);
     let message;
-    if (e?.extensions?.code && e.extensions.code != 'BAD_USER_INPUT') {
+    // Keenan: AuthorizationErrors weren't supposed to arrive here with a code, but now they do? For now, we'll check for them
+    // specifically, but there's probably a deeper problem somewhere.
+    if (e?.extensions?.code && e.extensions.code != 'BAD_USER_INPUT' && e?.extensions?.exception?.name != 'AuthorizationError') {
       message = `An unexpected error occurred.`;
     }
     return {
