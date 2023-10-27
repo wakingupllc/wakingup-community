@@ -22,7 +22,8 @@ export const sendgridWhitelistedEmailsSetting = new DatabaseServerSetting<string
 type SendgridEmailData = {
   user?: DbUser,
   to?: string,
-  notificationData?: AnyBecauseHard,
+  // See https://docs.sendgrid.com/ui/sending-email/how-to-send-an-email-with-dynamic-templates
+  dynamicTemplateData?: Record<string,AnyBecauseHard>,
   notifications?: DbNotification[],
   templateName?: string
 }
@@ -105,6 +106,7 @@ const isEmailWhitelistedForSendgrid = (emailAddress: string) => {
 }
 
 export const sendEmailSendgridTemplate = async (emailData: SendgridEmailData) => {
+  console.log('sendEmailSendgridTemplate', emailData)
   const client = getSendgridEmailClient();
 
   const notificationType = emailData.templateName ?? emailData.notifications?.[0].type;
@@ -144,6 +146,7 @@ export const sendEmailSendgridTemplate = async (emailData: SendgridEmailData) =>
 
   const message = {
     templateId,
+    dynamicTemplateData: emailData.dynamicTemplateData,
     personalizations: [
       {
         to: [

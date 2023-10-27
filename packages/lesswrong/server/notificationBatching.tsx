@@ -73,11 +73,14 @@ const sendNotificationBatch = async ({userId, notificationIds}: {userId: string,
        */
       for (let batch of groupedNotifications) {
         const notificationTypeRenderer = getNotificationTypeByNameServer(batch[0].type)
+        // If we are combining notifications into a single email, make sure to use the "Multiple" template
+        const templateName = batch.length > 1 ? {templateName: `${batch[0].type}Multiple`} : {}
         const sendgridData = {
           user,
           to: getUserEmail(user),
-          notificationData: await notificationTypeRenderer.loadData?.({user, notifications: batch}),
+          dynamicTemplateData: await notificationTypeRenderer.emailTemplateData?.({user, notifications: batch}),
           notifications: batch,
+          ...templateName
         }
         await sendEmailSendgridTemplate(sendgridData)
       }
