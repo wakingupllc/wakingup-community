@@ -37,9 +37,9 @@ export const wakingUpTheme: SiteThemeSpecification = {
       dark: '#3e64bb' // TODO: beware these probably shouldn't be the same as tertiary
     },
     secondary: {
-      main: '#215adb', //'#0c869b',
-      light: '#3c9eaf',
-      dark: '#3e64bb' // TODO: beware these probably shouldn't be the same as tertiary
+      main: '#215adb',
+      light: '#5a85e6',
+      dark: '#1842a0'
     },
     lwTertiary: {
       main: "#3e64bb",
