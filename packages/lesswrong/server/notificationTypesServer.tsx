@@ -11,7 +11,7 @@ import { Conversations } from '../lib/collections/conversations/collection';
 import { accessFilterMultiple } from '../lib/utils/schemaUtils';
 import keyBy from 'lodash/keyBy';
 import Users from '../lib/collections/users/collection';
-import { userGetDisplayName, userGetProfileUrl } from '../lib/collections/users/helpers';
+import { userGetDisplayName, userGetProfileUrl, userGetProfileUrlFromSlug } from '../lib/collections/users/helpers';
 import * as _ from 'underscore';
 import './emailComponents/EmailComment';
 import './emailComponents/PrivateMessagesEmail';
@@ -764,12 +764,19 @@ export const NewMentionNotification = serverRegisterNotificationType({
   emailTemplateData: async function({ user, notifications }: {user: DbUser, notifications: DbNotification[]}) {
     const templateData = []
     for (let notification of notifications) {
-      const summary = await getDocumentSummary(notification.documentType as NotificationDocument, notification.documentId);
-      if (!summary) continue
+      // Currently, we only include notifications for mentions on posts and comments
+      const documentType = notification.documentType as NotificationDocument
+      if (!['post', 'comment'].includes(documentType)) continue
       
+      const summary = await getDocumentSummary(documentType, notification.documentId);
+      if (!summary) continue
+        
       templateData.push({
         link: notification.link,
+        taggerProfileLink: summary.associatedUserSlug ? userGetProfileUrlFromSlug(summary.associatedUserSlug, true) : undefined,
         taggerUsername: summary.associatedUserName,
+        // @ts-ignore TODO
+        postLink: documentType === 'post' ? postGetPageUrl(summary.document, true) : commentGetPageUrl(summary.document, true),
         postTitle: summary.displayName
       })
     }
