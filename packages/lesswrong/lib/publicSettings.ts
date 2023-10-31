@@ -165,3 +165,4 @@ export const hasCookieConsentSetting = new DatabasePublicSetting<boolean>('hasCo
 export const frontpagePostsCountSetting = new DatabasePublicSetting<number | null>('frontpagePostsCount', null)
 export const showPersonalBlogpostIconSetting = new DatabasePublicSetting<boolean>('showPersonalBlogpostIcon', true);
 export const showFirstPostReviewMessageSetting = new DatabasePublicSetting<boolean>('showFirstPostReviewMessage', true);
+export const mentionKarmaThresholdSetting = new DatabasePublicSetting<number | null>('mentionKarmaThreshold', 1); // can be null, in which case there's no threshold and no mention limit
