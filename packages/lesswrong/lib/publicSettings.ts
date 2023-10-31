@@ -169,3 +169,5 @@ export const frontpagePostsCountSetting = new DatabasePublicSetting<number | nul
 export const frontpagePostsLoadMoreCountSetting = new DatabasePublicSetting<number | undefined>('frontpagePostsLoadMoreCount', undefined)
 export const showPersonalBlogpostIconSetting = new DatabasePublicSetting<boolean>('showPersonalBlogpostIcon', true);
 export const showFirstPostReviewMessageSetting = new DatabasePublicSetting<boolean>('showFirstPostReviewMessage', true);
+
+export const cdnAssetPathSetting = new DatabasePublicSetting<string | null>('cdnAssetPath', null);
