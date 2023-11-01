@@ -127,23 +127,13 @@ const CloudinaryImage2 = ({
   }
 
   function handleImageLoaded() {
-    setLoading && setLoading(false)
+    setLoading?.(false)
   }
 
+  // The onLoad event isn't reliable for some reason. This useEffect is a fallback.
   useEffect(() => {
-    if (!loading) return;
-
-    // The onLoad event isn't reliable; it won't fire if the tab is inactive, for example
-    // So we poll to see if the image has loaded
-    const intervalId = setInterval(() => {
-      if (imgRef.current && imgRef.current.complete) {
-        if (setLoading) setLoading(false);
-        clearInterval(intervalId);
-      }
-    }, 200);
-
-    return () => clearInterval(intervalId);
-  }, [loading, setLoading]);
+    if (imgRef?.current?.complete) setLoading?.(false);
+  }, [imgRef, setLoading]);
 
   return <picture className={wrapperClassName}>
     {srcSetFunc && (shouldUseDarkImage === 'maybe' ? <source
