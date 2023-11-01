@@ -89,6 +89,7 @@ const WUUserOnboarding: React.FC<WUUserOnboardingProps> = ({currentUser, classes
   const [acceptedTos, setAcceptedTos] = useState(false)
   const [mapLocation, setMapLocation] = useState(currentUser.mapLocation)
   const [validationError, setValidationError] = useState('')
+  const [validationErrors, setValidationErrors] = useState<any[]>([])
   const [updateUser] = useMutation(gql`
     mutation WUUserOnboarding(
     $username: String!, 
@@ -115,7 +116,7 @@ const WUUserOnboarding: React.FC<WUUserOnboardingProps> = ({currentUser, classes
     }
   `, {refetchQueries: ['getCurrentUser']})
   const {flash} = useMessages()
-  const {SingleColumnSection, Typography, EAButton, LocationPicker, EAUsersProfileImage, MuiTextField} = Components
+  const {SingleColumnSection, Typography, EAButton, LocationPicker, EAUsersProfileImage, MuiTextField, FormErrors} = Components
 
   function validateUsername(username: string): void {
     if (username.length === 0) {
@@ -143,6 +144,7 @@ const WUUserOnboarding: React.FC<WUUserOnboardingProps> = ({currentUser, classes
     } catch (err) {
       if (/Username/.test(err.toString?.())) {
         setValidationError('Username is already taken')
+        setValidationErrors([err])
       }
       // eslint-disable-next-line no-console
       console.error(err)
@@ -285,6 +287,10 @@ const WUUserOnboarding: React.FC<WUUserOnboardingProps> = ({currentUser, classes
             </Typography>}
         />
       </div>
+
+      <FormErrors
+        errors={validationErrors}
+      />
       
       <div className={classes.submitButtonSection}>
         <EAButton onClick={handleSave} disabled={!!validationError || !acceptedTos}>
