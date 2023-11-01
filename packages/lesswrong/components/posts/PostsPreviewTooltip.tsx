@@ -192,7 +192,6 @@ const PostsPreviewTooltip = ({ postsList, post, hash, classes, comment }: {
               { !postsList && <>
                 {post.user && <PostsUserAndCoauthors post={post}/>}
                 <div className={classes.metadata}>
-                  <span className={classes.smallText}>{postGetKarma(post)} karma</span>
                   <span className={classes.smallText}>{postGetCommentCountStr(post)}</span>
                   <span className={classes.smallText}>
                     <FormatDate date={post.postedAt}/>
