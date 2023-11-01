@@ -32,9 +32,6 @@ const UsersSearchAutocompleteHit = (props: UsersSearchAutocompleteHitProps) => {
     <MetaInfo className={metaClassName}>
       <FormatDate date={props.createdAt} tooltip={false} />
     </MetaInfo>
-    <MetaInfo className={metaClassName}>
-      {props.karma || 0} karma
-    </MetaInfo>
   </span>
 }
 
