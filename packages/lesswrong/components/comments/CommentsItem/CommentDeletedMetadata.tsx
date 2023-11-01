@@ -11,6 +11,12 @@ const styles = (theme: ThemeType): JssStyles => ({
     marginLeft: 3,
     fontStyle: "italic",
   },
+  firstLetterLower: {
+    display: 'inline-block',
+    "&::first-letter": {
+      textTransform: "lowercase",
+    }
+  }
 });
 
 const CommentDeletedMetadata = ({documentId, classes}: {
@@ -27,9 +33,9 @@ const CommentDeletedMetadata = ({documentId, classes}: {
     return (
       <div className={classes.root}>
         <div className={classes.meta}>
-          {deletedByUsername && <span>Deleted by {deletedByUsername}</span>}, {document.deletedDate && <span>
-            <Components.CalendarDate date={document.deletedDate}/>
-          </span>} 
+          Deleted {deletedByUsername && <span>by {deletedByUsername},</span>} {document.deletedDate && <span>
+            <Components.CalendarDate date={document.deletedDate} displayStyle={classes.firstLetterLower} />
+          </span>}
         </div>
         {document.deletedReason &&
           <div className={classes.meta}>
