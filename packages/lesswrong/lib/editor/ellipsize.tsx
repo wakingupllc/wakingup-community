@@ -6,13 +6,13 @@ export const SMALL_TRUNCATION_CHAR_COUNT = 750;
 export const LARGE_TRUNCATION_CHAR_COUNT = 1600;
 export const TRUNCATION_KARMA_THRESHOLD = 10
 
-export const highlightFromHTML = (html: string): string => {
+export const highlightFromHTML = (html: string, truncateLength?: number): string => {
   if (!html) return ""
   const styles = html.match(/<style[\s\S]*?<\/style>/g) || ""
   const htmlRemovedStyles = html.replace(/<style[\s\S]*?<\/style>/g, '');
 
   return truncatise(htmlRemovedStyles, {
-    TruncateLength: highlightMaxChars,
+    TruncateLength: truncateLength ?? highlightMaxChars,
     TruncateBy: "characters",
     Suffix: `... ${styles}`,
   });

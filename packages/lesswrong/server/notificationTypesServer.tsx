@@ -27,6 +27,7 @@ import { tagGetSubforumUrl } from '../lib/collections/tags/helpers';
 import uniq from 'lodash/uniq';
 import startCase from 'lodash/startCase';
 import { conversationGetPageUrl } from '../lib/collections/conversations/helpers';
+import { highlightFromHTML } from '../lib/editor/ellipsize';
 
 interface ServerNotificationType {
   name: string,
@@ -184,13 +185,17 @@ export const NewCommentNotification = serverRegisterNotificationType({
     
     const templateData = comments.map(comment => {
       const commenter = commentersById[comment.userId]
-      const postTitle = comment.postId ? postsById[comment.postId]?.title : null
+      const post = comment.postId ? postsById[comment.postId] : null
+      const postTitle = post?.title
 
       return {
         commentLink: notifications.find(n => n.documentId === comment._id)?.link,
         commenterUserId: comment.userId,
         commenterUsername: userGetDisplayName(commenter),
-        postTitle
+        commenterProfileLink: userGetProfileUrlFromSlug(commenter.slug, true),
+        postTitle,
+        postLink: post ? postGetPageUrl(post, true) : undefined,
+        commentContents: highlightFromHTML(comment.contents.html, 500)
       }
     })
     
@@ -351,13 +356,17 @@ export const NewReplyToYouNotification = serverRegisterNotificationType({
     
     const templateData = comments.map(comment => {
       const replier = repliersById[comment.userId]
-      const postTitle = comment.postId ? postsById[comment.postId]?.title : null
+      const post = comment.postId ? postsById[comment.postId] : null
+      const postTitle = post?.title
 
       return {
         commentLink: notifications.find(n => n.documentId === comment._id)?.link,
         replierUserId: comment.userId,
         replierUsername: userGetDisplayName(replier),
-        postTitle
+        replierProfileLink: userGetProfileUrlFromSlug(replier.slug, true),
+        postTitle,
+        postLink: post ? postGetPageUrl(post, true) : undefined,
+        commentContents: highlightFromHTML(comment.contents.html, 500)
       }
     })
     
@@ -445,7 +454,8 @@ export const NewMessageNotification = serverRegisterNotificationType({
       return {
         conversationLink: notifications.find(n => n.documentId === message._id)?.link,
         senderUserId: message.userId,
-        senderUsername: userGetDisplayName(sender)
+        senderUsername: userGetDisplayName(sender),
+        senderProfileLink: userGetProfileUrlFromSlug(sender.slug, true)
       }
     })
     
@@ -768,16 +778,18 @@ export const NewMentionNotification = serverRegisterNotificationType({
       const documentType = notification.documentType as NotificationDocument
       if (!['post', 'comment'].includes(documentType)) continue
       
-      const summary = await getDocumentSummary(documentType, notification.documentId);
-      if (!summary) continue
-        
+      const summary = await getDocumentSummary(documentType, notification.documentId)
+      // Since we are already filtering to posts and comments, the document should always have "contents"
+      if (!summary || !('contents' in summary.document)) continue
+              
       templateData.push({
         link: notification.link,
         taggerProfileLink: summary.associatedUserSlug ? userGetProfileUrlFromSlug(summary.associatedUserSlug, true) : undefined,
         taggerUsername: summary.associatedUserName,
         // @ts-ignore TODO
         postLink: documentType === 'post' ? postGetPageUrl(summary.document, true) : commentGetPageUrl(summary.document, true),
-        postTitle: summary.displayName
+        postTitle: summary.displayName,
+        postContents: highlightFromHTML(summary.document.contents.html, 500)
       })
     }
     
