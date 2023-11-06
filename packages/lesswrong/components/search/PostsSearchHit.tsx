@@ -6,6 +6,7 @@ import { Snippet } from 'react-instantsearch-dom';
 import type { Hit } from 'react-instantsearch-core';
 import DescriptionIcon from '@material-ui/icons/Description';
 import { SearchHitComponentProps } from './types';
+import { showKarmaSetting } from '../../lib/publicSettings';
 
 const styles = (theme: ThemeType): JssStyles => ({
   root: {
@@ -57,9 +58,9 @@ const PostsSearchHit = ({hit, clickAction, classes, showIcon=false}: SearchHitCo
           {post.authorDisplayName && <Components.MetaInfo>
             {post.authorDisplayName}
           </Components.MetaInfo>}
-          <Components.MetaInfo>
+          {showKarmaSetting.get() && <Components.MetaInfo>
             {post.baseScore} karma
-          </Components.MetaInfo>
+          </Components.MetaInfo>}
           {post.postedAt && <Components.MetaInfo>
             <Components.FormatDate date={post.postedAt}/>
           </Components.MetaInfo>}

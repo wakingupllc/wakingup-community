@@ -6,6 +6,7 @@ import ChatBubbleOutlineIcon from '@material-ui/icons/ChatBubbleOutline';
 import { tagGetCommentLink } from '../../lib/collections/tags/helpers';
 import { postGetPageUrl } from '../../lib/collections/posts/helpers';
 import type { SearchHitComponentProps } from './types';
+import { showKarmaSetting } from '../../lib/publicSettings';
 
 const styles = (theme: ThemeType): JssStyles => ({
   root: {
@@ -56,7 +57,7 @@ const CommentsSearchHit = ({hit, clickAction, classes, showIcon=false}: SearchHi
     <Link to={url} onClick={(event: React.MouseEvent) => isLeftClick(event) && clickAction && clickAction()}>
       <div>
         <Components.MetaInfo>{comment.authorDisplayName}</Components.MetaInfo>
-        <Components.MetaInfo>{comment.baseScore} karma </Components.MetaInfo>
+        {showKarmaSetting.get() && <Components.MetaInfo>{comment.baseScore} karma </Components.MetaInfo>}
         <Components.MetaInfo>
           <Components.FormatDate date={comment.postedAt}/>
         </Components.MetaInfo>

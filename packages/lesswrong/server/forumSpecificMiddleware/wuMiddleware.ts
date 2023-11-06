@@ -4,29 +4,22 @@ import { DatabaseServerSetting } from '../databaseSettings';
 import { createMutator, updateMutator } from '../vulcan-lib/mutators';
 import { userFindOneByEmail } from "../commonQueries";
 import request from 'request';
-import { Utils, slugify, addGraphQLMutation, addGraphQLSchema, addGraphQLResolvers } from '../vulcan-lib';
-import { isProduction } from '../../lib/executionEnvironment';
+import { Utils, slugify, addGraphQLMutation, addGraphQLSchema, addGraphQLResolvers, AuthorizationError } from '../vulcan-lib';
 import type { AddMiddlewareType } from '../apolloServer';
 import express from 'express'
-import { createError } from 'apollo-errors';
-import { ApolloError } from 'apollo-server-errors';
+import {cloudinaryPublicIdFromUrl, moveToCloudinary} from '../scripts/convertImagesToCloudinary'
 
 // This file has middleware for redirecting logged-out users to the login page,
 // but it also manages authentication with the Waking Up app. This latter thing
 // is not actually middleware, but it's useful to use the forumSpecificMiddleware
 // system to manage it.
 
-const AuthorizationError = createError(
-  'AuthorizationError',
-  {
-    message: "Sorry, the email provided doesn't have access to the Waking Up Community. Email community@wakingup.com if you think this is a mistake."
-  }
-)
+const authMessageWithEmail = (email: string) => `Sorry, the email ${email} doesn't have access to the Waking Up Community. Email community@wakingup.com if you think this is a mistake.`
 
 function urlDisallowedForLoggedOutUsers(req: express.Request) {
   if (req.user) return false;
 
-  const whiteListPaths = ['/', '/WakingUpLogo.png', '/graphql', '/analyticsEvent']
+  const whiteListPaths = ['/', '/graphql', '/analyticsEvent', '/browserconfig.xml', '/site.webmanifest']
   if (whiteListPaths.includes(req.path)) return false
   if (req.path.startsWith('/js/bundle.js')) return false
   if (req.path.startsWith('/allStyles')) return false
@@ -182,11 +175,21 @@ async function createWuUser(wuUser: WuUserData): Promise<DbUser> {
       displayName: wuDisplayName(wuUser),
       username: await Utils.getUnusedSlugByCollectionName("Users", slugify(wuDisplayName(wuUser))),
       usernameUnset: true,
+      profileImageId: await rehostProfileImageToCloudinary(wuUser.avatar)
     },
     validate: false,
     currentUser: null
   })
   return userCreated
+}
+
+const rehostProfileImageToCloudinary = async (url?: string) => {
+  if (!url) return undefined
+  const folder = 'profileImages'
+  const newUrl = await moveToCloudinary(url, folder)
+  if (!newUrl) return undefined
+  
+  return cloudinaryPublicIdFromUrl(newUrl, folder)
 }
 
 function wuDisplayName(wuUser: WuUserData): string {
@@ -230,7 +233,7 @@ const authenticationResolvers = {
         await updateOneTimeCode(user, oneTimeCode)
         // TODO: send code email
       } else {
-        throw new AuthorizationError({ internalData: { error: "Invalid Waking Up user" } })
+        throw new AuthorizationError({ message: authMessageWithEmail(email), internalData: { error: "Invalid Waking Up user" } })
       }
       return { result: "success" }
     },
@@ -238,8 +241,8 @@ const authenticationResolvers = {
     async codeLogin(root: void, { email, code }: {email: string, code: string}, { req, res }: ResolverContext) {
       const user = await userFindOneByEmail(email);
 
-      if (!user?.wu_subscription_active) throw new AuthorizationError({internalData: { error: "Inactive WU subscription" }});
-      if (!user.wu_forum_access) throw new AuthorizationError({internalData: { error: "WU account lacks forum access" }});
+      if (!user?.wu_subscription_active) throw new AuthorizationError({ message: authMessageWithEmail(email), internalData: { error: "Inactive WU subscription" }});
+      if (!user.wu_forum_access) throw new AuthorizationError({ message: authMessageWithEmail(email), internalData: { error: "WU account lacks forum access" }});
 
       const validCode = user && code?.length > 0 && user.services?.wakingUp?.oneTimeCode === code;
       // TODO: restrict the dev code in production (staging server runs in production mode so

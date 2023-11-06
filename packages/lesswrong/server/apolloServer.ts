@@ -14,7 +14,7 @@ import { getUserFromReq, configureSentryScope, getContextFromReqAndRes } from '.
 
 import universalCookiesMiddleware from 'universal-cookie-express';
 
-import { ErrorInfo, formatError } from 'apollo-errors';
+import {formatError} from 'apollo-errors'
 
 import * as Sentry from '@sentry/node';
 import express from 'express'
@@ -33,7 +33,7 @@ import expressSession from 'express-session';
 import MongoStore from './vendor/ConnectMongo/MongoStore';
 import { ckEditorTokenHandler } from './ckEditor/ckEditorToken';
 import { getEAGApplicationData } from './zohoUtils';
-import { faviconUrlSetting, isEAForum, testServerSetting } from '../lib/instanceSettings';
+import { faviconOverrideSetting, faviconUrlSetting, isEAForum, testServerSetting } from '../lib/instanceSettings';
 import { parseRoute, parsePath } from '../lib/vulcan-core/appContext';
 import { globalExternalStylesheets } from '../themes/globalStyles/externalStyles';
 import { addCypressRoutes } from './testingSqlClient';
@@ -49,6 +49,7 @@ import { hstsMiddleware } from './hsts';
 import { getClientBundle } from './utils/bundleUtils';
 import { isElasticEnabled } from './search/elastic/elasticSettings';
 import ElasticController from './search/elastic/ElasticController';
+import { shouldHideErrorDetailsFromUser } from './vulcan-lib';
 
 class ApolloServerLogging {
   requestDidStart(context: any) {
@@ -117,21 +118,21 @@ export function startWebserver() {
   // by formatError from apollo-errors, and the GraphQLFormattedError that
   // apolloServer.formatError needs to return.
   // 2. It conceals the specific error message of internal server errors that we
-  // don't want to expose to the client. So we replace the error message with
-  // a generic one, unless the code is missing (as in the case of custom errors
-  // made with apollo-errors) or the code is BAD_USER_INPUT (i.e. validation errors
-  // the user should know about).
-  // (To send an error message to the client, use createError from 'apollo-errors'.)
+  // don't want to expose to the client.
   const formatErrorShim = (e: GraphQLError) => {
     const formattedError = formatError(e);
     let message;
-    if (e?.extensions?.code && e.extensions.code != 'BAD_USER_INPUT') {
-      message = `An unexpected error occurred.`;
+
+    if (shouldHideErrorDetailsFromUser(e)) {
+      message = `Something went wrong. Please try again later or contact us for assistance.`;
+    } else {
+      message = formattedError.message;
     }
+
     return {
       ...formattedError,
       path: [formattedError?.path || ""],
-      message: message || formattedError.message,
+      message: message
     };
   }
 
@@ -276,7 +277,7 @@ export function startWebserver() {
       `<link rel="stylesheet" type="text/css" href="${url}">`
     ).join("");
     
-    const faviconHeader = `<link rel="shortcut icon" href="${faviconUrlSetting.get()}"/>`;
+    const faviconHeader = faviconOverrideSetting.get() ?? `<link rel="shortcut icon" href="${faviconUrlSetting.get()}"/>`;
     
     // The part of the header which can be sent before the page is rendered.
     // This includes an open tag for <html> and <head> but not the matching

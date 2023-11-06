@@ -31,15 +31,16 @@ export const wakingUpTheme: SiteThemeSpecification = {
     fonts: {sansSerifStack, serifStack},
   },
   componentPalette: (shadePalette: ThemeShadePalette) => ({
+    // Waking Up just has one highlight color, so primary/secondary/tertiary are pretty similar.
     primary: {
-      main: '#215adb', //'#0c869b',
-      light: '#00b2be', // TODO
-      dark: '#3e64bb' // TODO: beware these probably shouldn't be the same as tertiary
+      main: '#215adb',
+      light: '#5a85e6',
+      dark: '#3e64bb'
     },
     secondary: {
-      main: '#215adb', //'#0c869b',
-      light: '#3c9eaf',
-      dark: '#3e64bb' // TODO: beware these probably shouldn't be the same as tertiary
+      main: '#215adb',
+      light: '#5a85e6',
+      dark: '#1842a0'
     },
     lwTertiary: {
       main: "#3e64bb",
@@ -55,7 +56,8 @@ export const wakingUpTheme: SiteThemeSpecification = {
       primaryAlert: "#3e64bb"
     },
     link: {
-      visited: "#7130a6",
+      unmarked: "#0D5EC9",
+      visited: "#212121",
     },
     background: {
       default: shadePalette.type === 'light' ? '#e5e5e5' : shadePalette.grey[60],
@@ -233,9 +235,38 @@ export const wakingUpTheme: SiteThemeSpecification = {
         },
       },
       overrides: {
+        Header: {
+          title: {
+            ["@media screen and (max-width: 380px)"]: {
+              paddingRight: 0,
+            },
+            SiteLogo: {
+              root: {
+                ["@media screen and (max-width: 380px)"]: {
+                  maxWidth: "100%",
+                  height: "auto",
+                },
+              }
+            },
+          }
+        },
+        SearchBar: {
+          searchInputArea: {
+            ["@media screen and (max-width: 380px)"]: {
+              minWidth: 40,
+            },
+          }
+        },
+        NotificationsMenuButton: {
+          badgeContainer: {
+            ["@media screen and (max-width: 380px)"]: {
+              width: 40,
+            },
+          }
+        },
         SiteLogo: {
           root: {
-            height: "20px",
+            height: "24px",
             marginTop: "4px",
             '@media (max-width: 979px)': {
               height: "20px",
@@ -246,6 +277,11 @@ export const wakingUpTheme: SiteThemeSpecification = {
           main: {
             '@media (max-width: 979px)': {
               paddingTop: 22,
+            },
+          },
+          whiteBackground: {
+            "& .ToCColumn-content, & .ToCColumn-header": {
+              backgroundColor: "#fff",
             },
           }
         },

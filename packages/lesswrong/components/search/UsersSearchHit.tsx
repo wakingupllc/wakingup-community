@@ -4,6 +4,7 @@ import { Link } from '../../lib/reactRouterWrapper';
 import PersonIcon from '@material-ui/icons/Person';
 import React from 'react';
 import type { SearchHitComponentProps } from './types';
+import { showKarmaSetting } from '../../lib/publicSettings';
 
 const styles = (theme: ThemeType): JssStyles => ({
   root: {
@@ -40,9 +41,9 @@ const UsersSearchHit = ({hit, clickAction, classes, showIcon=false}: SearchHitCo
       <MetaInfo>
         <FormatDate date={user.createdAt} />
       </MetaInfo>
-      <MetaInfo>
+      {showKarmaSetting.get() && <MetaInfo>
         {user.karma||0} karma
-      </MetaInfo>
+      </MetaInfo>}
     </Link>
   </div>
 }

@@ -5,7 +5,6 @@ import FormControlLabel from '@material-ui/core/FormControlLabel'
 import TextField, {TextFieldProps} from '@material-ui/core/TextField'
 import {siteNameWithArticleSetting} from '../../lib/instanceSettings'
 import {Components, registerComponent} from '../../lib/vulcan-lib'
-import {useMessages} from '../common/withMessages'
 import {TosLink} from '../posts/PostsAcceptTos'
 import {textFieldContainerStyles, textFieldStyles} from '../form-components/MuiTextField.tsx'
 
@@ -14,6 +13,11 @@ const styles = (theme: ThemeType): JssStyles => ({
     background: theme.palette.panelBackground.default,
     padding: '40px 22px',
     borderRadius: 6,
+    
+    "& .MuiIconButton-root": {
+      paddingTop: 7,
+      paddingBottom: 7,
+    },
   },
   title: {
     marginTop: 0,
@@ -21,6 +25,8 @@ const styles = (theme: ThemeType): JssStyles => ({
       fontSize: 28,
     },
     color: theme.palette.text.normal,
+    fontWeight: 700,
+    fontSize: 30.8,
   },
   section: {
     marginTop: theme.spacing.unit * 3,
@@ -65,13 +71,6 @@ type WUUserOnboardingProps = {
   classes: ClassesType
 }
 
-function prefillUsername(maybeUsername: string | undefined | null): string {
-  if (!maybeUsername) return ''
-  if (/^\S+@\S+\.\S+$/.test(maybeUsername)) return ''
-  if (/new_user_\d+/.test(maybeUsername)) return ''
-  return maybeUsername
-}
-
 const WUTextField = ({classes, ...props}: TextFieldProps & { classes: ClassesType }) =>
   <div className={classes.inputContainer}>
     <TextField
@@ -81,14 +80,16 @@ const WUTextField = ({classes, ...props}: TextFieldProps & { classes: ClassesTyp
     /></div>
 
 const WUUserOnboarding: React.FC<WUUserOnboardingProps> = ({currentUser, classes}) => {
-  const [username, setUsername] = useState(prefillUsername(currentUser.displayName))
+  const [username, setUsername] = useState('')
   const [firstName, setFirstName] = useState(currentUser.first_name)
   const [lastName, setLastName] = useState(currentUser.last_name)
-  const [subscribeToDigest, setSubscribeToDigest] = useState(currentUser.subscribedToDigest)
+  const [subscribeToDigest, setSubscribeToDigest] = useState(true)
   const [allowNewPrivateMessageRequests, setAllowNewPrivateMessageRequests] = useState(true)
   const [acceptedTos, setAcceptedTos] = useState(false)
   const [mapLocation, setMapLocation] = useState(currentUser.mapLocation)
-  const [validationError, setValidationError] = useState('')
+  const [validationError, setValidationError] = useState('Username is empty by default')
+  const [serverValidationErrors, setServerValidationErrors] = useState<any[]>([])
+  
   const [updateUser] = useMutation(gql`
     mutation WUUserOnboarding(
     $username: String!, 
@@ -114,8 +115,7 @@ const WUUserOnboarding: React.FC<WUUserOnboardingProps> = ({currentUser, classes
       }
     }
   `, {refetchQueries: ['getCurrentUser']})
-  const {flash} = useMessages()
-  const {SingleColumnSection, Typography, EAButton, LocationPicker, EAUsersProfileImage, MuiTextField} = Components
+  const {SingleColumnSection, Typography, EAButton, LocationPicker, EAUsersProfileImage, FormErrors} = Components
 
   function validateUsername(username: string): void {
     if (username.length === 0) {
@@ -141,19 +141,19 @@ const WUUserOnboarding: React.FC<WUUserOnboardingProps> = ({currentUser, classes
         },
       })
     } catch (err) {
-      if (/duplicate key error/.test(err.toString?.())) {
-        setValidationError('Username already taken')
+      if (/username/.test(err.toString?.())) {
+        setValidationError('Username is already taken')
       }
       // eslint-disable-next-line no-console
       console.error(err)
-      flash(`${err}`)
+      setServerValidationErrors([err])
     }
   }
 
   return <SingleColumnSection>
     <div className={classes.root}>
       <Typography variant="display2" gutterBottom className={classes.title}>
-        Welcome to the {siteNameWithArticleSetting.get()}
+        Welcome to {siteNameWithArticleSetting.get()} Beta
       </Typography>
 
       <Typography variant="body2">
@@ -285,6 +285,8 @@ const WUUserOnboarding: React.FC<WUUserOnboardingProps> = ({currentUser, classes
             </Typography>}
         />
       </div>
+
+      <FormErrors errors={serverValidationErrors}/>
       
       <div className={classes.submitButtonSection}>
         <EAButton onClick={handleSave} disabled={!!validationError || !acceptedTos}>

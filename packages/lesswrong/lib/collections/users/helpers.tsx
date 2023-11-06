@@ -1,6 +1,6 @@
 import bowser from 'bowser';
 import { isClient, isServer } from '../../executionEnvironment';
-import { forumTypeSetting, isEAForum, isLW, lowKarmaUserVotingCutoffDateSetting, lowKarmaUserVotingCutoffKarmaSetting } from "../../instanceSettings";
+import { forumTypeSetting, isEAForum, isLW, lowKarmaUserVotingCutoffDateSetting, lowKarmaUserVotingCutoffKarmaSetting, verifyEmailsSetting } from "../../instanceSettings";
 import { getSiteUrl } from '../../vulcan-lib/utils';
 import { userOwns, userCanDo, userIsMemberOf } from '../../vulcan-users/permissions';
 import React, { useEffect, useState } from 'react';
@@ -8,9 +8,11 @@ import * as _ from 'underscore';
 import { getBrowserLocalStorage } from '../../../components/editor/localStorageHandlers';
 import { Components } from '../../vulcan-lib';
 import type { PermissionResult } from '../../make_voteable';
-import { DatabasePublicSetting } from '../../publicSettings';
+import {DatabasePublicSetting, requireMarkdownOnMobileSetting} from '../../publicSettings'
 import moment from 'moment';
 import { MODERATOR_ACTION_TYPES } from '../moderatorActions/schema';
+import { isFriendlyUI } from '../../../themes/forumTheme';
+import {isMobile} from '../../utils/isMobile.ts'
 
 const newUserIconKarmaThresholdSetting = new DatabasePublicSetting<number|null>('newUserIconKarmaThreshold', null)
 
@@ -52,7 +54,7 @@ export const isNewUser = (user: UsersMinimumInfo): boolean => {
   // For the EA forum, return true if either:
   // 1. the user is below the karma threshold, or
   // 2. the user was created less than a week ago
-  if (isEAForum) {
+  if (isFriendlyUI) {
     return userBelowKarmaThreshold || moment(user.createdAt).isAfter(moment().subtract(1, "week"));
   }
 
@@ -279,7 +281,7 @@ export const userBlockedCommentingReason = (user: UsersCurrent|DbUser|null, post
 // Return true if the user's account has at least one verified email address.
 export const userEmailAddressIsVerified = (user: UsersCurrent|DbUser|null): boolean => {
   // EA Forum does not do its own email verification
-  if (forumTypeSetting.get() === 'EAForum') {
+  if (!verifyEmailsSetting.get()) {
     return true
   }
   if (!user || !user.emails)
@@ -337,18 +339,8 @@ export const userGetProfileUrlFromSlug = (userSlug: string, isAbsolute=false): s
   return `${prefix}/users/${userSlug}`;
 }
 
-
-
-const clientRequiresMarkdown = (): boolean => {
-  if (isClient &&
-      window &&
-      window.navigator &&
-      window.navigator.userAgent) {
-
-      return (bowser.mobile || bowser.tablet)
-  }
-  return false
-}
+const clientRequiresMarkdown = (): boolean => 
+  requireMarkdownOnMobileSetting.get() && isMobile()
 
 export const userUseMarkdownPostEditor = (user: UsersCurrent|null): boolean => {
   if (clientRequiresMarkdown()) {

@@ -33,6 +33,10 @@ export class DatabasePublicSetting<SettingValueType> {
     private settingName: string, 
     private defaultValue: SettingValueType
   ) {
+    // Affords for a more convenient lazy usage, 
+    // so you can refer to setting getter as `setting.get` vs having to wrap it in a function like `() => setting.get()`
+    this.get = this.get.bind(this)
+    
     initializeSetting(settingName, "public")
   }
   get(): SettingValueType {
@@ -150,11 +154,6 @@ export const showCuratedSetting = new DatabasePublicSetting<boolean>("showCurate
 /** TODO; doc */
 export const showCommunityMapSetting = new DatabasePublicSetting<boolean>("showCommunityMap", false);
 
-// TODO: make this an instance setting if JP confirms that makes sense, because
-// we'd need it in collections/users/schema and server/emails/renderEmail
-/** whether this forum verifies user emails */
-export const verifyEmailsSetting = new DatabasePublicSetting<boolean>("verifyEmails", true);
-
 // TODO: make this an instance setting if JP confirms that makes sense
 // /** main theme color, needed here for server/emails/renderEmail */
 // export const mainThemeColorSetting = new DatabasePublicSetting<string>("mainThemeColor", "#5f9b65");
@@ -169,3 +168,6 @@ export const frontpagePostsCountSetting = new DatabasePublicSetting<number | nul
 export const frontpagePostsLoadMoreCountSetting = new DatabasePublicSetting<number | undefined>('frontpagePostsLoadMoreCount', undefined)
 export const showPersonalBlogpostIconSetting = new DatabasePublicSetting<boolean>('showPersonalBlogpostIcon', true);
 export const showFirstPostReviewMessageSetting = new DatabasePublicSetting<boolean>('showFirstPostReviewMessage', true);
+export const mentionKarmaThresholdSetting = new DatabasePublicSetting<number | null>('mentionKarmaThreshold', 1); // can be null, in which case there's no threshold
+export const showKarmaSetting = new DatabasePublicSetting<boolean>('showKarma', true);
+export const requireMarkdownOnMobileSetting = new DatabasePublicSetting<boolean>('requireMarkdownOnMobile', false);

@@ -24,7 +24,7 @@ export const styles = (theme: ThemeType): JssStyles => ({
       }),
 
     "&:hover": {
-      background: theme.palette.panelBackground.darken05,
+      background: theme.palette.secondary.dark,
     }
   },
 
@@ -37,7 +37,7 @@ export const styles = (theme: ThemeType): JssStyles => ({
       background: theme.palette.primary.main,
       color: "#fff", // Dark mode independent
       "&:hover": {
-        background: theme.palette.primary.light,
+        background: theme.palette.primary.dark,
       },
     }
     : {
@@ -93,7 +93,7 @@ const FormSubmit = ({
         className={classNames(classes.formButton, classes.secondaryButton)}
         onClick={() => updateCurrentValues({draft: true})}
       >
-        Save as draft
+        Save as Draft
       </Button>
 
       {userCanDo(currentUser, 'posts.curate.all') && !document.meta && !document.question &&
