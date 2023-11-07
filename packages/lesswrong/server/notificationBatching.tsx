@@ -49,34 +49,11 @@ const sendNotificationBatch = async ({userId, notificationIds}: {userId: string,
   if (notificationsToEmail.length) {
     const groupedNotifications = await groupNotifications({user, notifications: notificationsToEmail});
     if (useSendgridTemplatesSetting.get()) {
-      /** Example notification data:
-       * [
-    {
-      _id: 'xsLHawAnDK9kBzmza',
-      userId: 'vFmaN5HM4HkJpwgXm',
-      documentId: 'muCkEoteKzeLMLjsa',
-      documentType: 'message',
-      extraData: null,
-      link: '/inbox/NtwCrStHpoWLTkdwq',
-      title: null,
-      message: 'Will Howard sent you a new message!',
-      type: 'newMessage',
-      deleted: false,
-      viewed: false,
-      emailed: true,
-      waitingForBatch: false,
-      schemaVersion: 1,
-      createdAt: 2023-09-12T21:57:19.465Z,
-      legacyData: null
-    }
-  ]
-       */
       for (let batch of groupedNotifications) {
         const notificationTypeRenderer = getNotificationTypeByNameServer(batch[0].type)
         // If we are combining notifications into a single email, make sure to use the "Multiple" template
         const templateName = batch.length > 1 ? {templateName: `${batch[0].type}Multiple`} : {}
         const sendgridData = {
-          user,
           to: getUserEmail(user),
           dynamicTemplateData: await notificationTypeRenderer.emailTemplateData?.({user, notifications: batch}),
           notifications: batch,

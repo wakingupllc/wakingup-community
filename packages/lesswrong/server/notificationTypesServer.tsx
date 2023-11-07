@@ -184,12 +184,13 @@ export const NewCommentNotification = serverRegisterNotificationType({
     const commentersById = keyBy(commenters, sender => sender._id)
     
     const templateData = comments.map(comment => {
+      const commentLink = notifications.find(n => n.documentId === comment._id)?.link
       const commenter = commentersById[comment.userId]
       const post = comment.postId ? postsById[comment.postId] : null
       const postTitle = post?.title
 
       return {
-        commentLink: notifications.find(n => n.documentId === comment._id)?.link,
+        commentLink: commentLink ? makeAbsolute(commentLink) : undefined,
         commenterUserId: comment.userId,
         commenterUsername: userGetDisplayName(commenter),
         commenterProfileLink: userGetProfileUrlFromSlug(commenter.slug, true),
@@ -355,12 +356,13 @@ export const NewReplyToYouNotification = serverRegisterNotificationType({
     const repliersById = keyBy(repliers, sender => sender._id)
     
     const templateData = comments.map(comment => {
+      const commentLink = notifications.find(n => n.documentId === comment._id)?.link
       const replier = repliersById[comment.userId]
       const post = comment.postId ? postsById[comment.postId] : null
       const postTitle = post?.title
 
       return {
-        commentLink: notifications.find(n => n.documentId === comment._id)?.link,
+        commentLink: commentLink ? makeAbsolute(commentLink) : undefined,
         replierUserId: comment.userId,
         replierUsername: userGetDisplayName(replier),
         replierProfileLink: userGetProfileUrlFromSlug(replier.slug, true),
@@ -450,9 +452,10 @@ export const NewMessageNotification = serverRegisterNotificationType({
     const sendersById = keyBy(senders, sender => sender._id)
     
     const templateData = messages.map(message => {
+      const conversationLink = notifications.find(n => n.documentId === message._id)?.link
       const sender = sendersById[message.userId]
       return {
-        conversationLink: notifications.find(n => n.documentId === message._id)?.link,
+        conversationLink: conversationLink ? makeAbsolute(conversationLink) : undefined,
         senderUserId: message.userId,
         senderUsername: userGetDisplayName(sender),
         senderProfileLink: userGetProfileUrlFromSlug(sender.slug, true)
@@ -783,11 +786,9 @@ export const NewMentionNotification = serverRegisterNotificationType({
       if (!summary || !('contents' in summary.document)) continue
               
       templateData.push({
-        link: notification.link,
+        link: makeAbsolute(notification.link),
         taggerProfileLink: summary.associatedUserSlug ? userGetProfileUrlFromSlug(summary.associatedUserSlug, true) : undefined,
         taggerUsername: summary.associatedUserName,
-        // @ts-ignore TODO
-        postLink: documentType === 'post' ? postGetPageUrl(summary.document, true) : commentGetPageUrl(summary.document, true),
         postTitle: summary.displayName,
         postContents: highlightFromHTML(summary.document.contents.html, 500)
       })
