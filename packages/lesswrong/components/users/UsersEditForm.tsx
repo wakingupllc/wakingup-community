@@ -87,6 +87,16 @@ const styles = (theme: ThemeType): JssStyles => ({
   userName: {
     fontWeight: 600,
   },
+  nonEditableUserInfo: {
+    display: "flex",
+    columnGap: "2.5%",
+    flexWrap: "wrap",
+  },
+  nonEditableUserInfoItem: {
+    flexGrow: 1,
+    flexBasis: "48%",
+    marginBottom: "0.5em",
+  },
 })
 
 const passwordResetMutation = gql`
@@ -145,12 +155,25 @@ const UsersEditForm = ({terms, classes, enableResetPassword = false}: {
       <Typography variant="display2" className={classes.header}>
         {preferredHeadingCase("Account Settings")}
       </Typography>
-      <Typography variant="body2" className={classes.smallLabel}>
-        Username
-      </Typography>
-      <Typography variant="body2" className={classes.userName}>
-        {currentUser?.username}
-      </Typography>
+      <div className={classes.nonEditableUserInfo}>
+        <div className={classes.nonEditableUserInfoItem}>
+          <Typography variant="body2" className={classes.smallLabel}>
+            Username
+          </Typography>
+          <Typography variant="body2" className={classes.userName}>
+            {currentUser?.username}
+          </Typography>
+        </div>
+
+        <div className={classes.nonEditableUserInfoItem}>
+          <Typography variant="body2" className={classes.smallLabel}>
+            Email
+          </Typography>
+          <Typography variant="body2" className={classes.userName}>
+            {currentUser?.email}
+          </Typography>
+        </div>
+      </div>
       {isCurrentUser && enableResetPassword && <Button
         color="secondary"
         variant="outlined"
