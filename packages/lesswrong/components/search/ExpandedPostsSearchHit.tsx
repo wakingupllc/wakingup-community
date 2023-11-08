@@ -23,7 +23,7 @@ const ExpandedPostsSearchHit = ({hit, showKarma = showKarmaSetting.get, classes}
   return <PostsItem
     post={{
       ...post,
-      contents: {_id: post._id, htmlHighlight: post.body, wordCount: post.body.trim().split(/\s+/g).length, version: ''},
+      contents: {_id: post._id, htmlHighlight: post.body, wordCount: getWordCount(post), version: ''},
       // @ts-ignore
       user: {slug: post.authorSlug, displayName: post.authorDisplayName, _id: post.userId},
       __typename: 'Post',
@@ -34,6 +34,9 @@ const ExpandedPostsSearchHit = ({hit, showKarma = showKarmaSetting.get, classes}
     showAuthorTooltip={false}
   />
 }
+
+const getWordCount = (post: AlgoliaPost) => 
+  post.body?.trim()?.split(/\s+/g)?.length ?? 0
 
 const ExpandedPostsSearchHitComponent = registerComponent('ExpandedPostsSearchHit', ExpandedPostsSearchHit, {styles})
 
