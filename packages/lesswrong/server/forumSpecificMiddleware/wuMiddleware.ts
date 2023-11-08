@@ -1,13 +1,21 @@
-import { createAndSetToken } from '../vulcan-lib/apollo-server/authentication';
-import { Users } from '../../lib/collections/users/collection';
-import { DatabaseServerSetting } from '../databaseSettings';
-import { createMutator, updateMutator } from '../vulcan-lib/mutators';
-import { userFindOneByEmail } from "../commonQueries";
-import request from 'request';
-import { Utils, slugify, addGraphQLMutation, addGraphQLSchema, addGraphQLResolvers, AuthorizationError } from '../vulcan-lib';
-import type { AddMiddlewareType } from '../apolloServer';
+import {createAndSetToken} from '../vulcan-lib/apollo-server/authentication'
+import {Users} from '../../lib/collections/users/collection'
+import {DatabaseServerSetting} from '../databaseSettings'
+import {createMutator, updateMutator} from '../vulcan-lib/mutators'
+import {userFindOneByEmail} from '../commonQueries'
+import request from 'request'
+import {
+  addGraphQLMutation,
+  addGraphQLResolvers,
+  addGraphQLSchema,
+  AuthorizationError,
+  slugify,
+  Utils,
+} from '../vulcan-lib'
+import type {AddMiddlewareType} from '../apolloServer'
 import express from 'express'
 import {cloudinaryPublicIdFromUrl, moveToCloudinary} from '../scripts/convertImagesToCloudinary'
+import {wuDefaultProfileImageCloudinaryIdSetting} from '../../lib/publicSettings.ts'
 
 // This file has middleware for redirecting logged-out users to the login page,
 // but it also manages authentication with the Waking Up app. This latter thing
@@ -175,7 +183,7 @@ async function createWuUser(wuUser: WuUserData): Promise<DbUser> {
       displayName: wuDisplayName(wuUser),
       username: await Utils.getUnusedSlugByCollectionName("Users", slugify(wuDisplayName(wuUser))),
       usernameUnset: true,
-      profileImageId: await rehostProfileImageToCloudinary(wuUser.avatar)
+      profileImageId: await getProfileImageId(wuUser),
     },
     validate: false,
     currentUser: null
@@ -183,8 +191,12 @@ async function createWuUser(wuUser: WuUserData): Promise<DbUser> {
   return userCreated
 }
 
-const rehostProfileImageToCloudinary = async (url?: string) => {
-  if (!url) return undefined
+async function getProfileImageId(wuUser: WuUserData) {
+  if (!wuUser.avatar) return wuDefaultProfileImageCloudinaryIdSetting.get()
+  return await rehostProfileImageToCloudinary(wuUser.avatar)
+}
+
+const rehostProfileImageToCloudinary = async (url: string) => {
   const folder = 'profileImages'
   const newUrl = await moveToCloudinary(url, folder)
   if (!newUrl) return undefined

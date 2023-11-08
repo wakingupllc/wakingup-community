@@ -171,3 +171,4 @@ export const showFirstPostReviewMessageSetting = new DatabasePublicSetting<boole
 export const mentionKarmaThresholdSetting = new DatabasePublicSetting<number | null>('mentionKarmaThreshold', 1); // can be null, in which case there's no threshold
 export const showKarmaSetting = new DatabasePublicSetting<boolean>('showKarma', true);
 export const requireMarkdownOnMobileSetting = new DatabasePublicSetting<boolean>('requireMarkdownOnMobile', false);
+export const wuDefaultProfileImageCloudinaryIdSetting = new DatabasePublicSetting<string>('wuDefaultProfileImageCloudinaryId', "default_profile_image_thumb_x1_ajlf63");
