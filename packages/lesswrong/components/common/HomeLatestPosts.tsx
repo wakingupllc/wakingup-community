@@ -191,7 +191,7 @@ const HomeLatestPosts = ({classes}:{classes: ClassesType}) => {
         <Link to={{pathname:"/newPost"}} className={classes.noHoverLink}>
           <div className={classes.createPostContainer}>
             <span className={classes.createPostPlaceholder}>
-              Create Post
+              Share your thoughts...
             </span>
             <Button
               type="button"
