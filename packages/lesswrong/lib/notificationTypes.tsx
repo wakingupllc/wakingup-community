@@ -385,7 +385,6 @@ export const NewUserNotification = registerNotificationType({
 export const NewMessageNotification = registerNotificationType({
   name: "newMessage",
   userSettingField: "notificationPrivateMessage",
-  allowedChannels: ["onsite", "email", "both"],
   async getMessage({documentType, documentId}: GetMessageProps) {
     let document = await getDocument(documentType, documentId) as DbMessage;
     let conversation = await Conversations.findOne(document.conversationId);
@@ -400,7 +399,6 @@ export const NewMessageNotification = registerNotificationType({
 export const WrappedNotification = registerNotificationType({
   name: "wrapped",
   userSettingField: "notificationPrivateMessage",
-  allowedChannels: ["onsite", "email", "both"],
   async getMessage() {
     return "Check out your 2022 EA Forum Wrapped"
   },

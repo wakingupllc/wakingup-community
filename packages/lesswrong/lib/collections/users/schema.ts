@@ -104,7 +104,7 @@ export type NotificationTypeSettings = {
 export const defaultNotificationTypeSettings: NotificationTypeSettings = {
   channel: "onsite",
   batchingFrequency: "realtime",
-  timeOfDayGMT: 12,
+  timeOfDayGMT: 1, // 5pm PST
   dayOfWeekGMT: "Monday",
 };
 
@@ -1282,6 +1282,7 @@ const schema: SchemaType<DbUser> = {
     group: formGroups.notifications,
     type: Boolean,
     optional: true,
+    hidden: true,
     control: "checkbox",
     canRead: ['guests'],
     canCreate: ['members'],
@@ -1294,6 +1295,7 @@ const schema: SchemaType<DbUser> = {
     group: formGroups.notifications,
     type: Boolean,
     optional: true,
+    hidden: true,
     control: "checkbox",
     canRead: ['guests'],
     canCreate: ['members'],
@@ -1314,9 +1316,10 @@ const schema: SchemaType<DbUser> = {
   },
 
   notificationCommentsOnSubscribedPost: {
-    label: `Comments on posts/events I'm subscribed to`,
-    ...notificationTypeSettingsField(),
-    hidden: true, //!hasEventsSetting.get(),
+    // Used to be "Comments on posts/events I'm subscribed to"
+    // But we're hiding events and other post subscriptions for now
+    label: `Comments on my posts`,
+    ...notificationTypeSettingsField({ channel: "both", batchingFrequency: "daily"}),
   },
   notificationShortformContent: {
     label: isEAForum
@@ -1327,15 +1330,17 @@ const schema: SchemaType<DbUser> = {
   },
   notificationRepliesToMyComments: {
     label: "Replies to my comments",
-    ...notificationTypeSettingsField(),
+    ...notificationTypeSettingsField({ channel: "both", batchingFrequency: "daily"}),
   },
   notificationRepliesToSubscribedComments: {
     label: "Replies to comments I'm subscribed to",
     ...notificationTypeSettingsField(),
+    hidden: true, 
   },
   notificationSubscribedUserPost: {
     label: "Posts by users I'm subscribed to",
     ...notificationTypeSettingsField(),
+    hidden: true,
   },
   notificationPostsInGroups: {
     label: "Posts/events in groups I'm subscribed to",
@@ -1348,12 +1353,13 @@ const schema: SchemaType<DbUser> = {
     hidden: true, // re-enable when tags/topics are re-enabled after launch
   },
   notificationPrivateMessage: {
-    label: "Private messages",
+    label: "Direct messages",
     ...notificationTypeSettingsField({ channel: "both" }),
   },
   notificationSharedWithMe: {
     label: "Draft shared with me",
     ...notificationTypeSettingsField({ channel: "both" }),
+    hidden: true,
   },
   notificationAlignmentSubmissionApproved: {
     label: "Alignment Forum submission approvals",
@@ -1378,6 +1384,7 @@ const schema: SchemaType<DbUser> = {
   notificationCommentsOnDraft: {
     label: "Comments on unpublished draft posts I've shared",
     ...notificationTypeSettingsField({ channel: "both" }),
+    hidden: true,
   },
   notificationPostsNominatedReview: {
     label: `Nominations of my posts for the ${REVIEW_NAME_IN_SITU}`,
@@ -1388,18 +1395,21 @@ const schema: SchemaType<DbUser> = {
   notificationSubforumUnread: {
     label: `New discussions in topics I'm subscribed to`,
     ...notificationTypeSettingsField({ channel: "onsite", batchingFrequency: "daily" }),
+    hidden: true,
   },
   notificationNewMention: {
-    label: "Someone has mentioned me in a post or a comment",
-    ...notificationTypeSettingsField(),
+    label: "Mentions",
+    ...notificationTypeSettingsField({ channel: "both", batchingFrequency: "daily"}),
   },
   notificationDebateCommentsOnSubscribedPost: {
     label: "New dialogue content in a dialogue I'm subscribed to",
-    ...notificationTypeSettingsField({ batchingFrequency: 'daily' })
+    ...notificationTypeSettingsField({ batchingFrequency: 'daily' }),
+    hidden: true,
   },
   notificationDebateReplies: {
     label: "New dialogue content in a dialogue I'm participating in",
-    ...notificationTypeSettingsField()
+    ...notificationTypeSettingsField(),
+    hidden: true,
   },
 
   // Karma-change notifier settings
@@ -1407,6 +1417,7 @@ const schema: SchemaType<DbUser> = {
     group: formGroups.notifications,
     type: karmaChangeSettingsType, // See KarmaChangeNotifierSettings.tsx
     optional: true,
+    hidden: true,
     control: "KarmaChangeNotifierSettings",
     canRead: [userOwns, 'admins'],
     canUpdate: [userOwns, 'admins'],
@@ -1454,17 +1465,30 @@ const schema: SchemaType<DbUser> = {
   subscribedToDigest: {
     type: Boolean,
     optional: true,
-    group: formGroups.emails,
-    label: `Subscribe to ${siteNameWithArticleSetting.get()} Digest emails`,
+    order: 1,
+    group: formGroups.notifications,
+    label: `Subscribe to weekly digest emails`,
     canCreate: ['members'],
     canUpdate: [userOwns, 'sunshineRegiment', 'admins'],
     hidden: () => !hasDigestSetting.get(),
     canRead: ['members'],
     ...schemaDefaultValue(false)
   },
+  subscribedToWelcomeEmails: {
+    type: Boolean,
+    optional: true,
+    order: 1,
+    group: formGroups.notifications,
+    label: `Subscribe to welcome emails and surveys`,
+    canCreate: ['members'],
+    canUpdate: [userOwns, 'sunshineRegiment', 'admins'],
+    canRead: ['members'],
+    ...schemaDefaultValue(true)
+  },
   unsubscribeFromAll: {
     type: Boolean,
     optional: true,
+    hidden: true,
     group: formGroups.emails,
     label: "Do not send me any emails (unsubscribe from all)",
     canCreate: ['members'],

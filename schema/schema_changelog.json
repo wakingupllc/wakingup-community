@@ -318,5 +318,10 @@
     "acceptsSchemaHash": "fc67979155ff8529d2207d6cbbe433a1",
     "acceptedByMigration": "20231006T071853.add_waking_up_user_fields.ts",
     "timestamp": "2023-10-06T07:18:53.000Z"
+  },
+  {
+    "acceptsSchemaHash": "f23d5b34694ce7518a560c1b61f003d9",
+    "acceptedByMigration": "20231109T010214.add_subscribe_welcome_emails_config.ts",
+    "timestamp": "2023-11-09T01:02:14.000Z"
   }
 ]
