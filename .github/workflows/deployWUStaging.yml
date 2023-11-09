@@ -25,7 +25,7 @@ jobs:
         credentials-pat: ${{ secrets.WU_CREDENTIALS_PAT }}
         transcrypt-secret: ${{ secrets.WU_TRANSCRYPT_SECRET }}
     - name: Run Deploy
-      run: scripts/deploy.sh Staging2 ${{ matrix.environment }}
+      run: scripts/deploy.sh "Waking Up Community" ${{ matrix.environment }}
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.WU_AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.WU_AWS_SECRET_ACCESS_KEY }}
