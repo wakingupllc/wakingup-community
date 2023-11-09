@@ -146,7 +146,6 @@ const elasticSearchConfig: Record<AlgoliaIndexCollectionName, IndexConfig> = {
     filters: [
       {term: {deleted: false}},
       {term: {rejected: false}},
-      {term: {authorIsUnreviewed: false}},
       {term: {retracted: false}},
       {term: {spam: false}},
     ],
@@ -194,7 +193,6 @@ const elasticSearchConfig: Record<AlgoliaIndexCollectionName, IndexConfig> = {
       {term: {isFuture: false}},
       {term: {draft: false}},
       {term: {rejected: false}},
-      {term: {authorIsUnreviewed: false}},
       {term: {status: postStatuses.STATUS_APPROVED}},
       {range: {baseScore: {gte: 0}}},
     ],
