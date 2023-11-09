@@ -16,7 +16,7 @@ export const formGroups: Partial<Record<string, FormGroupType>> = {
   notifications: {
     order: 10,
     name: "notifications",
-    label: "Notifications",
+    label: "Notifications & Emails",
     startCollapsed: true,
   },
   emails: {

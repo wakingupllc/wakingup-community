@@ -435,6 +435,31 @@ getCollectionHooks("Users").newAsync.add(async function subscribeToWakingUpNewUs
   void addToSendgridList(user, sendgridWelcomeListId)
 });
 
+getCollectionHooks('Users').editAsync.add(async function subscribeToWelcomeEmails(newUser: DbUser, oldUser: DbUser) {
+  if (
+    isAnyTest ||
+    !isWakingUp ||
+    newUser.subscribedToWelcomeEmails === oldUser.subscribedToWelcomeEmails
+  ) {
+    return
+  }
+
+  if (!newUser.email) {
+    captureException(new Error(`Adding user to welcome emails list failed: no email for user ${newUser.displayName}`))
+    return
+  }
+
+  const sendgridWelcomeListId = sendgridWelcomeListIdSetting.get()
+  if (!sendgridWelcomeListId) return
+
+  if (newUser.subscribedToWelcomeEmails) {
+    void addToSendgridList(newUser, sendgridWelcomeListId)
+  } else {
+    void removeFromSendgridList(newUser, sendgridWelcomeListId)
+  }
+})
+
+
 const welcomeMessageDelayer = new EventDebouncer({
   name: "welcomeMessageDelay",
   

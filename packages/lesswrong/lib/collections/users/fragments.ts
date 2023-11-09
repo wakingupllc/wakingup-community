@@ -412,6 +412,7 @@ registerFragment(`
     whenConfirmationEmailSent
     emailSubscribedToCurated
     subscribedToDigest
+    subscribedToWelcomeEmails
     unsubscribeFromAll
     hasAuth0Id
 

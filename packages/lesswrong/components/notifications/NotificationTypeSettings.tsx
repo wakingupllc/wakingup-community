@@ -11,6 +11,9 @@ import { isFriendlyUI } from '../../themes/forumTheme';
 const styles = (theme: ThemeType): JssStyles => ({
   root: {
     padding: 8,
+    "& .MuiSelect-root" : {
+      border: theme.palette.border.maxIntensity,
+    },
   },
   label: {
     fontFamily: isFriendlyUI ? theme.palette.fonts.sansSerifStack : undefined,
@@ -42,7 +45,7 @@ const NotificationTypeSettings = ({ path, value, label, classes }: {
   }
   
   const channelOptions: Record<NotificationChannelOption, React.ReactChild> = {
-    none: <MenuItem value="none" key="none">Don't notify</MenuItem>,
+    none: <MenuItem value="none" key="none">Don't notify me</MenuItem>,
     onsite: <MenuItem value="onsite" key="onsite">Notify me on-site</MenuItem>,
     email: <MenuItem value="email" key="email">Notify me by email</MenuItem>,
     both: <MenuItem value="both" key="both">Notify me both on-site and by email</MenuItem>
@@ -66,9 +69,9 @@ const NotificationTypeSettings = ({ path, value, label, classes }: {
           onChange={(event) =>
             modifyValue({ batchingFrequency: event.target.value })}
         >
-          <MenuItem value="realtime">immediately</MenuItem>
-          <MenuItem value="daily">daily</MenuItem>
-          <MenuItem value="weekly">weekly</MenuItem>
+          <MenuItem value="realtime">Immediately</MenuItem>
+          <MenuItem value="daily">Daily</MenuItem>
+          <MenuItem value="weekly">Weekly</MenuItem>
         </Select>
       </React.Fragment>}
       { (currentValue.channel !== "none" && (currentValue.batchingFrequency==="daily" || currentValue.batchingFrequency==="weekly")) && <React.Fragment>
