@@ -50,7 +50,7 @@ const BatchTimePicker = ({ mode, value, onChange}: {
           )
         }
       </Select>
-      {moment().tz(timezone).format("z")}
+      {" "+ moment().tz(timezone).format("z")}
     </span>}
     
     { mode==="weekly" && <span>
