@@ -29,4 +29,4 @@ jobs:
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.WU_AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.WU_AWS_SECRET_ACCESS_KEY }}
-        AWS_DEFAULT_REGION: "us-east-1"
+        AWS_DEFAULT_REGION: "us-west-2"
