@@ -197,7 +197,7 @@ const UsersEditForm = ({terms, classes, enableResetPassword = false}: {
           // reconfigure datadog RUM in case they have changed their settings
           configureDatadogRum(user)
 
-          flash(`User "${userGetDisplayName(user)}" edited`);
+          flash(`Profile updated`);
           try {
             await client.resetStore()
           } finally {
