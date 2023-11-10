@@ -18,9 +18,6 @@ const styles = (theme: ThemeType): JssStyles => ({
   label: {
     fontFamily: isFriendlyUI ? theme.palette.fonts.sansSerifStack : undefined,
   },
-  settings: {
-    paddingLeft: 20,
-  },
 })
 
 interface NotificationSettings extends PickedTime {
@@ -53,7 +50,7 @@ const NotificationTypeSettings = ({ path, value, label, classes }: {
   
   return <div className={classes.root}>
     <Typography variant="body1" className={classes.label}>{label}</Typography>
-    <Typography variant="body2" component="div" className={classes.settings}>
+    <Typography variant="body2" component="div">
       <Select
         value={currentValue.channel}
         onChange={(event) =>
