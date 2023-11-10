@@ -1198,7 +1198,6 @@ const schema: SchemaType<DbUser> = {
     canRead: ['guests'],
     canUpdate: ['members', 'admins'],
     label: 'Deactivate',
-    tooltip: "Your posts and comments will be listed as '[Anonymous]', and your user profile won't accessible.",
     control: 'WUDeactivateAccount',
     group: formGroups.deactivate,
   },
