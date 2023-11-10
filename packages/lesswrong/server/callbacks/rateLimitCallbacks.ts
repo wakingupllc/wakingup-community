@@ -66,7 +66,7 @@ async function enforcePostRateLimit (user: DbUser) {
         interpolateRateLimitMessage(rateLimit.rateLimitMessage, nextEligible) :
         `Rate limit: You cannot post for ${moment(nextEligible).fromNow()} (until ${nextEligible})`
 
-      throw new Error(message);
+      throw new RateLimitError({message: message})
     }
   }
 }
