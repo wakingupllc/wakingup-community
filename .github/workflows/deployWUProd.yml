@@ -21,7 +21,7 @@ jobs:
     - run: pip3 install "pyyaml<5.4" && pip3 install --upgrade pip awsebcli # pip3 install "pyyaml<5.4" is a temporary workaround for this bug: https://github.com/aws/aws-elastic-beanstalk-cli/issues/441
     - name: Run Migrations
       if: github.ref == 'refs/heads/wu-deploy'
-      uses: ./.github/actions/runMigrations
+      uses: ./.github/actions/runWUMigrations
       with:
         mode: prod
         credentials-repo: ${{ secrets.WU_CREDENTIALS_REPO }}
