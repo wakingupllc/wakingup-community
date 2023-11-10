@@ -35,7 +35,7 @@ const SharePostSubmenu = ({post, closeMenu, classes}: {
     }
   }
   
-  const hasSubmenu = isServer || !navigator.canShare;
+  const hasSubmenu = !shareButtonSetting.get() || isServer || !navigator.canShare;
   const MaybeWrapWithSubmenu = hasSubmenu
     ? ({children}: {children: React.ReactNode}) => <LWTooltip
         title={<SharePostActions post={post} onClick={closeMenu} />}
