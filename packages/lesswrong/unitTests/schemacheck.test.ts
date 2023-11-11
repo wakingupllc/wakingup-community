@@ -12,7 +12,7 @@ describe('Schema check', () => {
       writeAcceptedSchema: true,
       generateMigrations: false,
       rootPath,
-      forumType: "EAForum",
+      forumType: "WakingUp",
       silent: true,
     });
   }, 60000);
