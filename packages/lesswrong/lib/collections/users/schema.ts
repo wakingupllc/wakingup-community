@@ -104,6 +104,7 @@ export type NotificationTypeSettings = {
 export const defaultNotificationTypeSettings: NotificationTypeSettings = {
   channel: "onsite",
   batchingFrequency: "realtime",
+  // Note, for notifications using the default value,  this is updated to notificationBatchHourInUserTzSetting as part of the Onboarding flow
   timeOfDayGMT: 1, // 5pm PST
   dayOfWeekGMT: "Monday",
 };
