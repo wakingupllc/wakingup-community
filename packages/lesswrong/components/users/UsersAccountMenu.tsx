@@ -7,6 +7,7 @@ import { withTracking } from '../../lib/analyticsEvents';
 import { isEAForum } from '../../lib/instanceSettings';
 import { withLocation } from '../../lib/routeUtil';
 import { isFriendlyUI } from '../../themes/forumTheme';
+import { devLoginsAllowedSetting } from '../../lib/publicSettings';
 
 const styles = (theme: ThemeType): JssStyles => ({
   root: {
@@ -32,7 +33,8 @@ const styles = (theme: ThemeType): JssStyles => ({
   devMessage: {
     fontFamily: theme.palette.fonts.sansSerifStack,
     margin: "16px 16px -10px",
-    color: theme.palette.error.main
+    color: theme.palette.error.main,
+    maxWidth: 220
   },
 })
 
@@ -88,7 +90,7 @@ class UsersAccountMenu extends PureComponent<UsersAccountMenuProps,UsersAccountM
             Sign up
           </EAButton>
         </> : <>
-          <Button onClick={this.handleClick}>
+          {devLoginsAllowedSetting.get() && <><Button onClick={this.handleClick}>
             <span className={classes.userButton}>
               Login (dev)
             </span>
@@ -99,9 +101,10 @@ class UsersAccountMenu extends PureComponent<UsersAccountMenuProps,UsersAccountM
             anchorOrigin={{horizontal: 'left', vertical: 'bottom'}}
             onClose={this.handleRequestClose}
           >
-            <div className={classes.devMessage}>(Non-Waking Up app logins are<br />still available in development for<br />easier testing)</div>
+            <div className={classes.devMessage}>(Dev server only: password-based logins are enabled)</div>
             {this.state.open && <WrappedLoginForm />}
           </Popover>
+          </>}
         </>}
       </div>
     )
