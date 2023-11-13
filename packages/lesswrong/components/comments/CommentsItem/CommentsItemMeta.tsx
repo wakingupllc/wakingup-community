@@ -3,15 +3,14 @@ import classNames from "classnames";
 import { Components, registerComponent } from "../../../lib/vulcan-lib";
 import { Link } from "../../../lib/reactRouterWrapper";
 import { isEAForum } from "../../../lib/instanceSettings";
-import { postGetPageUrl, userIsPostCoauthor } from "../../../lib/collections/posts/helpers";
+import { userIsPostCoauthor } from "../../../lib/collections/posts/helpers";
 import { useCommentLink } from "./useCommentLink";
 import { Comments } from "../../../lib/collections/comments";
 import { userIsAdmin } from "../../../lib/vulcan-users";
 import { useCurrentUser } from "../../common/withUser";
-import { AnalyticsContext, useTracking } from "../../../lib/analyticsEvents";
+import { AnalyticsContext } from "../../../lib/analyticsEvents";
 import type { CommentTreeOptions } from "../commentTree";
 import { isBookUI, isFriendlyUI } from "../../../themes/forumTheme";
-import { useMessages } from "../../common/withMessages";
 
 export const metaNoticeStyles = (theme: ThemeType) => ({
     color: theme.palette.lwTertiary.main,
@@ -112,15 +111,6 @@ const styles = (theme: ThemeType): JssStyles => ({
     top: 12,
     display: "flex",
   },
-  linkIcon: {
-    fontSize: "1.2rem",
-    verticalAlign: "top",
-    color: theme.palette.icon.dim,
-    margin: "0 4px",
-    position: "relative",
-    top: 1,
-    cursor: "pointer",
-  },
   menu: isFriendlyUI
     ? {
       color: theme.palette.icon.dim,
@@ -162,8 +152,6 @@ export const CommentsItemMeta = ({
   classes: ClassesType,
 }) => {
   const currentUser = useCurrentUser();
-  const { flash } = useMessages();
-  const { captureEvent } = useTracking()
 
   const {
     postPage, showCollapseButtons, post, tag, singleLineCollapse, isSideComment,
@@ -219,18 +207,10 @@ export const CommentsItemMeta = ({
     relevantTagsTruncated = relevantTagsTruncated.slice(0, 1);
   }
 
-  const commentUrl = post ? postGetPageUrl(post, true) + `?commentId=${comment._id}` : '';
-
-  const copyLink = () => {
-    captureEvent('shareComment', {option: 'copyLink'})
-    void navigator.clipboard.writeText(commentUrl);
-    flash("Link copied to clipboard");
-  }
-
   const {
     CommentShortformIcon, CommentDiscussionIcon, ShowParentComment, CommentUserName,
     CommentsItemDate, SmallSideVote, CommentOutdatedWarning, FooterTag, LoadMore,
-    ForumIcon, CommentsMenu, UserCommentMarkers
+    ForumIcon, CommentsMenu, UserCommentMarkers, ShareCommentButton
   } = Components;
 
   return (
@@ -326,9 +306,7 @@ export const CommentsItemMeta = ({
       </span>}
 
       <span className={classes.rightSection}>
-        {isFriendlyUI &&
-          <ForumIcon icon="Link" className={classes.linkIcon} onClick={copyLink} />
-        }
+        {post && <ShareCommentButton comment={comment} post={post} />}
         {!isParentComment && !hideActionsMenu &&
           <AnalyticsContext pageElementContext="tripleDotMenu">
             <CommentsMenu
