@@ -7,6 +7,7 @@ import {siteNameWithArticleSetting} from '../../lib/instanceSettings'
 import {Components, registerComponent} from '../../lib/vulcan-lib'
 import {TosLink} from '../posts/PostsAcceptTos'
 import {textFieldContainerStyles, textFieldStyles} from '../form-components/MuiTextField.tsx'
+import {useTimezone} from '../common/withTimezone.tsx'
 
 const styles = (theme: ThemeType): JssStyles => ({
   root: {
@@ -89,6 +90,7 @@ const WUUserOnboarding: React.FC<WUUserOnboardingProps> = ({currentUser, classes
   const [mapLocation, setMapLocation] = useState(currentUser.mapLocation)
   const [validationError, setValidationError] = useState('Username is empty by default')
   const [serverValidationErrors, setServerValidationErrors] = useState<any[]>([])
+  const {timezone} = useTimezone()
   
   const [updateUser] = useMutation(gql`
     mutation WUUserOnboarding(
@@ -98,7 +100,8 @@ const WUUserOnboarding: React.FC<WUUserOnboardingProps> = ({currentUser, classes
     $allowNewPrivateMessageRequests: Boolean!,
     $firstName: String, 
     $lastName: String, 
-    $mapLocation: JSON
+    $mapLocation: JSON,
+    $timezone: String
     ) {
       WUUserOnboarding(
       username: $username, 
@@ -107,7 +110,8 @@ const WUUserOnboarding: React.FC<WUUserOnboardingProps> = ({currentUser, classes
       allowNewPrivateMessageRequests: $allowNewPrivateMessageRequests,
       firstName: $firstName, 
       lastName: $lastName, 
-      mapLocation: $mapLocation
+      mapLocation: $mapLocation,
+      timezone: $timezone
       ) {
         username
         slug
@@ -138,6 +142,7 @@ const WUUserOnboarding: React.FC<WUUserOnboardingProps> = ({currentUser, classes
           allowNewPrivateMessageRequests,
           mapLocation,
           acceptedTos,
+          timezone,
         },
       })
     } catch (err) {

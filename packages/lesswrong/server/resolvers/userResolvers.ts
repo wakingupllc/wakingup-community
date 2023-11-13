@@ -32,6 +32,8 @@ import { getRecentKarmaInfo, rateLimitDateWhenUserNextAbleToComment, rateLimitDa
 import { RateLimitInfo, RecentKarmaInfo } from '../../lib/rateLimits/types';
 import { userIsAdminOrMod } from '../../lib/vulcan-users/permissions';
 import { UsersRepo } from '../repos';
+import {defaultNotificationTypeSettings} from '../../lib/collections/users/schema.ts'
+import {notificationBatchHourInUserTzSetting} from '../../lib/publicSettings.ts'
 
 augmentFieldsDict(Users, {
   htmlMapMarkerText: {
@@ -126,6 +128,7 @@ type WUUserOnboarding = {
   firstName?: string
   lastName?: string
   mapLocation: any 
+  timezone: string
 }
 
 addGraphQLSchema(`
@@ -210,7 +213,7 @@ addGraphQLResolvers({
     async WUUserOnboarding(
       root: void,
       // todo: allowNewPrivateMessageRequests doesn't exist for now, this need to be updated later when it's added
-      {username, subscribeToDigest, firstName, lastName, acceptedTos, allowNewPrivateMessageRequests, mapLocation}: WUUserOnboarding,
+      {username, subscribeToDigest, firstName, lastName, acceptedTos, allowNewPrivateMessageRequests, mapLocation, timezone}: WUUserOnboarding,
       context: ResolverContext,
     ) {
       const {currentUser} = context
@@ -244,6 +247,7 @@ addGraphQLResolvers({
           slug: await Utils.getUnusedSlugByCollectionName('Users', slugify(username)),
           subscribedToDigest: subscribeToDigest,
           acceptedTos,
+          ...updatedNotificationSettings(currentUser, timezone),
         },
         // We've already done necessary gating
         validate: false,
@@ -450,6 +454,20 @@ addGraphQLResolvers({
   },
 })
 
+const updatedNotificationSettings = (currentUser: DbUser, timezone: string) => {
+  const timeOfDayField = 'timeOfDayGMT'
+  const notificationFields = Object.entries(currentUser).filter(([, value]) => value?.[timeOfDayField] != null)
+
+  return Object.fromEntries(notificationFields.map(([key, value]) => {
+    const nonDefaultNotificationTime = value[timeOfDayField] !== defaultNotificationTypeSettings.timeOfDayGMT
+    if (nonDefaultNotificationTime) return [key, value]
+    
+    const timeInUserTz = moment.tz(timezone).hour(notificationBatchHourInUserTzSetting.get())
+    
+    return [key, {...value, timeOfDayGMT: timeInUserTz.utc().hour()}]
+  }))
+}
+
 function getAlignment(results: AnyBecauseTodo) {
   let goodEvil = 'neutral', lawfulChaotic = 'Neutral';
   if (results.engagementPercentile < 0.33) {
@@ -526,6 +544,7 @@ addGraphQLMutation(
   firstName: String, 
   lastName: String, 
   mapLocation: JSON,
+  timezone: String,
   ): NewUserCompletedProfile`
 )
 
