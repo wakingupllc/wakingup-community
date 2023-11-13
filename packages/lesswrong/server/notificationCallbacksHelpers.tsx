@@ -10,12 +10,13 @@ import { DebouncerTiming } from './debouncer';
 import { ensureIndex } from '../lib/collectionIndexUtils';
 import {getDocument, getNotificationTypeByName, NotificationDocument} from '../lib/notificationTypes'
 import { notificationDebouncers } from './notificationBatching';
-import { defaultNotificationTypeSettings } from '../lib/collections/users/schema';
+import { defaultNotificationTypeSettings, NotificationTypeSettings } from '../lib/collections/users/schema';
 import * as _ from 'underscore';
 import { createMutator } from './vulcan-lib/mutators';
 import { createAnonymousContext } from './vulcan-lib/query';
 import keyBy from 'lodash/keyBy';
 import UsersRepo, { MongoNearLocation } from './repos/UsersRepo';
+import { isWakingUp } from '../lib/instanceSettings';
 
 /**
  * Return a list of users (as complete user objects) subscribed to a given
@@ -101,9 +102,12 @@ export async function getUsersWhereLocationIsInNotificationRadius(location: Mong
 }
 ensureIndex(Users, {nearbyEventsNotificationsMongoLocation: "2dsphere"}, {name: "users.nearbyEventsNotifications"})
 
-const getNotificationTiming = (typeSettings: AnyBecauseTodo): DebouncerTiming => {
+const getNotificationTiming = (typeSettings: NotificationTypeSettings, deliveryType: 'email' | 'onsite'): DebouncerTiming => {
   switch (typeSettings.batchingFrequency) {
     case "realtime":
+      if (isWakingUp && deliveryType === 'email') {
+        return {type: "delayed", delayMinutes: 15}
+      }
       return { type: "none" };
     case "daily":
       return {
@@ -211,7 +215,7 @@ export const createNotification = async ({userId, notificationType, documentType
       await notificationDebouncers[notificationType]!.recordEvent({
         key: {notificationType, userId},
         data: createdNotification.data._id,
-        timing: getNotificationTiming(notificationTypeSettings),
+        timing: getNotificationTiming(notificationTypeSettings, 'onsite'),
         af: false, //TODO: Handle AF vs non-AF notifications
       });
     }
@@ -232,7 +236,7 @@ export const createNotification = async ({userId, notificationType, documentType
     await notificationDebouncers[notificationType]!.recordEvent({
       key: {notificationType, userId},
       data: createdNotification.data._id,
-      timing: getNotificationTiming(notificationTypeSettings),
+      timing: getNotificationTiming(notificationTypeSettings, 'email'),
       af: false, //TODO: Handle AF vs non-AF notifications
     });
   }

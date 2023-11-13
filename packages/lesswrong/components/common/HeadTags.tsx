@@ -5,6 +5,7 @@ import { combineUrls, getBasePath, getSiteUrl } from '../../lib/vulcan-lib/utils
 import { useSubscribedLocation } from '../../lib/routeUtil';
 import { taglineSetting, tabTitleSetting, tabLongTitleSetting, noIndexSetting } from '../../lib/instanceSettings';
 import { toEmbeddableJson } from '../../lib/utils/jsonUtils';
+import {onetrustDomainScriptSetting} from '../../lib/publicSettings.ts'
 
 const HeadTags = ({
   ogUrl: ogUrlProp,
@@ -40,6 +41,7 @@ const HeadTags = ({
     const titleString = currentRoute?.title || titleProp || currentRoute?.subtitle;
 
     const rssUrl = `${getSiteUrl()}feed.xml`
+    const onetrustDomainScript = onetrustDomainScriptSetting.get() 
 
     return (
       <React.Fragment>
@@ -79,6 +81,12 @@ const HeadTags = ({
           {structuredData && <script type="application/ld+json">
             {toEmbeddableJson(structuredData)}
           </script>}
+          {onetrustDomainScript &&
+            <script src={`https://cdn.cookielaw.org/consent/${onetrustDomainScript}/OtAutoBlock.js`}/>}
+          {onetrustDomainScript && <script
+            data-domain-script={onetrustDomainScript}
+            src="https://cdn.cookielaw.org/scripttemplates/otSDKStub.js"
+          />} 
         </Helmet>
       </React.Fragment>
     );

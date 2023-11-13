@@ -149,7 +149,9 @@ export const sendEmailSendgridTemplate = async (emailData: SendgridEmailData) =>
         ]
       }
     ],
-    from: {email: fromAddress},
+    // Currently hard-coded - this is the only allowed from address on Sendgrid,
+    // with the only allowed name
+    from: {name: "Waking Up Community", email: fromAddress},
     ...mailSettings
   }
   client
