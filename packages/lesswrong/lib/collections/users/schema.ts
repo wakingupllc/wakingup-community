@@ -23,6 +23,7 @@ import type { ForumIconName } from '../../../components/common/ForumIcon';
 import { getCommentViewOptions } from '../../commentViewOptions';
 import { isFriendlyUI } from '../../../themes/forumTheme';
 import { hasDigestSetting } from '../../publicSettings';
+import badWords from '../../badWords.json';
 
 ///////////////////////////////////////
 // Order for the Schema is as follows. Change as you see fit:
@@ -279,6 +280,16 @@ export type SocialMediaProfileField = keyof typeof SOCIAL_MEDIA_PROFILE_FIELDS;
 
 export type RateLimitReason = "moderator"|"lowKarma"|"downvoteRatio"|"universal"
 
+const validateName = (name: string, field: string) => {
+  if (badWords.includes(name.toLowerCase().trim()) || badWords.includes(name.toLowerCase().replace(/[0-9]/g, "").trim())) {
+    throwValidationError({
+      typeName: "User",
+      field,
+      errorType: "errors.disallowedUsername",
+    });
+  }
+}
+
 /**
  * @summary Users schema
  * @type {Object}
@@ -292,9 +303,14 @@ const schema: SchemaType<DbUser> = {
     canCreate: ['members'],
     hidden: true,
     onInsert: user => {
+      validateName(user.username, 'username');
+
       if (!user.username && user.services?.twitter?.screenName) {
         return user.services.twitter.screenName;
       }
+    },
+    onUpdate: ({ document: user }) => {
+      validateName(user.username, 'username');
     },
   },
   // Emails (not to be confused with email). This field belongs to Meteor's
@@ -388,7 +404,12 @@ const schema: SchemaType<DbUser> = {
     canRead: ['guests'],
     order: 10,
     onCreate: ({ document: user }) => {
+      validateName(user.displayName, 'displayName');
+
       return user.displayName || createDisplayName(user);
+    },
+    onUpdate: ({ document: user }) => {
+      validateName(user.displayName, 'displayName');
     },
     group: formGroups.default,
   },
