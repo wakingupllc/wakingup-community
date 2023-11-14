@@ -28,6 +28,7 @@ import uniq from 'lodash/uniq';
 import startCase from 'lodash/startCase';
 import { conversationGetPageUrl } from '../lib/collections/conversations/helpers';
 import { highlightFromHTML } from '../lib/editor/ellipsize';
+import moment from 'moment'
 
 interface ServerNotificationType {
   name: string,
@@ -196,7 +197,8 @@ export const NewCommentNotification = serverRegisterNotificationType({
         commenterProfileLink: userGetProfileUrlFromSlug(commenter.slug, true),
         postTitle,
         postLink: post ? postGetPageUrl(post, true) : undefined,
-        commentContents: highlightFromHTML(comment.contents.html, 500)
+        commentContents: highlightFromHTML(comment.contents.html, 500),
+        year: moment().year(),
       }
     })
     
@@ -368,7 +370,8 @@ export const NewReplyToYouNotification = serverRegisterNotificationType({
         replierProfileLink: userGetProfileUrlFromSlug(replier.slug, true),
         postTitle,
         postLink: post ? postGetPageUrl(post, true) : undefined,
-        commentContents: highlightFromHTML(comment.contents.html, 500)
+        commentContents: highlightFromHTML(comment.contents.html, 500),
+        year: moment().year(),
       }
     })
     
@@ -458,7 +461,8 @@ export const NewMessageNotification = serverRegisterNotificationType({
         conversationLink: conversationLink ? makeAbsolute(conversationLink) : undefined,
         senderUserId: message.userId,
         senderUsername: userGetDisplayName(sender),
-        senderProfileLink: userGetProfileUrlFromSlug(sender.slug, true)
+        senderProfileLink: userGetProfileUrlFromSlug(sender.slug, true),
+        year: moment().year(),
       }
     })
     
@@ -790,7 +794,8 @@ export const NewMentionNotification = serverRegisterNotificationType({
         taggerProfileLink: summary.associatedUserSlug ? userGetProfileUrlFromSlug(summary.associatedUserSlug, true) : undefined,
         taggerUsername: summary.associatedUserName,
         postTitle: summary.displayName,
-        postContents: highlightFromHTML(summary.document.contents.html, 500)
+        postContents: highlightFromHTML(summary.document.contents.html, 500),
+        year: moment().year(),
       })
     }
     
