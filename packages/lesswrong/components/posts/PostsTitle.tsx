@@ -171,7 +171,9 @@ const PostsTitle = ({
     </span>}
     {Icon && <Icon className={classes.primaryIcon}/>}
 
-    {post.draft && showDraftTag && <span className={classes.tag}>[Draft]</span>}
+    {post.draft && showDraftTag && <span className={classes.tag}>
+      {post.deletedDraft ? <>[Deleted]</> : <>[Draft]</>}
+    </span>}
     {post.isFuture && <span className={classes.tag}>[Pending]</span>}
     {post.unlisted && <span className={classes.tag}>[Unlisted]</span>}
     {shared && <span className={classes.tag}>[Shared]</span>}

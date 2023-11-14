@@ -906,6 +906,7 @@ interface PostsMinimumInfo { // fragment on Posts
   readonly slug: string,
   readonly title: string,
   readonly draft: boolean,
+  readonly deletedDraft: boolean,
   readonly shortform: boolean,
   readonly hideCommentKarma: boolean,
   readonly af: boolean,

@@ -125,6 +125,16 @@ export const userOwnsAndOnLW = function (user:UsersMinimumInfo|DbUser|null, docu
   return isLW && userOwns(user, document)
 }
 
+const documentDeleted = (document: OwnableDocument) => {
+  // Unfortunately, different collections use different field names
+  // to represent "deleted-ness"
+  return (
+    (document as unknown as DbComment).deleted ||
+    (document as unknown as DbPost).deletedDraft ||
+    (document as unknown as DbSequence).isDeleted
+  );
+}
+
 export const documentIsNotDeleted = (
   user: PermissionableUser|DbUser|null,
   document: OwnableDocument,
@@ -134,16 +144,11 @@ export const documentIsNotDeleted = (
     return true;
   }
   // Authors can see their deleted content
-  if (userOwns(user, document)) {
+  if (userOwns(user, document) && !documentDeleted(document)) {
     return true;
   }
-  // Unfortunately, different collections use different field names
-  // to represent "deleted-ness"
-  return !(
-    (document as unknown as DbComment).deleted ||
-    (document as unknown as DbPost).deletedDraft ||
-    (document as unknown as DbSequence).isDeleted
-  );
+
+  return !documentDeleted(document);
 }
 
 export const userCanComment = (user: PermissionableUser|DbUser|null): boolean => {

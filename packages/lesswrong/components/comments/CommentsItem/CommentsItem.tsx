@@ -387,7 +387,7 @@ export const CommentsItem = ({ treeOptions, comment, nestingLevel=1, isChild, co
           {moderatedCommentId === comment._id && <FlagIcon className={classes.flagIcon} />}
           {showPostTitle && !isChild && hasPostField(comment) && comment.post && <LWTooltip tooltip={false} title={<PostsPreviewTooltipSingle postId={comment.postId}/>}>
               <Link className={classes.postTitle} to={commentGetPageUrlFromIds({postId: comment.postId, commentId: comment._id, postSlug: ""})}>
-                {comment.post.draft && "[Draft] "}
+                {comment.post.draft && (comment.post.deletedDraft ? "[Deleted] " : "[Draft] ")}
                 {comment.post.title}
               </Link>
             </LWTooltip>}
