@@ -417,6 +417,7 @@ const forumNewMessageEmail = forumSelect(newMessageEmails) ?? undefined
 
 export const NewMessageNotification = serverRegisterNotificationType({
   name: "newMessage",
+  canCombineEmails: true,
   from: forumNewMessageEmail, // passing in undefined will lead to default behavior
   loadData: async function({ user, notifications }: {user: DbUser, notifications: DbNotification[]}) {
     // Load messages
@@ -778,6 +779,7 @@ export const NewSubforumMemberNotification = serverRegisterNotificationType({
 
 export const NewMentionNotification = serverRegisterNotificationType({
   name: "newMention",
+  canCombineEmails: true,
   emailTemplateData: async function({ user, notifications }: {user: DbUser, notifications: DbNotification[]}) {
     const templateData = []
     for (let notification of notifications) {
