@@ -19,5 +19,6 @@ declare global {
     Intercom: any,
     grecaptcha?: any,
     google?: any,
+    OnetrustActiveGroups?: string
   }
 }
