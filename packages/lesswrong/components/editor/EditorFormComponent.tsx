@@ -17,6 +17,7 @@ import Transition from 'react-transition-group/Transition';
 import { useTracking } from '../../lib/analyticsEvents';
 import { PostCategory } from '../../lib/collections/posts/helpers';
 import { DynamicTableOfContentsContext } from '../posts/TableOfContents/DynamicTableOfContents';
+import { showVersionHistorySetting } from '../../lib/publicSettings';
 
 const autosaveInterval = 3000; //milliseconds
 
@@ -358,7 +359,7 @@ export const EditorFormComponent = ({form, formType, formProps, document, name, 
       maxHeight={maxHeight}
       hasCommitMessages={hasCommitMessages ?? undefined}
     />
-    {!hideControls && collectionName==="Posts" && fieldName==="contents" && !!document._id &&
+    {showVersionHistorySetting.get() && !hideControls && collectionName==="Posts" && fieldName==="contents" && !!document._id &&
       <Components.PostVersionHistoryButton
         post={document}
         postId={document._id}
