@@ -19,6 +19,12 @@ import {devLoginsAllowedSetting, wuDefaultProfileImageCloudinaryIdSetting} from 
 import { sendEmailSendgridTemplate } from '../emails/sendEmail.ts'
 import moment from 'moment'
 
+const LOGIN_LIMIT_HOURS = 3
+const CODE_REQUEST_LIMIT = 5
+const CODE_ENTRY_LIMIT = 5
+const CODE_REQUEST_LIMIT_EXCEEDED_MSG = "User is locked out due to too many code requests"
+const CODE_ENTRY_LIMIT_EXCEEDED_MSG = "Locked after entering too many invalid codes"
+
 // This file has middleware for redirecting logged-out users to the login page,
 // but it also manages authentication with the Waking Up app. This latter thing
 // is not actually middleware, but it's useful to use the forumSpecificMiddleware
@@ -221,69 +227,111 @@ const loginData = `type LoginReturnData2 {
 addGraphQLSchema(loginData);
 addGraphQLSchema(requestedCodeData);
 
-function updateOneTimeCode(user: DbUser, oneTimeCode: string|null) {
-  const limitStartAt = moment(user.services?.wakingUp?.codeRequestLimitStartAt).toDate() > moment().subtract(3, 'hours').toDate() ? user.services?.wakingUp?.codeRequestLimitStartAt : new Date()
+function updateUserLoginProps(user: DbUser, oneTimeCode: string|null) {
+  const limitStartAt = codeRequestLimitActive(user) ?? new Date()
+  const otcRequestAttempts = (wuServ(user)?.otcRequestAttempts ?? 0) + 1
+
+  const fieldUpdates = {
+    codeRequestLimitStartAt: limitStartAt,
+    oneTimeCode,
+    otcRequestAttempts,
+  }
+
   return Users.rawUpdateOne(
     {_id: user._id},
     {$set: {services: {
       ...(user.services),
       "wakingUp": {
-        "oneTimeCode": oneTimeCode,
-        "codeRequestLimitStartAt": limitStartAt,
-        "oneTimeCodeRequestAttempts": (user.services?.wakingUp?.oneTimeCodeRequestAttempts ?? 0) + 1,
+        ...wuServ(user),
+        ...fieldUpdates,
       }
     }}}
   );
 }
 
-function isLoginCodeRequestLocked(user: DbUser) {
-  const limitStartAt = user.services?.wakingUp?.codeRequestLimitStartAt
-  if (moment(limitStartAt).toDate() > moment().subtract(3, 'hours').toDate()) {
-    if (user.services?.wakingUp?.oneTimeCodeRequestAttempts >= 5) return true
-  }
-
-  return false
+function wuServ(user: DbUser) {
+  return user.services?.wakingUp
 }
 
-function isLoginCodeEntryLocked(user: DbUser) {
-  const lockedAt = user.services?.wakingUp?.oneTimeCodeEntryLockedAt
-  return lockedAt && moment(lockedAt).toDate() > moment().subtract(3, 'hours').toDate()
+function codeRequestLimitActive(user: DbUser) {
+  const limitStartAt = wuServ(user)?.codeRequestLimitStartAt
+  if (moment(limitStartAt).toDate() > moment().subtract(LOGIN_LIMIT_HOURS, 'hours').toDate()) {
+    return limitStartAt;
+  }
+  return null;
+}
+
+function codeRequestLimitExpiresAt(user: DbUser) {
+  const limitStartAt = codeRequestLimitActive(user)
+  if (!limitStartAt) return null;
+
+  return moment(limitStartAt).add(LOGIN_LIMIT_HOURS, 'hours').format('h:mm a')
+}
+
+function codeEntryLockExpiresAt(user: DbUser) {
+  const lockStartAt = wuServ(user)?.otcEntryLockedAt
+  if (!lockStartAt) return null;
+
+  return moment(lockStartAt).add(LOGIN_LIMIT_HOURS, 'hours').format('h:mm a')
+}
+
+function isCodeRequestLocked(user: DbUser, modifier = 0) {
+  // modifier is needed because the user's otcRequestAttempts haven't been incremented
+  // for the current request yet.
+  return codeRequestLimitActive(user) && wuServ(user)?.otcRequestAttempts > CODE_REQUEST_LIMIT - 1 + modifier
+}
+
+function throwIfCodeRequestLocked(user: DbUser, modifier = 0) {
+  if (isCodeRequestLocked(user, modifier)) {
+    throw new AuthorizationError({
+      message: loginCodeRequestLockedMessage(user),
+      internalData: { error: CODE_REQUEST_LIMIT_EXCEEDED_MSG }}
+    );
+  }
+}
+
+function isCodeEntryLocked(user: DbUser) {
+  const lockedAt = wuServ(user)?.otcEntryLockedAt
+  return lockedAt && moment(lockedAt).toDate() > moment().subtract(LOGIN_LIMIT_HOURS, 'hours').toDate()
+}
+
+function throwIfCodeEntryLocked(user: DbUser) {
+  if (isCodeEntryLocked(user)) {
+    throw new AuthorizationError({
+      message: loginCodeEntryLockedMessage(user),
+      internalData: { error: CODE_ENTRY_LIMIT_EXCEEDED_MSG }}
+    );
+  }
 }
 
 function loginCodeRequestLockedMessage(user: DbUser) {
-  const limitStartAt = user.services?.wakingUp?.codeRequestLimitStartAt
-  return `Error: You have requested too many invalid codes, and your account is locked until ${moment(limitStartAt).add(3, 'hours').format('h:mm a')}.`
+  const limitExpiresAt = codeRequestLimitExpiresAt(user)
+  return `You have requested too many codes. Your account is locked until ${limitExpiresAt}.`
 }
 
 function loginCodeEntryLockedMessage(user: DbUser) {
-  const lockedAt = user.services?.wakingUp?.oneTimeCodeEntryLockedAt;
-  return `Error: You have attempted too many invalid codes, and your account is locked until ${moment(lockedAt).add(3, 'hours').format('h:mm a')}.`
+  const lockedAt = codeEntryLockExpiresAt(user);
+  return `You have attempted too many invalid codes. Your account is locked until ${lockedAt}.`
 }
 
-function incrementOneTimeCodeEntryAttempts(user: DbUser) {
-  let oneTimeCode = null;
-  let oneTimeCodeEntryAttempts = null;
-  let oneTimeCodeEntryLockedAt = null;
-  const codeRequestLimitStartAt = user.services?.wakingUp?.codeRequestLimitStartAt;
-  const oneTimeCodeRequestAttempts = user.services?.wakingUp?.oneTimeCodeRequestAttempts;
+async function incrementOtcEntryAttempts(user: DbUser) {
+  const otcEntryAttempts = (wuServ(user)?.otcEntryAttempts ?? 0) + 1;
 
-  if (user.services?.wakingUp?.oneTimeCodeEntryAttempts >= 5) {
-    oneTimeCodeEntryLockedAt = new Date();
-  } else {
-    oneTimeCode = user.services?.wakingUp?.oneTimeCode;
-    oneTimeCodeEntryAttempts = (user.services?.wakingUp?.oneTimeCodeEntryAttempts ?? 0) + 1;
+  const fieldUpdates = otcEntryAttempts > CODE_ENTRY_LIMIT - 1 ? {
+    otcEntryLockedAt: new Date(),
+    oneTimeCode: null,
+    otcEntryAttempts: 0,
+  } : {
+    otcEntryAttempts: (wuServ(user).otcEntryAttempts ?? 0) + 1
   }
 
-  return Users.rawUpdateOne(
+  return await Users.rawUpdateOne(
     {_id: user._id},
     {$set: {services: {
       ...(user.services),
       "wakingUp": {
-        "oneTimeCode": oneTimeCode,
-        "oneTimeCodeEntryAttempts": oneTimeCodeEntryAttempts,
-        "oneTimeCodeEntryLockedAt": oneTimeCodeEntryLockedAt,
-        "codeRequestLimitStartAt": codeRequestLimitStartAt,
-        "oneTimeCodeRequestAttempts": oneTimeCodeRequestAttempts,
+        ...wuServ(user),
+        ...fieldUpdates,
       }
     }}}
   );
@@ -295,28 +343,19 @@ const authenticationResolvers = {
       if (!email) {
         throw new Error('Email missing')
       }
-    
-      const oneTimeCode = Math.floor(1000 + (Math.random() * 9000)).toString();
-    
+
       const wuUser = await getWakingUpUserData(email);
 
       if (isValidWuUser(wuUser)) {
         const user = await syncOrCreateWuUser(wuUser)
 
-        if (isLoginCodeRequestLocked(user)) {
-          throw new AuthorizationError({
-            message: loginCodeRequestLockedMessage(user),
-            internalData: { error: "User is locked out due to too many login attempts" }}
-          );
-        }
-        if (isLoginCodeEntryLocked(user)) {
-          throw new AuthorizationError({
-            message: loginCodeEntryLockedMessage(user),
-            internalData: { error: "User is locked out due to too many login attempts" }}
-          );
-        }
+        throwIfCodeRequestLocked(user, -1);
+        throwIfCodeEntryLocked(user);
 
-        await updateOneTimeCode(user, oneTimeCode)
+        const oneTimeCode = Math.floor(1000 + (Math.random() * 9000)).toString();
+
+        await updateUserLoginProps(user, oneTimeCode)
+
         const sendgridData = {
           to: wuUser.email,
           dynamicTemplateData: {
@@ -336,33 +375,35 @@ const authenticationResolvers = {
       }
       return { result: "success" }
     },
-    
+
     async codeLogin(root: void, { email, code }: {email: string, code: string}, { req, res }: ResolverContext) {
       const user = await userFindOneByEmail(email);
 
       if (!user?.wu_subscription_active) throw new AuthorizationError({ message: authMessageWithEmail(email), internalData: { error: "Inactive WU subscription" }});
       if (!user.wu_forum_access) throw new AuthorizationError({ message: authMessageWithEmail(email), internalData: { error: "WU account lacks forum access" }});
-      if (isLoginCodeEntryLocked(user)) throw new AuthorizationError({ message: loginCodeEntryLockedMessage(user), internalData: { error: "User is locked out due to too many login attempts" }});
 
-      const validCode = user && code?.length > 0 && user.services?.wakingUp?.oneTimeCode === code;
+      await incrementOtcEntryAttempts(user);
+      throwIfCodeEntryLocked(user);
+
+      const validCode = user && code?.length > 0 && wuServ(user)?.oneTimeCode === code;
       const devCodeOkay = devLoginsAllowedSetting.get() && user && code === '1234';
 
       if (validCode || devCodeOkay) {
-        await updateOneTimeCode(user, null)
+        await updateUserLoginProps(user, null)
 
         const token = await createAndSetToken(req, res, user)
         return { token };
       } else {
-        await incrementOneTimeCodeEntryAttempts(user);
-        if (user.services?.wakingUp?.oneTimeCodeEntryLockedAt) {
+        if (wuServ(user)?.otcEntryLockedAt) {
           throw new AuthorizationError({
             message: loginCodeEntryLockedMessage(user),
-            internalData: { error: "Invalid one-time code" }}
+            internalData: { error: CODE_ENTRY_LIMIT_EXCEEDED_MSG }}
           );
         }
         throw new AuthorizationError({
           message: "Sorry, that code is incorrect or expired.",
           internalData: { error: "Invalid one-time code" },
+          data: { invalidCode: true },
         });
       }
     },

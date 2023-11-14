@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { forwardRef, useImperativeHandle } from 'react';
 
 type AllowedInputTypes = 'password' | 'text' | 'number' | 'tel';
 
@@ -51,7 +51,11 @@ interface OTPInputProps {
 
 const isStyleObject = (obj: unknown) => typeof obj === 'object' && obj !== null;
 
-const OTPInput = ({
+export interface OTPInputMethods {
+  focusFirstInput: () => void;
+}
+
+const OTPInput = forwardRef<OTPInputMethods, OTPInputProps>(({
   value = '',
   numInputs = 4,
   onChange,
@@ -63,7 +67,7 @@ const OTPInput = ({
   placeholder,
   containerStyle,
   inputStyle,
-}: OTPInputProps) => {
+}: OTPInputProps, ref) => {
   const [activeInput, setActiveInput] = React.useState(0);
   const inputRefs = React.useRef<Array<HTMLInputElement | null>>([]);
 
@@ -211,6 +215,12 @@ const OTPInput = ({
     handleOTPChange(otp);
   };
 
+  useImperativeHandle(ref, () => ({
+    focusFirstInput: () => {
+      focusInput(0);
+    }
+  }));
+
   return (
     <div
       style={Object.assign({ display: 'flex', alignItems: 'center' }, isStyleObject(containerStyle) && containerStyle)}
@@ -244,7 +254,7 @@ const OTPInput = ({
       ))}
     </div>
   );
-};
+});
 
 export type { OTPInputProps, InputProps, AllowedInputTypes };
 export default OTPInput;

@@ -1,8 +1,8 @@
 import { Components, registerComponent } from '../../lib/vulcan-lib';
-import React, { useState } from 'react';
-import { gql, useMutation, DocumentNode, ApolloError } from '@apollo/client';
+import React, { useState, useRef, useEffect } from 'react';
+import { gql, useMutation } from '@apollo/client';
 import classNames from 'classnames';
-import OTPInput from './OTPInput';
+import OTPInput, { OTPInputMethods } from './OTPInput';
 import SimpleSchema from 'simpl-schema';
 import { cdnAssetUrl } from '../../lib/routeUtil';
 import { devLoginsAllowedSetting } from '../../lib/publicSettings';
@@ -39,6 +39,9 @@ const styles = (theme: ThemeType): JssStyles => ({
     cursor: 'pointer',
     fontSize: '1rem',
     padding: '12px 30px',
+    "&:disabled": {
+      opacity: 0.5,
+    }
   },
   enterCodeSubmit: {
     display: 'inline-block',
@@ -48,6 +51,7 @@ const styles = (theme: ThemeType): JssStyles => ({
   error: {
     padding: 8,
     color: theme.palette.error.main,
+    marginTop: "0.5em",
     marginLeft: -90,
     marginRight: -90,
     [theme.breakpoints.down('sm')]: {
@@ -139,9 +143,12 @@ const codeLoginMutation = gql`
   }
 `
 
-const currentActionToMutation : Record<possibleActions, DocumentNode> = {
-  requestCode: requestLoginCodeMutation, 
-  enterCode: codeLoginMutation,
+const currentActionToMutation = function(currentAction: possibleActions, oneOffCodeRequest: boolean) {
+  if (oneOffCodeRequest) return requestLoginCodeMutation
+  if (currentAction == "requestCode") return requestLoginCodeMutation
+  if (currentAction == "enterCode") return codeLoginMutation
+
+  throw "Invalid currentAction"
 }
 
 type possibleActions = "requestCode" | "enterCode"
@@ -161,31 +168,74 @@ export const WULoginForm = ({ startingState = "requestCode", classes }: WULoginF
   const [email, setEmail] = useState<string>("")
   const [oneTimeCode, setOneTimeCode] = useState<string>("")
   const [currentAction, setCurrentAction] = useState<possibleActions>(startingState)
-  const [ mutate, { error } ] = useMutation(currentActionToMutation[currentAction], { errorPolicy: 'all' })
-  const [showValidationWarning, setShowValidationWarning] = useState<boolean>(false)
+  const [requestAnotherCode, setRequestAnotherCode] = useState<boolean>(false)
+  // This currentActionToMutation thing is regrettably complicated, but the point
+  // is to have a single useMutation call that shares one error state, so that
+  // subsequent mutations overwrite the error state of the previous one.
+  const [ mutate, { error } ] = useMutation(currentActionToMutation(currentAction, requestAnotherCode), { errorPolicy: 'all' })
+  const [validationError, setValidationError] = useState<string>("")
   const [loading, setLoading] = useState<boolean>(false)
+  const otpRef = useRef<OTPInputMethods>(null)
 
-  const { Loading } = Components;
+  useEffect(() => {
+    if (requestAnotherCode) {
+      void withLoadingSpinner(async () => {
+        setOneTimeCode("");
+        otpRef.current?.focusFirstInput();
 
-  const submitFunction = async (e: AnyBecauseTodo) => {
-    e.preventDefault();
+        const variables = { email }
+        void mutate({ variables })
+      })
+      setRequestAnotherCode(false)
+    }
+  }, [requestAnotherCode, email, mutate]);
+
+  const withLoadingSpinner = async function(inner: Function) {
+    setLoading(true);
+    inner()
+    setLoading(false);
+  }
+
+  const errorMessage = function() {
+    return error?.message || validationError
+  }
+
+  const showSendNewCodeLink = function() {
+    return (currentAction === 'enterCode' && error?.graphQLErrors[0] as any)?.data?.invalidCode
+  }
+
+  const validateForm = function() {
     if (!SimpleSchema.RegEx.Email.test(email)) {
-      setShowValidationWarning(true);
+      setValidationError("Please enter a valid email address");
       return false;
     }
-
-    setLoading(true);
-
-    const variables = { email, code: oneTimeCode }
-    const { data } = await mutate({ variables })
-
-    setLoading(false);
-
-    if (data?.requestLoginCode?.result === "success") {
-      setCurrentAction("enterCode")
-    }
-    if (data?.codeLogin?.token) location.reload()
+    setValidationError("");
+    return true;
   }
+
+  // submitFunction requests a code or enters a code, depending on the currentAction
+  const submitFunction = async (e: AnyBecauseTodo) => {
+    e.preventDefault();
+
+    if (!validateForm()) return;
+
+    await withLoadingSpinner(async () => {
+      const variables = { email, code: oneTimeCode }
+      const { data } = await mutate({ variables })
+
+      if (data?.requestLoginCode?.result === "success") {
+        setCurrentAction("enterCode")
+      }
+      if (data?.codeLogin?.token) location.reload()
+    })
+  }
+
+  // requestNewCode is called by the link that requests a new code after the user entered an incorrect code
+  const requestNewCode = async function() {
+    setRequestAnotherCode(true)
+  }
+
+  const { Loading } = Components;
 
   return <Components.ContentStyles contentType="commentExceptPointerEvents">
     <form className={classes.root} onSubmit={submitFunction}>
@@ -197,14 +247,12 @@ export const WULoginForm = ({ startingState = "requestCode", classes }: WULoginF
           <input value={email} type="email" name="email" placeholder={"Email Address"} className={classes.input} onChange={event => setEmail(event.target.value)}/>
           <input type="submit" className={classes.submit} value={currentActionToButtonText[currentAction]} />
         </div>}
-        {showValidationWarning && <div className={classes.error}>
-          Please enter a valid email address
-        </div>}
       </>}
       {currentAction === "enterCode" && <>
         <p className={classes.instructions}>We have sent a four-digit verification code to {email}. Please enter it below.</p>
         {devLoginsAllowedSetting.get() && <p>(Dev server only: you can use the test code: 1234)</p>}
         <OTPInput
+          ref={otpRef}
           inputStyle={classes.otpInput}
           containerStyle={classes.otpContainer}
           numInputs={4}
@@ -215,10 +263,15 @@ export const WULoginForm = ({ startingState = "requestCode", classes }: WULoginF
           renderInput={(props) => <input {...props} />}
           shouldAutoFocus
         />
-        <input type="submit" className={classNames(classes.submit, classes.enterCodeSubmit)} value={currentActionToButtonText[currentAction]} />
+        <input
+          type="submit"
+          className={classNames(classes.submit, classes.enterCodeSubmit)}
+          value={currentActionToButtonText[currentAction]}
+          disabled={oneTimeCode.length !== 4} />
       </>}
-
-      {error && <div className={classes.error}>{error.message}</div>}
+      {errorMessage() && <div className={classes.error}>{errorMessage()}
+        {showSendNewCodeLink() && <>&nbsp;<a href="#" onClick={() => { void requestNewCode() }}>Send a new code</a>.</>}
+      </div>}
       {(error || currentAction === "enterCode") && <a href="/" className={classes.returnToLogin}>Return to login</a>}
       {loading && <Loading />}
     </form>
