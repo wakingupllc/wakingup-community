@@ -175,3 +175,4 @@ export const wuDefaultProfileImageCloudinaryIdSetting = new DatabasePublicSettin
 export const onetrustDomainScriptSetting = new DatabasePublicSetting<string>('onetrustDomainScript', "c8afa025-de60-4850-a9db-4962e99aa987-test");
 export const notificationBatchHourInUserTzSetting = new DatabasePublicSetting<number>('notificationBatchHourInUserTz', 17)
 export const showVersionHistorySetting = new DatabasePublicSetting<boolean>('showVersionHistory', true);
+export const sendAutoMessageOnCommentRemovalSetting = new DatabasePublicSetting<boolean>('sendAutoMessageOnCommentRemoval', true);
