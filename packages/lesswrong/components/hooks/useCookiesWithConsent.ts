@@ -1,12 +1,21 @@
 import { useCookies } from "react-cookie";
 import { CookieSetOptions } from "universal-cookie/cjs/types";
-import { ALL_COOKIES, COOKIE_CONSENT_TIMESTAMP_COOKIE, COOKIE_PREFERENCES_COOKIE, CookieType, ONLY_NECESSARY_COOKIES, isCookieAllowed, isValidCookieTypeArray } from "../../lib/cookies/utils";
+import {
+  ALL_COOKIES,
+  COOKIE_CONSENT_TIMESTAMP_COOKIE,
+  COOKIE_PREFERENCES_COOKIE,
+  CookieType,
+  ONLY_NECESSARY_COOKIES,
+  isCookieAllowed,
+  isValidCookieTypeArray,
+  getOneTrustCookiePreferences,
+} from '../../lib/cookies/utils'
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { cookiePreferencesChangedCallbacks } from "../../lib/cookies/callbacks";
 import { getExplicitConsentRequiredAsync, getExplicitConsentRequiredSync } from "../common/CookieBanner/geolocation";
 import { useTracking } from "../../lib/analyticsEvents";
 import moment from "moment";
-import { DatabasePublicSetting } from "../../lib/publicSettings";
+import {DatabasePublicSetting, onetrustDomainScriptSetting} from '../../lib/publicSettings'
 
 const disableCookiePreferenceAutoUpdateSetting = new DatabasePublicSetting<boolean>('disableCookiePreferenceAutoUpdate', false)
 /** Global variable storing the last time the cookie preferences were updated automatically, to prevent several instances
@@ -31,8 +40,10 @@ export function useCookiePreferences(): {
   const [explicitConsentRequired, setExplicitConsentRequired] = useState<boolean | "unknown">(getExplicitConsentRequiredSync());
 
   const [cookies, setCookie] = useCookies([COOKIE_PREFERENCES_COOKIE, COOKIE_CONSENT_TIMESTAMP_COOKIE]);
-  const preferencesCookieValue = cookies[COOKIE_PREFERENCES_COOKIE];
-  const explicitConsentGiven = !!cookies[COOKIE_CONSENT_TIMESTAMP_COOKIE] && isValidCookieTypeArray(preferencesCookieValue)
+  const useOneTrust = !!onetrustDomainScriptSetting.get()
+
+  const preferencesCookieValue = useOneTrust ? getOneTrustCookiePreferences() : cookies[COOKIE_PREFERENCES_COOKIE]
+  const explicitConsentGiven = (useOneTrust || !!cookies[COOKIE_CONSENT_TIMESTAMP_COOKIE]) && isValidCookieTypeArray(preferencesCookieValue)
 
   const fallbackPreferences: CookieType[] = useMemo(() => explicitConsentRequired !== false ? ONLY_NECESSARY_COOKIES : ALL_COOKIES, [explicitConsentRequired]);
   const cookiePreferences = explicitConsentGiven ? preferencesCookieValue : fallbackPreferences
