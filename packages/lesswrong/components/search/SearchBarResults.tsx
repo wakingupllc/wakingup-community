@@ -68,23 +68,25 @@ const styles = (theme: ThemeType): JssStyles => ({
   },
 })
 
-const SearchBarResults = ({closeSearch, currentQuery, classes}: {
+const SearchBarResults = ({closeSearch, currentQuery, enableTagSearch = false, enableSequenceSearch = false, classes}: {
   closeSearch: ()=>void,
   currentQuery: string,
+  enableTagSearch?: boolean,
+  enableSequenceSearch?: boolean,
   classes: ClassesType
 }) => {
   const { PostsSearchHit, SequencesSearchHit, UsersSearchHit, TagsSearchHit, CommentsSearchHit } = Components
 
-  const searchTypes: Array<{
-    type: AlgoliaIndexCollectionName;
-    Component: React.ComponentType<Omit<SearchHitComponentProps, "classes">>;
-  }> = [
+  const searchTypes = [
     { type: "Users", Component: UsersSearchHit },
     { type: "Posts", Component: PostsSearchHit },
-    { type: "Tags", Component: TagsSearchHit },
+    enableTagSearch && { type: "Tags", Component: TagsSearchHit },
     { type: "Comments", Component: CommentsSearchHit },
-    { type: "Sequences", Component: SequencesSearchHit },
-  ];
+    enableSequenceSearch && { type: "Sequences", Component: SequencesSearchHit },
+  ].filter(Boolean) as Array<{
+    type: AlgoliaIndexCollectionName;
+    Component: React.ComponentType<Omit<SearchHitComponentProps, "classes">>;
+  }>
 
   return <div className={classes.root}>
     <div className={classes.searchResults}>

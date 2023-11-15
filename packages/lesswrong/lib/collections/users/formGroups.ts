@@ -16,7 +16,7 @@ export const formGroups: Partial<Record<string, FormGroupType>> = {
   notifications: {
     order: 10,
     name: "notifications",
-    label: "Notifications",
+    label: "Notifications & Emails",
     startCollapsed: true,
   },
   emails: {
@@ -79,7 +79,7 @@ export const formGroups: Partial<Record<string, FormGroupType>> = {
   deactivate: {
     order: 130,
     name: "deactivate",
-    label: preferredHeadingCase("Deactivate Account"),
+    label: preferredHeadingCase("Deactivate Community Account"),
     startCollapsed: true,
   },
 };

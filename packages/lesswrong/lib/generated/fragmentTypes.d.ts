@@ -238,6 +238,7 @@ interface UsersDefaultFragment { // fragment on Users
   readonly karmaChangeBatchStart: Date,
   readonly emailSubscribedToCurated: boolean,
   readonly subscribedToDigest: boolean,
+  readonly subscribedToWelcomeEmails: boolean,
   readonly unsubscribeFromAll: boolean,
   readonly hideSubscribePoke: boolean,
   readonly hideMeetupsPoke: boolean,
@@ -807,61 +808,6 @@ interface ModeratorClientIDInfo { // fragment on ClientIds
   readonly users: Array<UsersMinimumInfo>,
 }
 
-interface CronHistoriesDefaultFragment { // fragment on CronHistories
-  readonly _id: string,
-  readonly intendedAt: Date,
-  readonly name: string,
-  readonly startedAt: Date,
-  readonly finishedAt: Date | null,
-  readonly result: any /*{"definitions":[{"blackbox":true}]}*/,
-}
-
-interface MessagesDefaultFragment { // fragment on Messages
-  readonly userId: string,
-  readonly conversationId: string,
-  readonly noEmail: boolean,
-}
-
-interface SessionsDefaultFragment { // fragment on Sessions
-  readonly _id: string,
-  readonly session: any /*{"definitions":[{"blackbox":true}]}*/,
-  readonly expires: Date | null,
-  readonly lastModified: Date | null,
-}
-
-interface NotificationsDefaultFragment { // fragment on Notifications
-  readonly userId: string,
-  readonly documentId: string,
-  readonly documentType: string,
-  readonly extraData: any /*{"definitions":[{"blackbox":true}]}*/,
-  readonly link: string,
-  readonly title: string,
-  readonly message: string,
-  readonly type: string,
-  readonly deleted: boolean,
-  readonly viewed: boolean,
-  readonly emailed: boolean,
-  readonly waitingForBatch: boolean,
-}
-
-interface TypingIndicatorsDefaultFragment { // fragment on TypingIndicators
-  readonly userId: string,
-  readonly documentId: string,
-  readonly lastUpdated: Date,
-}
-
-interface RSSFeedsDefaultFragment { // fragment on RSSFeeds
-  readonly userId: string,
-  readonly ownedByUser: boolean,
-  readonly displayFullContent: boolean,
-  readonly nickname: string,
-  readonly url: string,
-  readonly status: string,
-  readonly rawFeed: any /*{"definitions":[{}]}*/,
-  readonly setCanonicalUrl: boolean,
-  readonly importAsDraft: boolean,
-}
-
 interface RevisionsDefaultFragment { // fragment on Revisions
   readonly documentId: string,
   readonly collectionName: string,
@@ -885,6 +831,70 @@ interface RevisionsDefaultFragment { // fragment on Revisions
   readonly changeMetrics: any /*{"definitions":[{"blackbox":true}]}*/,
 }
 
+interface NotificationsDefaultFragment { // fragment on Notifications
+  readonly userId: string,
+  readonly documentId: string,
+  readonly documentType: string,
+  readonly extraData: any /*{"definitions":[{"blackbox":true}]}*/,
+  readonly link: string,
+  readonly title: string,
+  readonly message: string,
+  readonly type: string,
+  readonly deleted: boolean,
+  readonly viewed: boolean,
+  readonly emailed: boolean,
+  readonly waitingForBatch: boolean,
+}
+
+interface SubscriptionsDefaultFragment { // fragment on Subscriptions
+  readonly userId: string,
+  readonly state: "subscribed" | "suppressed",
+  readonly documentId: string,
+  readonly collectionName: string,
+  readonly deleted: boolean,
+  readonly type: "newComments" | "newShortform" | "newPosts" | "newRelatedQuestions" | "newEvents" | "newReplies" | "newTagPosts" | "newDebateComments",
+}
+
+interface MessagesDefaultFragment { // fragment on Messages
+  readonly userId: string,
+  readonly conversationId: string,
+  readonly noEmail: boolean,
+}
+
+interface CronHistoriesDefaultFragment { // fragment on CronHistories
+  readonly _id: string,
+  readonly intendedAt: Date,
+  readonly name: string,
+  readonly startedAt: Date,
+  readonly finishedAt: Date | null,
+  readonly result: any /*{"definitions":[{"blackbox":true}]}*/,
+}
+
+interface SessionsDefaultFragment { // fragment on Sessions
+  readonly _id: string,
+  readonly session: any /*{"definitions":[{"blackbox":true}]}*/,
+  readonly expires: Date | null,
+  readonly lastModified: Date | null,
+}
+
+interface TypingIndicatorsDefaultFragment { // fragment on TypingIndicators
+  readonly userId: string,
+  readonly documentId: string,
+  readonly lastUpdated: Date,
+}
+
+interface RSSFeedsDefaultFragment { // fragment on RSSFeeds
+  readonly userId: string,
+  readonly ownedByUser: boolean,
+  readonly displayFullContent: boolean,
+  readonly nickname: string,
+  readonly url: string,
+  readonly status: string,
+  readonly rawFeed: any /*{"definitions":[{}]}*/,
+  readonly setCanonicalUrl: boolean,
+  readonly importAsDraft: boolean,
+}
+
 interface ModeratorActionsDefaultFragment { // fragment on ModeratorActions
   readonly userId: string,
   readonly type: "rateLimitOnePerDay" | "rateLimitOnePerThreeDays" | "rateLimitOnePerWeek" | "rateLimitOnePerFortnight" | "rateLimitOnePerMonth" | "rateLimitThreeCommentsPerPost" | "recentlyDownvotedContentAlert" | "lowAverageKarmaCommentAlert" | "lowAverageKarmaPostAlert" | "negativeUserKarmaAlert" | "movedPostToDraft" | "sentModeratorMessage" | "manualFlag" | "votingPatternWarningDelivered" | "flaggedForNDMs" | "autoBlockedFromSendingDMs" | "rejectedPost" | "rejectedComment" | "potentialTargetedDownvoting",
@@ -896,6 +906,7 @@ interface PostsMinimumInfo { // fragment on Posts
   readonly slug: string,
   readonly title: string,
   readonly draft: boolean,
+  readonly deletedDraft: boolean,
   readonly shortform: boolean,
   readonly hideCommentKarma: boolean,
   readonly af: boolean,
@@ -2455,15 +2466,6 @@ interface DigestsMinimumInfo { // fragment on Digests
   readonly publishedDate: Date | null,
 }
 
-interface SubscriptionsDefaultFragment { // fragment on Subscriptions
-  readonly userId: string,
-  readonly state: "subscribed" | "suppressed",
-  readonly documentId: string,
-  readonly collectionName: string,
-  readonly deleted: boolean,
-  readonly type: "newComments" | "newShortform" | "newPosts" | "newRelatedQuestions" | "newEvents" | "newReplies" | "newTagPosts" | "newDebateComments",
-}
-
 interface SubscriptionState { // fragment on Subscriptions
   readonly _id: string,
   readonly userId: string,
@@ -2858,6 +2860,7 @@ interface UsersEdit extends UsersProfile { // fragment on Users
   readonly whenConfirmationEmailSent: Date,
   readonly emailSubscribedToCurated: boolean,
   readonly subscribedToDigest: boolean,
+  readonly subscribedToWelcomeEmails: boolean,
   readonly unsubscribeFromAll: boolean,
   readonly hasAuth0Id: boolean,
   readonly moderatorAssistance: boolean,
@@ -3270,13 +3273,14 @@ interface FragmentTypes {
   emailHistoryFragment: emailHistoryFragment
   ClientIdsDefaultFragment: ClientIdsDefaultFragment
   ModeratorClientIDInfo: ModeratorClientIDInfo
-  CronHistoriesDefaultFragment: CronHistoriesDefaultFragment
-  MessagesDefaultFragment: MessagesDefaultFragment
-  SessionsDefaultFragment: SessionsDefaultFragment
+  RevisionsDefaultFragment: RevisionsDefaultFragment
   NotificationsDefaultFragment: NotificationsDefaultFragment
+  SubscriptionsDefaultFragment: SubscriptionsDefaultFragment
+  MessagesDefaultFragment: MessagesDefaultFragment
+  CronHistoriesDefaultFragment: CronHistoriesDefaultFragment
+  SessionsDefaultFragment: SessionsDefaultFragment
   TypingIndicatorsDefaultFragment: TypingIndicatorsDefaultFragment
   RSSFeedsDefaultFragment: RSSFeedsDefaultFragment
-  RevisionsDefaultFragment: RevisionsDefaultFragment
   ModeratorActionsDefaultFragment: ModeratorActionsDefaultFragment
   PostsMinimumInfo: PostsMinimumInfo
   PostsBase: PostsBase
@@ -3406,7 +3410,6 @@ interface FragmentTypes {
   DigestPostsMinimumInfo: DigestPostsMinimumInfo
   DigestsDefaultFragment: DigestsDefaultFragment
   DigestsMinimumInfo: DigestsMinimumInfo
-  SubscriptionsDefaultFragment: SubscriptionsDefaultFragment
   SubscriptionState: SubscriptionState
   PodcastsDefaultFragment: PodcastsDefaultFragment
   PodcastSelect: PodcastSelect
@@ -3475,13 +3478,14 @@ interface CollectionNamesByFragmentName {
   emailHistoryFragment: "LWEvents"
   ClientIdsDefaultFragment: "ClientIds"
   ModeratorClientIDInfo: "ClientIds"
-  CronHistoriesDefaultFragment: "CronHistories"
-  MessagesDefaultFragment: "Messages"
-  SessionsDefaultFragment: "Sessions"
+  RevisionsDefaultFragment: "Revisions"
   NotificationsDefaultFragment: "Notifications"
+  SubscriptionsDefaultFragment: "Subscriptions"
+  MessagesDefaultFragment: "Messages"
+  CronHistoriesDefaultFragment: "CronHistories"
+  SessionsDefaultFragment: "Sessions"
   TypingIndicatorsDefaultFragment: "TypingIndicators"
   RSSFeedsDefaultFragment: "RSSFeeds"
-  RevisionsDefaultFragment: "Revisions"
   ModeratorActionsDefaultFragment: "ModeratorActions"
   PostsMinimumInfo: "Posts"
   PostsBase: "Posts"
@@ -3611,7 +3615,6 @@ interface CollectionNamesByFragmentName {
   DigestPostsMinimumInfo: "DigestPosts"
   DigestsDefaultFragment: "Digests"
   DigestsMinimumInfo: "Digests"
-  SubscriptionsDefaultFragment: "Subscriptions"
   SubscriptionState: "Subscriptions"
   PodcastsDefaultFragment: "Podcasts"
   PodcastSelect: "Podcasts"

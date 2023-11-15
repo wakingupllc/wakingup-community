@@ -80,12 +80,12 @@ export const getDocument = async (documentType: NotificationDocument | null, doc
   (await getDocumentSummary(documentType, documentId))?.document
 
 type DocumentSummary =
-  | { type: 'post'; associatedUserName: string; displayName: string; document: DbPost }
-  | { type: 'comment'; associatedUserName: string; displayName: string | undefined; document: DbComment }
-  | { type: 'user'; associatedUserName: string; displayName: string; document: DbUser }
-  | { type: 'message'; associatedUserName: string; displayName: string | undefined; document: DbMessage }
-  | { type: 'localgroup'; displayName: string; document: DbLocalgroup; associatedUserName: null }
-  | { type: 'tagRel'; document: DbTagRel; associatedUserName: null; displayName: null }
+  | { type: 'post'; associatedUserName: string; associatedUserSlug?: string; displayName: string; document: DbPost }
+  | { type: 'comment'; associatedUserName: string; associatedUserSlug?: string; displayName: string | undefined; document: DbComment }
+  | { type: 'user'; associatedUserName: string; associatedUserSlug?: string; displayName: string; document: DbUser }
+  | { type: 'message'; associatedUserName: string; associatedUserSlug?: string; displayName: string | undefined; document: DbMessage }
+  | { type: 'localgroup'; displayName: string; document: DbLocalgroup; associatedUserName: null; associatedUserSlug: null; }
+  | { type: 'tagRel'; document: DbTagRel; associatedUserName: null; associatedUserSlug: null; displayName: null }
 
 export const getDocumentSummary = async (documentType: NotificationDocument | null, documentId: string | null): Promise<DocumentSummary | null> => {
   if (!documentId) return null
@@ -93,19 +93,23 @@ export const getDocumentSummary = async (documentType: NotificationDocument | nu
   switch (documentType) {
     case 'post':
       const post = await Posts.findOne(documentId)
+      const postAuthor = post && await Users.findOne(post.userId)
       return post && {
         type: documentType,
         document: post,
         displayName: post.title,
         associatedUserName: await postGetAuthorName(post),
+        associatedUserSlug: postAuthor?.slug
       }
     case 'comment':
       const comment = await Comments.findOne(documentId)
+      const commentAuthor = comment && await Users.findOne(comment.userId)
       return comment && {
         type: documentType,
         document: comment,
         displayName: await getCommentParentTitle(comment),
         associatedUserName: await commentGetAuthorName(comment),
+        associatedUserSlug: commentAuthor?.slug
       }
     case 'user':
       const user = await Users.findOne(documentId)
@@ -114,6 +118,7 @@ export const getDocumentSummary = async (documentType: NotificationDocument | nu
         document: user,
         displayName: userGetDisplayName(user),
         associatedUserName: userGetDisplayName(user),
+        associatedUserSlug: user.slug
       }
     case 'message':
       const message = await Messages.findOne(documentId)
@@ -126,6 +131,7 @@ export const getDocumentSummary = async (documentType: NotificationDocument | nu
         document: message,
         displayName: conversation?.title,
         associatedUserName: userGetDisplayName(author),
+        associatedUserSlug: author?.slug
       }
     case 'localgroup':
       const localgroup = await Localgroups.findOne(documentId)
@@ -134,6 +140,7 @@ export const getDocumentSummary = async (documentType: NotificationDocument | nu
         document: localgroup,
         displayName: localgroup.name,
         associatedUserName: null,
+        associatedUserSlug: null,
       }
     case 'tagRel':
       const tagRel = await TagRels.findOne(documentId)
@@ -142,6 +149,7 @@ export const getDocumentSummary = async (documentType: NotificationDocument | nu
         document: tagRel,
         displayName: null,
         associatedUserName: null,
+        associatedUserSlug: null,
       }
     default:
       //eslint-disable-next-line no-console
@@ -377,7 +385,6 @@ export const NewUserNotification = registerNotificationType({
 export const NewMessageNotification = registerNotificationType({
   name: "newMessage",
   userSettingField: "notificationPrivateMessage",
-  allowedChannels: ["onsite", "email", "both"],
   async getMessage({documentType, documentId}: GetMessageProps) {
     let document = await getDocument(documentType, documentId) as DbMessage;
     let conversation = await Conversations.findOne(document.conversationId);
@@ -392,7 +399,6 @@ export const NewMessageNotification = registerNotificationType({
 export const WrappedNotification = registerNotificationType({
   name: "wrapped",
   userSettingField: "notificationPrivateMessage",
-  allowedChannels: ["onsite", "email", "both"],
   async getMessage() {
     return "Check out your 2022 EA Forum Wrapped"
   },

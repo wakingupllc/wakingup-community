@@ -114,7 +114,7 @@ const PostsEditForm = ({ documentId, classes }: {
       <div className={classes.postForm}>
         <HeadTags title={document.title} />
         {currentUser && <Components.PostsAcceptTos currentUser={currentUser} />}
-        {rateLimitNextAbleToPost && <RateLimitWarning lastRateLimitExpiry={rateLimitNextAbleToPost.nextEligible} rateLimitMessage={rateLimitNextAbleToPost.rateLimitMessage}  />}
+        {document.draft && rateLimitNextAbleToPost && <RateLimitWarning lastRateLimitExpiry={rateLimitNextAbleToPost.nextEligible} rateLimitMessage={rateLimitNextAbleToPost.rateLimitMessage}  />}
         <NoSSR>
           <WrappedSmartForm
             collectionName="Posts"

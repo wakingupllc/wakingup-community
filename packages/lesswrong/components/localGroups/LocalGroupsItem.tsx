@@ -17,8 +17,9 @@ export const postsItemLikeStyles = (theme: ThemeType): JssStyles => ({
       flexWrap: "wrap",
     },
     [legacyBreakpoints.maxTiny]: {
-      marginLeft: 0,
-      paddingLeft: 0,
+      marginLeft: -8,
+      marginRight: -8,
+      paddingLeft: 8,
     },
     "& a:hover": {
       textDecoration: "none",

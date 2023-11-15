@@ -11,14 +11,14 @@ import { Conversations } from '../lib/collections/conversations/collection';
 import { accessFilterMultiple } from '../lib/utils/schemaUtils';
 import keyBy from 'lodash/keyBy';
 import Users from '../lib/collections/users/collection';
-import { userGetDisplayName, userGetProfileUrl } from '../lib/collections/users/helpers';
+import { userGetDisplayName, userGetProfileUrl, userGetProfileUrlFromSlug } from '../lib/collections/users/helpers';
 import * as _ from 'underscore';
 import './emailComponents/EmailComment';
 import './emailComponents/PrivateMessagesEmail';
 import './emailComponents/EventUpdatedEmail';
 import './emailComponents/EmailUsernameByID';
 import {getDocumentSummary, taggedPostMessage, NotificationDocument} from '../lib/notificationTypes'
-import { commentGetPageUrlFromIds } from "../lib/collections/comments/helpers";
+import { commentGetPageUrl, commentGetPageUrlFromIds } from "../lib/collections/comments/helpers";
 import { getReviewTitle, REVIEW_YEAR } from '../lib/reviewUtils';
 import { ForumOptions, forumSelect } from '../lib/forumTypeUtils';
 import { forumTitleSetting, siteNameWithArticleSetting } from '../lib/instanceSettings';
@@ -26,6 +26,9 @@ import Tags from '../lib/collections/tags/collection';
 import { tagGetSubforumUrl } from '../lib/collections/tags/helpers';
 import uniq from 'lodash/uniq';
 import startCase from 'lodash/startCase';
+import { conversationGetPageUrl } from '../lib/collections/conversations/helpers';
+import { highlightFromHTML } from '../lib/editor/ellipsize';
+import moment from 'moment'
 
 interface ServerNotificationType {
   name: string,
@@ -33,6 +36,8 @@ interface ServerNotificationType {
   canCombineEmails?: boolean,
   skip: ({user, notifications}: {user: DbUser, notifications: DbNotification[]}) => Promise<boolean>,
   loadData?: ({user, notifications}: {user: DbUser, notifications: DbNotification[]}) => Promise<any>,
+  // Currently, email template data is only used for Sendgrid templates
+  emailTemplateData?: ({user, notifications}: {user: DbUser, notifications: DbNotification[]}) => Promise<any>,
   emailSubject: ({user, notifications}: {user: DbUser, notifications: DbNotification[]}) => Promise<string>,
   emailBody: ({user, notifications}: {user: DbUser, notifications: DbNotification[]}) => Promise<React.ReactNode>,
 }
@@ -155,6 +160,53 @@ export const NewTagPostsNotification = serverRegisterNotificationType({
 export const NewCommentNotification = serverRegisterNotificationType({
   name: "newComment",
   canCombineEmails: true,
+  emailTemplateData: async function({ user, notifications }: {user: DbUser, notifications: DbNotification[]}) {
+    // Load comments
+    const commentIds = notifications.map(notification => notification.documentId);
+    const commentsRaw = await Comments.find({ _id: {$in: commentIds} }).fetch();
+    const comments = await accessFilterMultiple(user, Comments, commentsRaw, null);
+    
+    // Load posts
+    const postsRaw = await Posts.find(
+      { _id: {$in: comments.map(c => c.postId)} },
+      undefined,
+      {title: true}
+    ).fetch();
+    const posts = await accessFilterMultiple(user, Posts, postsRaw, null);
+    const postsById = keyBy(posts, post => post._id)
+    
+    // Load commenters
+    const commentersRaw = await Users.find(
+      { _id: {$in: comments.map(m => m.userId)} },
+      undefined,
+      {username: true, fullName: true, displayName: true}
+    ).fetch()
+    const commenters = await accessFilterMultiple(user, Users, commentersRaw, null)
+    const commentersById = keyBy(commenters, sender => sender._id)
+    
+    const templateData = comments.map(comment => {
+      const commentLink = notifications.find(n => n.documentId === comment._id)?.link
+      const commenter = commentersById[comment.userId]
+      const post = comment.postId ? postsById[comment.postId] : null
+      const postTitle = post?.title
+
+      return {
+        commentLink: commentLink ? makeAbsolute(commentLink) : undefined,
+        commenterUserId: comment.userId,
+        commenterUsername: userGetDisplayName(commenter),
+        commenterProfileLink: userGetProfileUrlFromSlug(commenter.slug, true),
+        postTitle,
+        postLink: post ? postGetPageUrl(post, true) : undefined,
+        commentContents: highlightFromHTML(comment.contents.html, 500),
+        year: moment().year(),
+      }
+    })
+    
+    if (templateData.length === 1) {
+      return templateData[0]
+    }
+    return {comments: templateData}
+  },
   emailSubject: async ({ user, notifications }: {user: DbUser, notifications: DbNotification[]}) => {
     if (notifications.length > 1) {
       return `${notifications.length} comments on posts you subscribed to`;
@@ -281,6 +333,53 @@ export const NewReplyNotification = serverRegisterNotificationType({
 export const NewReplyToYouNotification = serverRegisterNotificationType({
   name: "newReplyToYou",
   canCombineEmails: true,
+  emailTemplateData: async function({ user, notifications }: {user: DbUser, notifications: DbNotification[]}) {
+    // Load comments
+    const commentIds = notifications.map(notification => notification.documentId);
+    const commentsRaw = await Comments.find({ _id: {$in: commentIds} }).fetch();
+    const comments = await accessFilterMultiple(user, Comments, commentsRaw, null);
+    
+    // Load posts
+    const postsRaw = await Posts.find(
+      { _id: {$in: comments.map(c => c.postId)} },
+      undefined,
+      {title: true}
+    ).fetch();
+    const posts = await accessFilterMultiple(user, Posts, postsRaw, null);
+    const postsById = keyBy(posts, post => post._id)
+    
+    // Load repliers
+    const repliersRaw = await Users.find(
+      { _id: {$in: comments.map(m => m.userId)} },
+      undefined,
+      {username: true, fullName: true, displayName: true}
+    ).fetch()
+    const repliers = await accessFilterMultiple(user, Users, repliersRaw, null)
+    const repliersById = keyBy(repliers, sender => sender._id)
+    
+    const templateData = comments.map(comment => {
+      const commentLink = notifications.find(n => n.documentId === comment._id)?.link
+      const replier = repliersById[comment.userId]
+      const post = comment.postId ? postsById[comment.postId] : null
+      const postTitle = post?.title
+
+      return {
+        commentLink: commentLink ? makeAbsolute(commentLink) : undefined,
+        replierUserId: comment.userId,
+        replierUsername: userGetDisplayName(replier),
+        replierProfileLink: userGetProfileUrlFromSlug(replier.slug, true),
+        postTitle,
+        postLink: post ? postGetPageUrl(post, true) : undefined,
+        commentContents: highlightFromHTML(comment.contents.html, 500),
+        year: moment().year(),
+      }
+    })
+    
+    if (templateData.length === 1) {
+      return templateData[0]
+    }
+    return {comments: templateData}
+  },
   emailSubject: async ({ user, notifications }: {user: DbUser, notifications: DbNotification[]}) => {
     if (notifications.length > 1) {
       return `${notifications.length} replies to your comments`;
@@ -318,6 +417,7 @@ const forumNewMessageEmail = forumSelect(newMessageEmails) ?? undefined
 
 export const NewMessageNotification = serverRegisterNotificationType({
   name: "newMessage",
+  canCombineEmails: true,
   from: forumNewMessageEmail, // passing in undefined will lead to default behavior
   loadData: async function({ user, notifications }: {user: DbUser, notifications: DbNotification[]}) {
     // Load messages
@@ -339,6 +439,38 @@ export const NewMessageNotification = serverRegisterNotificationType({
     const otherParticipants = _.filter(participants, participant=>participant._id!=user._id);
     
     return { conversations, messages, participantsById, otherParticipants };
+  },
+  emailTemplateData: async function({ user, notifications }: {user: DbUser, notifications: DbNotification[]}) {
+    // Load messages
+    const messageIds = notifications.map(notification => notification.documentId);
+    const messagesRaw = await Messages.find({ _id: {$in: messageIds} }).fetch();
+    const messages = await accessFilterMultiple(user, Messages, messagesRaw, null);
+    
+    // Load message senders
+    const sendersRaw = await Users.find(
+      { _id: {$in: messages.map(m => m.userId)} },
+      undefined,
+      {username: true, fullName: true, displayName: true}
+    ).fetch()
+    const senders = await accessFilterMultiple(user, Users, sendersRaw, null)
+    const sendersById = keyBy(senders, sender => sender._id)
+    
+    const templateData = messages.map(message => {
+      const conversationLink = notifications.find(n => n.documentId === message._id)?.link
+      const sender = sendersById[message.userId]
+      return {
+        conversationLink: conversationLink ? makeAbsolute(conversationLink) : undefined,
+        senderUserId: message.userId,
+        senderUsername: userGetDisplayName(sender),
+        senderProfileLink: userGetProfileUrlFromSlug(sender.slug, true),
+        year: moment().year(),
+      }
+    })
+    
+    if (templateData.length === 1) {
+      return templateData[0]
+    }
+    return {messages: templateData}
   },
   emailSubject: async function({ user, notifications }: {user: DbUser, notifications: DbNotification[]}) {
     const { conversations, otherParticipants } = await this.loadData!({ user, notifications });
@@ -647,6 +779,33 @@ export const NewSubforumMemberNotification = serverRegisterNotificationType({
 
 export const NewMentionNotification = serverRegisterNotificationType({
   name: "newMention",
+  canCombineEmails: true,
+  emailTemplateData: async function({ user, notifications }: {user: DbUser, notifications: DbNotification[]}) {
+    const templateData = []
+    for (let notification of notifications) {
+      // Currently, we only include notifications for mentions on posts and comments
+      const documentType = notification.documentType as NotificationDocument
+      if (!['post', 'comment'].includes(documentType)) continue
+      
+      const summary = await getDocumentSummary(documentType, notification.documentId)
+      // Since we are already filtering to posts and comments, the document should always have "contents"
+      if (!summary || !('contents' in summary.document)) continue
+              
+      templateData.push({
+        link: makeAbsolute(notification.link),
+        taggerProfileLink: summary.associatedUserSlug ? userGetProfileUrlFromSlug(summary.associatedUserSlug, true) : undefined,
+        taggerUsername: summary.associatedUserName,
+        postTitle: summary.displayName,
+        postContents: highlightFromHTML(summary.document.contents.html, 500),
+        year: moment().year(),
+      })
+    }
+    
+    if (templateData.length === 1) {
+      return templateData[0]
+    }
+    return {mentions: templateData}
+  },
   emailSubject: async ({ user, notifications }: {user: DbUser, notifications: DbNotification[]}) => {
     const summary = await getDocumentSummary(notifications[0].documentType as NotificationDocument, notifications[0].documentId);
     if (!summary) {

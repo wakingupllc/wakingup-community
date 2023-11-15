@@ -8,6 +8,7 @@ registerFragment(`
     slug
     title
     draft
+    deletedDraft
     shortform
     hideCommentKarma
     af

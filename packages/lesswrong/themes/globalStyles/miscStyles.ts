@@ -273,4 +273,17 @@ div#mocha {
      has an ill-advised max-width:none in it. */
   max-width: 100% !important;
 }
+
+/*
+ * OneTrust cookie consent banner
+ */
+
+#onetrust-consent-sdk {
+  font-family: GreekFallback,Inter,Helvetica Neue,Helvetica,Arial,sans-serif;
+}
+
+#onetrust-consent-sdk #onetrust-banner-sdk.ot-wo-title #onetrust-group-container {
+  margin-top: 0;
+}
+
 `

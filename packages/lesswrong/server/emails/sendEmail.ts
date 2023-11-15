@@ -20,9 +20,9 @@ export const sendgridApiKeySetting = new DatabaseServerSetting("sendgrid.apiKey"
 export const sendgridWhitelistedEmailsSetting = new DatabaseServerSetting<string[]|null>("sendgrid.whitelistedEmails", null);
 
 type SendgridEmailData = {
-  user?: DbUser,
   to?: string,
-  notificationData?: AnyBecauseHard,
+  // See https://docs.sendgrid.com/ui/sending-email/how-to-send-an-email-with-dynamic-templates
+  dynamicTemplateData?: Record<string,AnyBecauseHard>,
   notifications?: DbNotification[],
   templateName?: string
 }
@@ -120,10 +120,7 @@ export const sendEmailSendgridTemplate = async (emailData: SendgridEmailData) =>
     throw new Error("No source email address configured. Make sure \"defaultEmail\" is set in your settings.json.");
   }
   
-  if (!emailData.to && !emailData.user) {
-    throw new Error("No destination email address for logged-out user email");
-  }
-  const destinationAddress = emailData.to || getUserEmail(emailData.user ?? null)
+  const destinationAddress = emailData.to
   if (!destinationAddress) {
     throw new Error("No destination email address for user email");
   }
@@ -144,6 +141,7 @@ export const sendEmailSendgridTemplate = async (emailData: SendgridEmailData) =>
 
   const message = {
     templateId,
+    dynamicTemplateData: emailData.dynamicTemplateData,
     personalizations: [
       {
         to: [
@@ -151,7 +149,9 @@ export const sendEmailSendgridTemplate = async (emailData: SendgridEmailData) =>
         ]
       }
     ],
-    from: {email: fromAddress},
+    // Currently hard-coded - this is the only allowed from address on Sendgrid,
+    // with the only allowed name
+    from: {name: "Waking Up Community", email: fromAddress},
     ...mailSettings
   }
   client

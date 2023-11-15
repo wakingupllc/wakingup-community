@@ -12,6 +12,8 @@ const styles = (theme: ThemeType): JssStyles => ({
     display: 'flex',
     alignItems: 'center',
     marginBottom: '1em',
+    flexWrap: 'wrap',
+    rowGap: '1em',
   },
   userMetaInfoIcon: {
     fontSize: 18,
@@ -20,6 +22,9 @@ const styles = (theme: ThemeType): JssStyles => ({
   dateGap: {
     marginRight: '0.5em',
     marginLeft: '0.5em',
+    [theme.breakpoints.down('sm')]: {
+      marginRight: '1em',
+    },
   },
 })
 
@@ -41,8 +46,10 @@ const WUUsersMetaInfo = ({user, classes}: {
       <div className={classes.userMetaInfo}>
         <ForumIcon icon="CalendarDays" className={classes.userMetaInfoIcon}/>
         <span>Joined Community <FormatDate date={user.createdAt} format={'MM/YYYY'}/></span>
-        <span className={classes.dateGap}>•</span>
-        <span>Waking Up Member Since <FormatDate date={user.wu_created_at!} format={'MM/YYYY'}/></span>
+        <span>
+          <span className={classes.dateGap}>•</span>
+          <span>Waking Up Member Since <FormatDate date={user.wu_created_at!} format={'MM/YYYY'}/></span>
+        </span>
       </div>
     </ContentStyles>
   )

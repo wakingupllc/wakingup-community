@@ -89,4 +89,5 @@ addStrings('en', {
   'errors.required': 'Please add a {name}',
   'errors.maxString': 'Field “{label}” is limited to {max} characters.',
   'errors.regEx': 'Field "{label}" is invalid.',
+  'errors.disallowedUsername': 'Sorry, that username isn\'t allowed. Please try another.',
 });

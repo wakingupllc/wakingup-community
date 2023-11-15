@@ -145,6 +145,14 @@ const forumDomainWhitelist: ForumOptions<DomainList> = {
     ],
     mirrorDomains: ['ea.greaterwrong.com'],
   },
+  WakingUp: {
+    onsiteDomains: [
+      'community.wakingup.com',
+      'community.staging.wakingup.com',
+      `localhost:${getServerPort()}`,
+    ],
+    mirrorDomains: [],
+  },
   default: {
     onsiteDomains: [
       `localhost:${getServerPort()}`,

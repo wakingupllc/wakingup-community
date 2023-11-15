@@ -79,7 +79,9 @@ const PostsPageTitle = ({classes, post}: {
       </Typography>}
       <Typography variant="display3" className={classes.root}>
         <Link to={postGetPageUrl(post)} className={classes.link}>
-          {post.draft && <span className={classes.draft}>[Draft] </span>}
+          {post.draft && <span className={classes.draft}>
+          {post.deletedDraft ? <>[Deleted] </> : <>[Draft] </>}
+          </span>}
           {mostOfTitle}{mostOfTitle && " "}
           <span className={classes.lastWord}>
             {lastWordOfTitle}

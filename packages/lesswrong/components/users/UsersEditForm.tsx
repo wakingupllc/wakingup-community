@@ -43,7 +43,11 @@ const styles = (theme: ThemeType): JssStyles => ({
         paddingRight: "3em",
       },
     },
-
+    "& .form-input.input-displayName .form-input-errors": {
+      // Validation errors are displayed at the top of the form, and the displayName is the first field, so we don't
+      // need to display the error again immediately under it.
+      display: 'none',
+    },
     "& .input-first_name, & .input-last_name": {
       display: 'inline-block',
       width: '49%',
@@ -86,6 +90,16 @@ const styles = (theme: ThemeType): JssStyles => ({
   },
   userName: {
     fontWeight: 600,
+  },
+  nonEditableUserInfo: {
+    display: "flex",
+    columnGap: "2.5%",
+    flexWrap: "wrap",
+  },
+  nonEditableUserInfoItem: {
+    flexGrow: 1,
+    flexBasis: "48%",
+    marginBottom: "0.5em",
   },
 })
 
@@ -145,12 +159,25 @@ const UsersEditForm = ({terms, classes, enableResetPassword = false}: {
       <Typography variant="display2" className={classes.header}>
         {preferredHeadingCase("Account Settings")}
       </Typography>
-      <Typography variant="body2" className={classes.smallLabel}>
-        Username
-      </Typography>
-      <Typography variant="body2" className={classes.userName}>
-        {currentUser?.username}
-      </Typography>
+      <div className={classes.nonEditableUserInfo}>
+        <div className={classes.nonEditableUserInfoItem}>
+          <Typography variant="body2" className={classes.smallLabel}>
+            Username
+          </Typography>
+          <Typography variant="body2" className={classes.userName}>
+            {currentUser?.username}
+          </Typography>
+        </div>
+
+        <div className={classes.nonEditableUserInfoItem}>
+          <Typography variant="body2" className={classes.smallLabel}>
+            Email
+          </Typography>
+          <Typography variant="body2" className={classes.userName}>
+            {currentUser?.email}
+          </Typography>
+        </div>
+      </div>
       {isCurrentUser && enableResetPassword && <Button
         color="secondary"
         variant="outlined"
@@ -174,7 +201,7 @@ const UsersEditForm = ({terms, classes, enableResetPassword = false}: {
           // reconfigure datadog RUM in case they have changed their settings
           configureDatadogRum(user)
 
-          flash(`User "${userGetDisplayName(user)}" edited`);
+          flash(`Profile updated`);
           try {
             await client.resetStore()
           } finally {
@@ -185,6 +212,7 @@ const UsersEditForm = ({terms, classes, enableResetPassword = false}: {
         mutationFragment={getFragment('UsersEdit')}
         showRemove={false}
         submitLabel="Save"
+        repeatErrors={true}
       />
     </div>
   );

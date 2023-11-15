@@ -200,7 +200,7 @@ export const styles = (theme: ThemeType): JssStyles => ({
     marginBottom: 0
   },
   postContent: { //Used by a Cypress test
-    marginBottom: isFriendlyUI ? 40 : undefined,
+    marginBottom: isEAForum ? 40 : undefined,
     paddingTop: 14,
     [theme.breakpoints.down('sm')]: {
       paddingTop: 0,

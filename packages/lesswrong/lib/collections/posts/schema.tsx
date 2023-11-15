@@ -2404,7 +2404,7 @@ const schema: SchemaType<DbPost> = {
       type: 'Boolean',
       resolver: async (post: DbPost, args: void, context: ResolverContext): Promise<boolean> => {
         const { LWEvents, currentUser } = context;
-        if(currentUser){
+        if(currentUser && !post.deletedDraft){
           const query = {
             name:'toggled-user-moderation-guidelines',
             documentId: post.userId,

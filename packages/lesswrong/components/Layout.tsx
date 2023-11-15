@@ -12,7 +12,7 @@ import { DialogManager } from './common/withDialog';
 import { CommentBoxManager } from './common/withCommentBox';
 import { ItemsReadContextWrapper } from './hooks/useRecordPostView';
 import { pBodyStyle } from '../themes/stylePiping';
-import { DatabasePublicSetting, googleTagManagerIdSetting } from '../lib/publicSettings';
+import {DatabasePublicSetting, googleTagManagerIdSetting, onetrustDomainScriptSetting} from '../lib/publicSettings'
 import { isAF, isLW } from '../lib/instanceSettings';
 import { globalStyles } from '../themes/globalStyles/globalStyles';
 import { ForumOptions, forumSelect } from '../lib/forumTypeUtils';
@@ -210,7 +210,7 @@ const Layout = ({currentUser, children, classes}: {
   const { currentRoute, params: { slug }, pathname} = useLocation();
   const layoutOptionsState = React.useContext(LayoutOptionsContext);
   const { explicitConsentGiven: cookieConsentGiven, explicitConsentRequired: cookieConsentRequired } = useCookiePreferences();
-  const showCookieBanner = cookieConsentRequired === true && !cookieConsentGiven;
+  const showCookieBanner = !onetrustDomainScriptSetting.get() && cookieConsentRequired === true && !cookieConsentGiven;
 
   // enable during ACX Everywhere
   // const [cookies] = useCookiesWithConsent()

@@ -1,7 +1,8 @@
 import { Cookies } from "react-cookie";
 import { TupleSet, UnionOf } from "../utils/typeGuardUtils";
 import { getExplicitConsentRequiredAsync } from "../../components/common/CookieBanner/geolocation";
-import { DatabasePublicSetting } from "../publicSettings";
+import {onetrustDomainScriptSetting} from '../publicSettings'
+import {isServer} from '../executionEnvironment.ts'
 
 export const CookiesTable: Record<string, CookieSignature> = {};
 
@@ -76,10 +77,10 @@ export async function getCookiePreferences(): Promise<{
   explicitConsentGiven: boolean;
 }> {
   const cookies = new Cookies();
-  const preferencesValue = cookies.get(COOKIE_PREFERENCES_COOKIE);
+  const useOneTrust = !!onetrustDomainScriptSetting.get()
+  const preferencesValue = useOneTrust ? getOneTrustCookiePreferences() : cookies.get(COOKIE_PREFERENCES_COOKIE)
   const consentTimestamp = cookies.get(COOKIE_CONSENT_TIMESTAMP_COOKIE);
-  const explicitConsentGiven = !!consentTimestamp && isValidCookieTypeArray(preferencesValue);
-
+  const explicitConsentGiven = (useOneTrust || !!consentTimestamp) && isValidCookieTypeArray(preferencesValue);
   const explicitConsentRequired = await getExplicitConsentRequiredAsync();
   const fallbackPreferences: CookieType[] = explicitConsentRequired
     ? ONLY_NECESSARY_COOKIES
@@ -89,6 +90,30 @@ export async function getCookiePreferences(): Promise<{
     : fallbackPreferences;
 
   return { cookiePreferences, explicitConsentGiven };
+}
+
+/**
+ * C0001 -> Essential
+ * C0002 -> Performance
+ * C0003 -> Functional Cookies
+ * C0004 -> Ad Targeting
+ */
+export const getOneTrustCookiePreferences = () => {
+  if (isServer) return null
+  // Comes in CSV form like ",C0001,C0002,C0003,"
+  const oneTrustActiveGroups = window.OnetrustActiveGroups
+  if (!oneTrustActiveGroups) return null
+  
+  const oneTrustMapping: Record<string, CookieType | null> = {
+    C0001: 'necessary',
+    C0002: 'analytics',
+    C0003: 'functional',
+    // No ad cookies
+    C0004: null,
+  }
+  
+  return  oneTrustActiveGroups.split(',')
+    .map(it => oneTrustMapping[it]).filter(Boolean)
 }
 
 /**
