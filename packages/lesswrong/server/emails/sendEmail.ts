@@ -112,19 +112,19 @@ export const sendEmailSendgridTemplate = async (emailData: SendgridEmailData) =>
   if (!templateId) {
     throw new Error(`Missing sendgrid template id for notification type ${notificationType}`)
   }
-  
+
   // Note: Currently Waking Up is sending all emails from community@wakingup.com
   // because that's the only email that is verified on Sendgrid.
   const fromAddress = defaultEmailSetting.get()
   if (!fromAddress) {
     throw new Error("No source email address configured. Make sure \"defaultEmail\" is set in your settings.json.");
   }
-  
+
   const destinationAddress = emailData.to
   if (!destinationAddress) {
     throw new Error("No destination email address for user email");
   }
-  
+
   // Sandbox mode just validates the request - it doesn't actually trigger a mail send.
   // We only trigger the mail send for whitelisted email addresses, on prod, or if the "enableDevelopmentEmails" is true.
   const mailSettings = (
