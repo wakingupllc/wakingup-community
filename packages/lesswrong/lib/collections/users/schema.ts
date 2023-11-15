@@ -281,6 +281,8 @@ export type SocialMediaProfileField = keyof typeof SOCIAL_MEDIA_PROFILE_FIELDS;
 export type RateLimitReason = "moderator"|"lowKarma"|"downvoteRatio"|"universal"
 
 const validateName = (name: string, field: string) => {
+  if (!name) return;
+
   if (badWords.includes(name.toLowerCase().trim()) || badWords.includes(name.toLowerCase().replace(/[0-9]/g, "").trim())) {
     throwValidationError({
       typeName: "User",
