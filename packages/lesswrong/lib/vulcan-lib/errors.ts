@@ -127,7 +127,7 @@ export const throwValidationError = ({
   }: {
     typeName: string, // e.g "Comment", "Post", "User"
     field: string,
-    errorType: 'errors.required' | 'errors.expectedType' | 'errors.maxString' | 'errors.regEx' | 'errors.disallowed_property_detected',
+    errorType: 'errors.required' | 'errors.expectedType' | 'errors.maxString' | 'errors.regEx' | 'errors.disallowed_property_detected' | 'errors.disallowedUsername',
     alias?: string, // i.e. the field name as described in the message to the user, which you might want to change from the schema field name
     capitalizeName?: boolean
   }

@@ -43,7 +43,11 @@ const styles = (theme: ThemeType): JssStyles => ({
         paddingRight: "3em",
       },
     },
-
+    "& .form-input.input-displayName .form-input-errors": {
+      // Validation errors are displayed at the top of the form, and the displayName is the first field, so we don't
+      // need to display the error again immediately under it.
+      display: 'none',
+    },
     "& .input-first_name, & .input-last_name": {
       display: 'inline-block',
       width: '49%',
@@ -208,6 +212,7 @@ const UsersEditForm = ({terms, classes, enableResetPassword = false}: {
         mutationFragment={getFragment('UsersEdit')}
         showRemove={false}
         submitLabel="Save"
+        repeatErrors={true}
       />
     </div>
   );
