@@ -28,6 +28,7 @@ import uniq from 'lodash/uniq';
 import startCase from 'lodash/startCase';
 import { conversationGetPageUrl } from '../lib/collections/conversations/helpers';
 import { highlightFromHTML } from '../lib/editor/ellipsize';
+import moment from 'moment'
 
 interface ServerNotificationType {
   name: string,
@@ -196,7 +197,8 @@ export const NewCommentNotification = serverRegisterNotificationType({
         commenterProfileLink: userGetProfileUrlFromSlug(commenter.slug, true),
         postTitle,
         postLink: post ? postGetPageUrl(post, true) : undefined,
-        commentContents: highlightFromHTML(comment.contents.html, 500)
+        commentContents: highlightFromHTML(comment.contents.html, 500),
+        year: moment().year(),
       }
     })
     
@@ -368,7 +370,8 @@ export const NewReplyToYouNotification = serverRegisterNotificationType({
         replierProfileLink: userGetProfileUrlFromSlug(replier.slug, true),
         postTitle,
         postLink: post ? postGetPageUrl(post, true) : undefined,
-        commentContents: highlightFromHTML(comment.contents.html, 500)
+        commentContents: highlightFromHTML(comment.contents.html, 500),
+        year: moment().year(),
       }
     })
     
@@ -414,6 +417,7 @@ const forumNewMessageEmail = forumSelect(newMessageEmails) ?? undefined
 
 export const NewMessageNotification = serverRegisterNotificationType({
   name: "newMessage",
+  canCombineEmails: true,
   from: forumNewMessageEmail, // passing in undefined will lead to default behavior
   loadData: async function({ user, notifications }: {user: DbUser, notifications: DbNotification[]}) {
     // Load messages
@@ -458,7 +462,8 @@ export const NewMessageNotification = serverRegisterNotificationType({
         conversationLink: conversationLink ? makeAbsolute(conversationLink) : undefined,
         senderUserId: message.userId,
         senderUsername: userGetDisplayName(sender),
-        senderProfileLink: userGetProfileUrlFromSlug(sender.slug, true)
+        senderProfileLink: userGetProfileUrlFromSlug(sender.slug, true),
+        year: moment().year(),
       }
     })
     
@@ -774,6 +779,7 @@ export const NewSubforumMemberNotification = serverRegisterNotificationType({
 
 export const NewMentionNotification = serverRegisterNotificationType({
   name: "newMention",
+  canCombineEmails: true,
   emailTemplateData: async function({ user, notifications }: {user: DbUser, notifications: DbNotification[]}) {
     const templateData = []
     for (let notification of notifications) {
@@ -790,7 +796,8 @@ export const NewMentionNotification = serverRegisterNotificationType({
         taggerProfileLink: summary.associatedUserSlug ? userGetProfileUrlFromSlug(summary.associatedUserSlug, true) : undefined,
         taggerUsername: summary.associatedUserName,
         postTitle: summary.displayName,
-        postContents: highlightFromHTML(summary.document.contents.html, 500)
+        postContents: highlightFromHTML(summary.document.contents.html, 500),
+        year: moment().year(),
       })
     }
     
