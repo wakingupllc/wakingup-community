@@ -213,7 +213,15 @@ const rehostProfileImageToCloudinary = async (url: string) => {
 }
 
 function wuDisplayName(wuUser: WuUserData): string {
-  return `${wuUser.first_name} ${wuUser.last_name}`
+  if (wuUser.first_name && wuUser.last_name) {
+    return `${wuUser.first_name} ${wuUser.last_name}`
+  } else if (wuUser.first_name) {
+    return wuUser.first_name
+  } else if (wuUser.last_name) {
+    return wuUser.last_name
+  } else {
+    return wuUser.email!.split('@')[0]
+  }
 }
 
 const requestedCodeData = `type requestedCodeData {
@@ -229,12 +237,12 @@ addGraphQLSchema(requestedCodeData);
 
 function updateUserLoginProps(user: DbUser, oneTimeCode: string|null) {
   const limitStartAt = codeRequestLimitActive(user) ?? new Date()
-  const otcRequestAttempts = (wuServ(user)?.otcRequestAttempts ?? 0) + 1
+  const otcRequests = (wuServ(user)?.otcRequests ?? 0) + 1
 
   const fieldUpdates = {
     codeRequestLimitStartAt: limitStartAt,
     oneTimeCode,
-    otcRequestAttempts,
+    otcRequests,
   }
 
   return Users.rawUpdateOne(
@@ -275,14 +283,12 @@ function codeEntryLockExpiresAt(user: DbUser) {
   return moment(lockStartAt).add(LOGIN_LIMIT_HOURS, 'hours').format('h:mm a')
 }
 
-function isCodeRequestLocked(user: DbUser, modifier = 0) {
-  // modifier is needed because the user's otcRequestAttempts haven't been incremented
-  // for the current request yet.
-  return codeRequestLimitActive(user) && wuServ(user)?.otcRequestAttempts > CODE_REQUEST_LIMIT - 1 + modifier
+function isCodeRequestLocked(user: DbUser) {
+  return codeRequestLimitActive(user) && wuServ(user)?.otcRequests > CODE_REQUEST_LIMIT - 1
 }
 
-function throwIfCodeRequestLocked(user: DbUser, modifier = 0) {
-  if (isCodeRequestLocked(user, modifier)) {
+function assertCodeRequestNotLocked(user: DbUser) {
+  if (isCodeRequestLocked(user)) {
     throw new AuthorizationError({
       message: loginCodeRequestLockedMessage(user),
       internalData: { error: CODE_REQUEST_LIMIT_EXCEEDED_MSG }}
@@ -295,7 +301,7 @@ function isCodeEntryLocked(user: DbUser) {
   return lockedAt && moment(lockedAt).toDate() > moment().subtract(LOGIN_LIMIT_HOURS, 'hours').toDate()
 }
 
-function throwIfCodeEntryLocked(user: DbUser) {
+function assertCodeEntryNotLocked(user: DbUser) {
   if (isCodeEntryLocked(user)) {
     throw new AuthorizationError({
       message: loginCodeEntryLockedMessage(user),
@@ -322,8 +328,10 @@ async function incrementOtcEntryAttempts(user: DbUser) {
     oneTimeCode: null,
     otcEntryAttempts: 0,
   } : {
-    otcEntryAttempts: (wuServ(user).otcEntryAttempts ?? 0) + 1
+    otcEntryAttempts: otcEntryAttempts
   }
+
+  wuServ(user).otcEntryLockedAt = fieldUpdates.otcEntryLockedAt
 
   return await Users.rawUpdateOne(
     {_id: user._id},
@@ -349,8 +357,8 @@ const authenticationResolvers = {
       if (isValidWuUser(wuUser)) {
         const user = await syncOrCreateWuUser(wuUser)
 
-        throwIfCodeRequestLocked(user, -1);
-        throwIfCodeEntryLocked(user);
+        assertCodeRequestNotLocked(user);
+        assertCodeEntryNotLocked(user);
 
         const oneTimeCode = Math.floor(1000 + (Math.random() * 9000)).toString();
 
@@ -382,8 +390,7 @@ const authenticationResolvers = {
       if (!user?.wu_subscription_active) throw new AuthorizationError({ message: authMessageWithEmail(email), internalData: { error: "Inactive WU subscription" }});
       if (!user.wu_forum_access) throw new AuthorizationError({ message: authMessageWithEmail(email), internalData: { error: "WU account lacks forum access" }});
 
-      await incrementOtcEntryAttempts(user);
-      throwIfCodeEntryLocked(user);
+      assertCodeEntryNotLocked(user);
 
       const validCode = user && code?.length > 0 && wuServ(user)?.oneTimeCode === code;
       const devCodeOkay = devLoginsAllowedSetting.get() && user && code === '1234';
@@ -394,12 +401,8 @@ const authenticationResolvers = {
         const token = await createAndSetToken(req, res, user)
         return { token };
       } else {
-        if (wuServ(user)?.otcEntryLockedAt) {
-          throw new AuthorizationError({
-            message: loginCodeEntryLockedMessage(user),
-            internalData: { error: CODE_ENTRY_LIMIT_EXCEEDED_MSG }}
-          );
-        }
+        await incrementOtcEntryAttempts(user);
+        assertCodeEntryNotLocked(user);
         throw new AuthorizationError({
           message: "Sorry, that code is incorrect or expired.",
           internalData: { error: "Invalid one-time code" },

@@ -143,7 +143,7 @@ const codeLoginMutation = gql`
   }
 `
 
-const currentActionToMutation = function(currentAction: possibleActions, oneOffCodeRequest: boolean) {
+const chooseMutation = function(currentAction: possibleActions, oneOffCodeRequest: boolean) {
   if (oneOffCodeRequest) return requestLoginCodeMutation
   if (currentAction == "requestCode") return requestLoginCodeMutation
   if (currentAction == "enterCode") return codeLoginMutation
@@ -172,12 +172,15 @@ export const WULoginForm = ({ startingState = "requestCode", classes }: WULoginF
   // This currentActionToMutation thing is regrettably complicated, but the point
   // is to have a single useMutation call that shares one error state, so that
   // subsequent mutations overwrite the error state of the previous one.
-  const [ mutate, { error } ] = useMutation(currentActionToMutation(currentAction, requestAnotherCode), { errorPolicy: 'all' })
+  const [ mutate, { error } ] = useMutation(chooseMutation(currentAction, requestAnotherCode), { errorPolicy: 'all' })
   const [validationError, setValidationError] = useState<string>("")
   const [loading, setLoading] = useState<boolean>(false)
   const otpRef = useRef<OTPInputMethods>(null)
 
   useEffect(() => {
+    // This regrettably complicated useEffect step is necessary because the requestAnotherCode boolean is a parameter
+    // for the chooseMutation function that gets called by mutate(). If this were just called directly from the button,
+    // we'd not be able to distinguish the intention to request a new code, rather than to enter a code.
     if (requestAnotherCode) {
       void withLoadingSpinner(async () => {
         setOneTimeCode("");
@@ -214,12 +217,12 @@ export const WULoginForm = ({ startingState = "requestCode", classes }: WULoginF
   }
 
   // submitFunction requests a code or enters a code, depending on the currentAction
-  const submitFunction = async (e: AnyBecauseTodo) => {
+  const submitFunction = (e: AnyBecauseTodo) => {
     e.preventDefault();
 
     if (!validateForm()) return;
 
-    await withLoadingSpinner(async () => {
+    void withLoadingSpinner(async () => {
       const variables = { email, code: oneTimeCode }
       const { data } = await mutate({ variables })
 
