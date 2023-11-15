@@ -195,7 +195,7 @@ export const WULoginForm = ({ startingState = "requestCode", classes }: WULoginF
 
   const withLoadingSpinner = async function(inner: Function) {
     setLoading(true);
-    inner()
+    await inner()
     setLoading(false);
   }
 
