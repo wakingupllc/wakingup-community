@@ -24,6 +24,7 @@ import { mongoFindOne } from '../../../lib/mongoQueries';
 import {userFindOneByEmail} from "../../commonQueries";
 import { ClientIds } from "../../../lib/collections/clientIds/collection";
 import { UsersRepo } from '../../repos';
+import { devLoginsAllowedSetting } from '../../../lib/publicSettings';
 
 // Meteor hashed its passwords twice, once on the client
 // and once again on the server. To preserve backwards compatibility
@@ -47,6 +48,7 @@ const passwordAuthStrategy = new GraphQLLocalStrategy(async function getUserPass
     ? new UsersRepo().getUserByUsernameOrEmail(username)
     : Users.findOne({$or: [{"emails.address": username}, {email: username}, {username: username}]}));
 
+  if (!devLoginsAllowedSetting.get()) return done(null, false, { message: 'Password-based logins are disabled.' });
   if (!user) return done(null, false, { message: 'Invalid login.' }); //Don't reveal that an email exists in DB
   
   // Load legacyData, if applicable. Needed because imported users had their

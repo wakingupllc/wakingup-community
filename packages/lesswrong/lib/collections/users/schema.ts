@@ -281,6 +281,8 @@ export type SocialMediaProfileField = keyof typeof SOCIAL_MEDIA_PROFILE_FIELDS;
 export type RateLimitReason = "moderator"|"lowKarma"|"downvoteRatio"|"universal"
 
 const validateName = (name: string, field: string) => {
+  if (!name) return;
+
   if (badWords.includes(name.toLowerCase().trim()) || badWords.includes(name.toLowerCase().replace(/[0-9]/g, "").trim())) {
     throwValidationError({
       typeName: "User",
@@ -1374,7 +1376,7 @@ const schema: SchemaType<DbUser> = {
     hidden: true, // re-enable when tags/topics are re-enabled after launch
   },
   notificationPrivateMessage: {
-    label: "Direct messages",
+    label: "Private messages",
     ...notificationTypeSettingsField({ channel: "both" }),
   },
   notificationSharedWithMe: {
