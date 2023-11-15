@@ -8,7 +8,7 @@ import withErrorBoundary from '../../common/withErrorBoundary'
 import { useRecordPostView } from '../../hooks/useRecordPostView';
 import { AnalyticsContext, useTracking } from "../../../lib/analyticsEvents";
 import {forumTitleSetting, isAF, isEAForum} from '../../../lib/instanceSettings';
-import { cloudinaryCloudNameSetting, showTableOfContentsSetting } from '../../../lib/publicSettings';
+import { cloudinaryCloudNameSetting, commentPermalinksAtTopSetting, showTableOfContentsSetting } from '../../../lib/publicSettings';
 import classNames from 'classnames';
 import { userHasSideComments } from '../../../lib/betas';
 import { forumSelect } from '../../../lib/forumTypeUtils';
@@ -525,7 +525,7 @@ const PostsPage = ({post, eagerPostComments, refetch, classes}: {
     <AnalyticsContext pageSectionContext="postHeader">
       <div className={classes.title}>
         <div className={classes.centralColumn}>
-          {commentId && !isDebateResponseLink && <CommentPermalink documentId={commentId} post={post} />}
+          {commentPermalinksAtTopSetting.get() && commentId && !isDebateResponseLink && <CommentPermalink documentId={commentId} post={post} />}
           {post.eventImageId && <div className={classNames(classes.headerImageContainer, {[classes.headerImageContainerWithComment]: commentId})}>
             <CloudinaryImage2
               publicId={post.eventImageId}

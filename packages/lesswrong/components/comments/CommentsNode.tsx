@@ -7,6 +7,7 @@ import { AnalyticsContext, useTracking } from "../../lib/analyticsEvents"
 import { CommentTreeNode, commentTreesEqual } from '../../lib/utils/unflatten';
 import type { CommentTreeOptions } from './commentTree';
 import { HIGHLIGHT_DURATION } from './CommentFrame';
+import { commentPermalinksAtTopSetting } from '../../lib/publicSettings';
 
 const KARMA_COLLAPSE_THRESHOLD = -4;
 
@@ -115,6 +116,7 @@ const CommentsNode = ({
   const [collapsed, setCollapsed] = useState(!forceUnCollapsed && (comment.deleted || comment.baseScore < karmaCollapseThreshold || comment.modGPTRecommendation === 'Intervene'));
   const [truncatedState, setTruncated] = useState(!!startThreadTruncated);
   const { lastCommentId, condensed, postPage, post, highlightDate, scrollOnExpand, forceSingleLine, forceNotSingleLine, noHash, onToggleCollapsed } = treeOptions;
+  const location = useSubscribedLocation();
 
   const beginSingleLine = (): boolean => {
     // TODO: Before hookification, this got nestingLevel without the default value applied, which may have changed its behavior?
@@ -175,7 +177,9 @@ const CommentsNode = ({
 
   const {hash: commentHash} = useSubscribedLocation();
   useEffect(() => {
-    if (!noHash && !noAutoScroll && comment && commentHash === ("#" + comment._id)) {
+    const hashCommentLink = !noHash && !noAutoScroll && comment && commentHash === ("#" + comment._id)
+    const commentPermalinkInPlace = !commentPermalinksAtTopSetting.get() && [location.query.commentId, location.params.commentId].includes(comment._id)
+    if (hashCommentLink || commentPermalinkInPlace) {
       setTimeout(() => { //setTimeout make sure we execute this after the element has properly rendered
         void handleExpand()
         scrollIntoView()
