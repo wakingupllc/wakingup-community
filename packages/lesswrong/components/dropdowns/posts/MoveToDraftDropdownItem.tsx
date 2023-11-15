@@ -12,7 +12,7 @@ const MoveToDraftDropdownItem = ({ post }: {
   const {DropdownItem} = Components;
   const {mutate: updatePost} = useUpdate({
     collectionName: "Posts",
-    fragmentName: 'PostsList',
+    fragmentName: 'PostsListWithVotes',
   });
 
   const handleMoveToDraftDropdownItem = useCallback(() => {

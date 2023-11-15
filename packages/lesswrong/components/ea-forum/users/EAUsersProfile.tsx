@@ -488,10 +488,10 @@ const EAUsersProfile = ({terms, slug, subscriptionsEnabled = true, postSortingEn
           </Button>
         )}
 
-        {!!(userPostsCount || user.postCount) && <div className={classes.section}>
+        {!!user.postCount && <div className={classes.section}>
           <div className={classes.sectionHeadingRow}>
             <Typography variant="headline" className={classes.sectionHeading}>
-              Posts <div className={classes.sectionHeadingCount}>{(userPostsCount || user.postCount)}</div>
+              Posts <div className={classes.sectionHeadingCount}>{user.postCount}</div>
             </Typography>
             {postSortingEnabled && <SortButton onClick={() => setShowPostSettings(!showPostSettings)}
               label={`Sorted by ${ SORT_ORDER_OPTIONS[currentSorting].label }`} />}
