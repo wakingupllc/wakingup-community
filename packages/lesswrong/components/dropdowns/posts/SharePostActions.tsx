@@ -2,12 +2,12 @@ import React from 'react';
 import { Components, registerComponent } from '../../../lib/vulcan-lib';
 import { postGetPageUrl } from '../../../lib/collections/posts/helpers';
 import { forumTitleSetting } from '../../../lib/instanceSettings';
-import { useMessages } from '../../common/withMessages';
 import { preferredHeadingCase } from '../../../lib/forumTypeUtils';
 import Paper from '@material-ui/core/Paper';
 import { useTracking } from '../../../lib/analyticsEvents';
 import { isFriendlyUI } from '../../../themes/forumTheme';
 import { showSocialMediaShareLinksSetting } from '../../../lib/publicSettings';
+import { useMessages } from '../../common/withMessages';
 
 const styles = (theme: ThemeType): JssStyles => ({
   icon: {
@@ -25,9 +25,10 @@ const SharePostActions = ({post, onClick, classes}: {
   const postUrl = postGetPageUrl(post, true);
   const { captureEvent } = useTracking()
   const { flash } = useMessages();
-  
+
   const copyLink = () => {
     captureEvent('sharePost', {option: 'copyLink'})
+    const postUrl = postGetPageUrl(post, true);
     void navigator.clipboard.writeText(postUrl);
     flash("Link copied to clipboard");
   }

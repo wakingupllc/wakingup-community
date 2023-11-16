@@ -4,6 +4,8 @@ import withErrorBoundary from '../common/withErrorBoundary';
 import classNames from 'classnames';
 import { useTracking } from '../../lib/analyticsEvents';
 import { postGetPageUrl } from '../../lib/collections/posts/helpers';
+import { useMessages } from '../common/withMessages';
+import { showSocialMediaShareLinksSetting } from '../../lib/publicSettings';
 
 const styles = (theme: ThemeType): JssStyles => ({
   root: {
@@ -30,7 +32,16 @@ const SharePostButton = ({
   const anchorEl = useRef<HTMLDivElement | null>(null)
   const [isOpen, setIsOpen] = useState<boolean>(false)
   const { captureEvent } = useTracking()
-  
+  const { flash } = useMessages();
+
+  const handleClick = () => {
+    if (showSocialMediaShareLinksSetting.get()) {
+      shareClicked()
+    } else {
+      copyLink()
+    }
+  }
+
   const shareClicked = () => {
     captureEvent('sharePostButtonClicked')
     // navigator.canShare will be present on mobile devices with sharing-intents,
@@ -49,6 +60,13 @@ const SharePostButton = ({
     setIsOpen(!isOpen)
   }
 
+  const copyLink = () => {
+    captureEvent('sharePost', {option: 'copyLink'})
+    const postUrl = postGetPageUrl(post, true);
+    void navigator.clipboard.writeText(postUrl);
+    flash("Link copied to clipboard");
+  }
+
   const {LWTooltip, ForumIcon, PopperCard, LWClickAwayListener, SharePostActions} = Components
 
   return <div className={classes.root}>
@@ -57,7 +75,7 @@ const SharePostButton = ({
         <ForumIcon
           icon="Link"
           className={classNames(classes.icon, className)}
-          onClick={shareClicked}
+          onClick={handleClick}
         />
       </LWTooltip>
     </div>
