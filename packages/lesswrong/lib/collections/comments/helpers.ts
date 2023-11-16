@@ -85,6 +85,7 @@ export const commentGetDefaultView = (post: PostsDetails|DbPost|null, currentUse
   const fallback = forumSelect({
     AlignmentForum: "afPostCommentsTop",
     EAForum: "postCommentsMagic",
+    WakingUp: "postCommentsMagic",
     default: "postCommentsTop",
   });
   return (post?.commentSortOrder as CommentsViewName) || (currentUser?.commentSorting as CommentsViewName) || fallback
