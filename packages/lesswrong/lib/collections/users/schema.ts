@@ -1376,7 +1376,7 @@ const schema: SchemaType<DbUser> = {
     hidden: true, // re-enable when tags/topics are re-enabled after launch
   },
   notificationPrivateMessage: {
-    label: "Direct messages",
+    label: "Private messages",
     ...notificationTypeSettingsField({ channel: "both" }),
   },
   notificationSharedWithMe: {

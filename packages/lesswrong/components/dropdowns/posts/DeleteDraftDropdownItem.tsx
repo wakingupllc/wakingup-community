@@ -4,10 +4,15 @@ import React, { useCallback } from 'react';
 import { postCanDelete } from '../../../lib/collections/posts/helpers';
 import { useCurrentUser } from '../../common/withUser';
 import { preferredHeadingCase } from '../../../lib/forumTypeUtils';
+import { useMessages } from '../../common/withMessages';
+import { useNavigation } from '../../../lib/routeUtil';
+import { userGetProfileUrl } from '../../../lib/collections/users/helpers';
 
 const DeleteDraftDropdownItem = ({ post }: {
   post: PostsBase
 }) => {
+  const { flash } = useMessages();
+  const { history } = useNavigation();
   const currentUser = useCurrentUser();
   const {mutate: updatePost} = useUpdate({
     collectionName: "Posts",
@@ -21,8 +26,12 @@ const DeleteDraftDropdownItem = ({ post }: {
         selector: {_id: post._id},
         data: {deletedDraft:true, draft: true}
       })
+      flash({messageString: "Post deleted", type: "success"});
+      if (!currentUser?.isAdmin) {
+        history.push(userGetProfileUrl(currentUser))
+      }
     }
-  }, [post, updatePost])
+  }, [post, updatePost, flash, history, currentUser])
 
   if (currentUser && postCanDelete(currentUser, post)) {
     return (

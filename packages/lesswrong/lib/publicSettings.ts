@@ -176,3 +176,5 @@ export const onetrustDomainScriptSetting = new DatabasePublicSetting<string>('on
 export const devLoginsAllowedSetting = new DatabasePublicSetting<boolean>('devLoginsAllowed', false);
 export const notificationBatchHourInUserTzSetting = new DatabasePublicSetting<number>('notificationBatchHourInUserTz', 17)
 export const showVersionHistorySetting = new DatabasePublicSetting<boolean>('showVersionHistory', true);
+export const sendAutoMessageOnCommentRemovalSetting = new DatabasePublicSetting<boolean>('sendAutoMessageOnCommentRemoval', true);
+export const commentPermalinksAtTopSetting = new DatabasePublicSetting<boolean>('commentPermalinksAtTop', true);

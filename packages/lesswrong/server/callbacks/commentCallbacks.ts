@@ -18,7 +18,7 @@ import ReadStatuses from '../../lib/collections/readStatus/collection';
 import { isAnyTest } from '../../lib/executionEnvironment';
 import { REJECTED_COMMENT } from '../../lib/collections/moderatorActions/schema';
 import { captureEvent } from '../../lib/analyticsEvents';
-import { adminAccountSetting } from '../../lib/publicSettings';
+import { adminAccountSetting, sendAutoMessageOnCommentRemovalSetting } from '../../lib/publicSettings';
 
 
 const MINIMUM_APPROVAL_KARMA = 5
@@ -202,10 +202,12 @@ export async function moderateCommentsPostUpdate (comment: DbComment, currentUse
       validate: false,
     })
   }
-  if (action === 'deleted') {
-    void commentsDeleteSendPMAsync(comment, currentUser);
-  } else {
-    void commentsRejectSendPMAsync(comment, currentUser);
+  if (sendAutoMessageOnCommentRemovalSetting.get()) {
+    if (action === 'deleted') {
+      void commentsDeleteSendPMAsync(comment, currentUser);
+    } else {
+      void commentsRejectSendPMAsync(comment, currentUser);
+    }
   }
 }
 
