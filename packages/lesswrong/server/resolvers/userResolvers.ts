@@ -234,26 +234,40 @@ addGraphQLResolvers({
       if (existingUser && existingUser._id !== currentUser._id) {
         throw new SimpleValidationError({message: "Sorry, that username is already taken."})
       }
-      const updatedUser = (await updateMutator({
-        collection: Users,
-        documentId: currentUser._id,
-        set: {
-          usernameUnset: false,
-          username,
-          displayName: username,
-          first_name: firstName,
-          last_name: lastName,
-          mapLocation,
-          slug: await Utils.getUnusedSlugByCollectionName('Users', slugify(username)),
-          subscribedToDigest: subscribeToDigest,
-          acceptedTos,
-          ...updatedNotificationSettings(currentUser, timezone),
-        },
-        // We've already done necessary gating
-        validate: false,
-      })).data
-      // Don't want to return the whole object without more permission checking
-      return pick(updatedUser, 'username', 'slug', 'displayName', 'subscribedToCurated', 'usernameUnset')
+
+      try {
+        const updatedUser = (await updateMutator({
+          collection: Users,
+          documentId: currentUser._id,
+          set: {
+            usernameUnset: false,
+            username,
+            displayName: username,
+            first_name: firstName,
+            last_name: lastName,
+            mapLocation,
+            slug: await Utils.getUnusedSlugByCollectionName('Users', slugify(username)),
+            subscribedToDigest: subscribeToDigest,
+            acceptedTos,
+            ...updatedNotificationSettings(currentUser, timezone),
+          },
+          // We've already done necessary gating
+          validate: false,
+        })).data
+        // Don't want to return the whole object without more permission checking
+        return pick(updatedUser, 'username', 'slug', 'displayName', 'subscribedToCurated', 'usernameUnset')
+      } catch (e) {
+        // WUUserOnboarding doesn't use the usual Vulcan/WrappedSmartForm, so it includes the FormErrors component
+        // itself, and it needs validation errors adjusted slightly before we send them.
+        if (e.id === 'app.validation_error') {
+          throw new SimpleValidationError({
+            message: e.extensions.data.errors[0].id,
+            path: e.extensions.data.errors[0].path,
+            data: e.extensions.data,
+          })
+        }
+        throw e;
+      }
     },
     // TODO: Deprecated
     async UserAcceptTos(_root: void, _args: {}, {currentUser}: ResolverContext) {

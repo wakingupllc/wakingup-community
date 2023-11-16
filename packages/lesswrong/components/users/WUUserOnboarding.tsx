@@ -8,6 +8,7 @@ import {Components, registerComponent} from '../../lib/vulcan-lib'
 import {TosLink} from '../posts/PostsAcceptTos'
 import {textFieldContainerStyles, textFieldStyles} from '../form-components/MuiTextField.tsx'
 import {useTimezone} from '../common/withTimezone.tsx'
+import classNames from 'classnames'
 
 const styles = (theme: ThemeType): JssStyles => ({
   root: {
@@ -57,6 +58,9 @@ const styles = (theme: ThemeType): JssStyles => ({
     flexGrow: 1,
     marginRight: '0.5em',
     marginTop: '0.5em',
+    "&.WUUserOnboarding-inputErrors": {
+      border: `2px solid ${theme.palette.error.main}`,
+    }
   },
   nameContainer: {
     display: 'flex',
@@ -71,14 +75,14 @@ type WUUserOnboardingProps = {
   currentUser: UsersCurrent
   classes: ClassesType
 }
-
-const WUTextField = ({classes, ...props}: TextFieldProps & { classes: ClassesType }) =>
-  <div className={classes.inputContainer}>
+const WUTextField = ({classes, ...props}: TextFieldProps & { classes: ClassesType }) => {
+  return <div className={classNames(classes.inputContainer, { [classes.inputErrors]: props.error })}>
     <TextField
       {...props}
       InputProps={{disableUnderline: true}}
       className={classes.formInput}
     /></div>
+}
 
 const WUUserOnboarding: React.FC<WUUserOnboardingProps> = ({currentUser, classes}) => {
   const [username, setUsername] = useState('')
@@ -155,6 +159,15 @@ const WUUserOnboarding: React.FC<WUUserOnboardingProps> = ({currentUser, classes
     }
   }
 
+  const isErrorField = function(name: string) {
+    return serverValidationErrors.some((err) => {
+      // Errors are processed into some complicated thing that, usually, a Vulcan form would handle. Since this isn't
+      // a Vulcan form, we delve into the error fields to check the error field ourselves.
+      const path = err?.graphQLErrors?.[0]?.data?.errors?.[0]?.path
+      return name === path
+    })
+  }
+
   return <SingleColumnSection>
     <div className={classes.root}>
       <Typography variant="display2" gutterBottom className={classes.title}>
@@ -186,6 +199,7 @@ const WUUserOnboarding: React.FC<WUUserOnboardingProps> = ({currentUser, classes
           onBlur={(_event) => validateUsername(username)}
           classes={classes}
           inputProps={{maxLength: 70}}
+          error={isErrorField('username')}
         />
         <div className={classes.nameContainer}>
           <WUTextField
