@@ -4,11 +4,14 @@ import React, { useCallback } from 'react';
 import { canUserEditPostMetadata } from '../../../lib/collections/posts/helpers';
 import { useCurrentUser } from '../../common/withUser';
 import { preferredHeadingCase } from '../../../lib/forumTypeUtils';
+import { useNavigation } from '../../../lib/routeUtil';
+import { userGetProfileUrl } from '../../../lib/collections/users/helpers';
 
 const MoveToDraftDropdownItem = ({ post }: {
   post: PostsBase
 }) => {
   const currentUser = useCurrentUser();
+  const { history } = useNavigation();
   const {DropdownItem} = Components;
   const {mutate: updatePost} = useUpdate({
     collectionName: "Posts",
@@ -20,7 +23,8 @@ const MoveToDraftDropdownItem = ({ post }: {
       selector: {_id: post._id},
       data: {draft:true}
     })
-  }, [updatePost, post])
+    history.push(userGetProfileUrl(currentUser))
+  }, [updatePost, post, history, currentUser])
 
   if (!post.draft && currentUser && canUserEditPostMetadata(currentUser, post)) {
     return (
