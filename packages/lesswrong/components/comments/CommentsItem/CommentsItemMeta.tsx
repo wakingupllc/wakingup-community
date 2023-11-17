@@ -8,9 +8,11 @@ import { useCommentLink } from "./useCommentLink";
 import { Comments } from "../../../lib/collections/comments";
 import { userIsAdmin } from "../../../lib/vulcan-users";
 import { useCurrentUser } from "../../common/withUser";
-import { AnalyticsContext } from "../../../lib/analyticsEvents";
+import { AnalyticsContext, useTracking } from "../../../lib/analyticsEvents";
 import type { CommentTreeOptions } from "../commentTree";
 import { isBookUI, isFriendlyUI } from "../../../themes/forumTheme";
+import { useMessages } from "../../common/withMessages";
+import { commentGetPageUrlFromIds } from "../../../lib/collections/comments/helpers";
 
 export const metaNoticeStyles = (theme: ThemeType) => ({
     color: theme.palette.lwTertiary.main,
@@ -118,6 +120,7 @@ const styles = (theme: ThemeType): JssStyles => ({
     margin: "0 4px",
     position: "relative",
     top: 1,
+    cursor: "pointer",
   },
   menu: isFriendlyUI
     ? {
@@ -159,6 +162,8 @@ export const CommentsItemMeta = ({
   setShowEdit: () => void,
   classes: ClassesType,
 }) => {
+  const { flash } = useMessages();
+  const { captureEvent } = useTracking()
   const currentUser = useCurrentUser();
 
   const {
@@ -213,6 +218,21 @@ export const CommentsItemMeta = ({
   if (!showMoreClicked) {
     shouldDisplayLoadMore = relevantTagsTruncated.length > 1 && !showMoreClicked;
     relevantTagsTruncated = relevantTagsTruncated.slice(0, 1);
+  }
+
+  // On Waking Up, all comments are post comments. The following would break if
+  // used on a tag comment, but if we decide to implement tag comments, the error
+  // will be easily apparent in development, and easy to fix.
+  const commentUrl = commentGetPageUrlFromIds({
+    postId: post!._id,
+    postSlug: post!.slug,
+    commentId: comment._id,
+  });
+
+  const copyLink = () => {
+    captureEvent('shareComment', {option: 'copyLink'})
+    void navigator.clipboard.writeText(commentUrl);
+    flash("Link copied to clipboard");
   }
 
   const {
@@ -315,9 +335,7 @@ export const CommentsItemMeta = ({
 
       <span className={classes.rightSection}>
         {isFriendlyUI &&
-          <CommentLinkWrapper>
-            <ForumIcon icon="Link" className={classes.linkIcon} />
-          </CommentLinkWrapper>
+          <ForumIcon icon="Link" className={classes.linkIcon} onClick={copyLink} />
         }
         {!isParentComment && !hideActionsMenu &&
           <AnalyticsContext pageElementContext="tripleDotMenu">

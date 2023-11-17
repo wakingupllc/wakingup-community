@@ -9,6 +9,10 @@ const styles = (theme: ThemeType): JssStyles => ({
   root: {
     ...theme.typography.body2,
     ...theme.typography.commentStyle,
+    paddingTop: "1em",
+    [theme.breakpoints.down('sm')]: {
+      paddingTop: 0,
+    }
   },
   dividerMargins: {
     marginTop: 150,
