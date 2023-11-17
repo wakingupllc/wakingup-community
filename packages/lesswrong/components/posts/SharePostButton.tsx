@@ -71,7 +71,7 @@ const SharePostButton = ({
 
   return <div className={classes.root}>
     <div ref={anchorEl}>
-      <LWTooltip title="Share post" placement="bottom-start" disabled={isOpen}>
+      <LWTooltip title="Copy Link" placement="bottom-start" disabled={isOpen}>
         <ForumIcon
           icon="Link"
           className={classNames(classes.icon, className)}
