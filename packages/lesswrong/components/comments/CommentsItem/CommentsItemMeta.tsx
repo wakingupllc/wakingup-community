@@ -227,6 +227,7 @@ export const CommentsItemMeta = ({
     postId: post!._id,
     postSlug: post!.slug,
     commentId: comment._id,
+    isAbsolute: true,
   });
 
   const copyLink = () => {
