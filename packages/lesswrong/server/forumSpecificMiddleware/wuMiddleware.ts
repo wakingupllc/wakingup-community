@@ -88,7 +88,8 @@ async function getWakingUpUserData(email: string): Promise<any> {
   const wakingUpKey = wakingUpKeySetting.get()
   const wakingUpEndpoint = wakingUpEndpointSetting.get()
 
-  const url = `${wakingUpEndpoint}${email}`;
+  // The Waking Up API expects email addresses to be in lowercase.
+  const url = `${wakingUpEndpoint}${email.toLowerCase()}`;
   const headers = {
     'x-community-key': wakingUpKey,
   };
