@@ -3,7 +3,7 @@ import classNames from "classnames";
 import { Components, registerComponent } from "../../../lib/vulcan-lib";
 import { Link } from "../../../lib/reactRouterWrapper";
 import { isEAForum } from "../../../lib/instanceSettings";
-import { postGetPageUrl, userIsPostCoauthor } from "../../../lib/collections/posts/helpers";
+import { userIsPostCoauthor } from "../../../lib/collections/posts/helpers";
 import { useCommentLink } from "./useCommentLink";
 import { Comments } from "../../../lib/collections/comments";
 import { userIsAdmin } from "../../../lib/vulcan-users";
@@ -12,6 +12,7 @@ import { AnalyticsContext, useTracking } from "../../../lib/analyticsEvents";
 import type { CommentTreeOptions } from "../commentTree";
 import { isBookUI, isFriendlyUI } from "../../../themes/forumTheme";
 import { useMessages } from "../../common/withMessages";
+import { commentGetPageUrlFromIds } from "../../../lib/collections/comments/helpers";
 
 export const metaNoticeStyles = (theme: ThemeType) => ({
     color: theme.palette.lwTertiary.main,
@@ -219,7 +220,14 @@ export const CommentsItemMeta = ({
     relevantTagsTruncated = relevantTagsTruncated.slice(0, 1);
   }
 
-  const commentUrl = post ? postGetPageUrl(post, true) + `?commentId=${comment._id}` : '';
+  // On Waking Up, all comments are post comments. The following would break if
+  // used on a tag comment, but if we decide to implement tag comments, the error
+  // will be easily apparent in development, and easy to fix.
+  const commentUrl = commentGetPageUrlFromIds({
+    postId: post!._id,
+    postSlug: post!.slug,
+    commentId: comment._id,
+  });
 
   const copyLink = () => {
     captureEvent('shareComment', {option: 'copyLink'})
