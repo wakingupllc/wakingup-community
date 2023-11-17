@@ -56,7 +56,6 @@ const styles = (theme: ThemeType): JssStyles => ({
     border: theme.palette.border.grey300,
     flexGrow: 1,
     marginRight: '0.5em',
-    marginTop: '0.5em',
   },
   nameContainer: {
     display: 'flex',
