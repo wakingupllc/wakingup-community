@@ -18,7 +18,7 @@ import './emailComponents/PrivateMessagesEmail';
 import './emailComponents/EventUpdatedEmail';
 import './emailComponents/EmailUsernameByID';
 import {getDocumentSummary, taggedPostMessage, NotificationDocument} from '../lib/notificationTypes'
-import { commentGetPageUrl, commentGetPageUrlFromIds } from "../lib/collections/comments/helpers";
+import { commentGetPageUrlFromIds } from "../lib/collections/comments/helpers";
 import { getReviewTitle, REVIEW_YEAR } from '../lib/reviewUtils';
 import { ForumOptions, forumSelect } from '../lib/forumTypeUtils';
 import { forumTitleSetting, siteNameWithArticleSetting } from '../lib/instanceSettings';
@@ -26,7 +26,6 @@ import Tags from '../lib/collections/tags/collection';
 import { tagGetSubforumUrl } from '../lib/collections/tags/helpers';
 import uniq from 'lodash/uniq';
 import startCase from 'lodash/startCase';
-import { conversationGetPageUrl } from '../lib/collections/conversations/helpers';
 import { highlightFromHTML } from '../lib/editor/ellipsize';
 import moment from 'moment'
 
@@ -53,12 +52,26 @@ export const getNotificationTypeByNameServer = (name: string): ServerNotificatio
     throw new Error(`Invalid notification type: ${name}`);
 }
 
+export const getPostUrlFromPostOrComment  = async (postOrComment: DbPost | DbComment) => {
+  const getPostId = () => {
+    if ('postId' in postOrComment) {
+      return postOrComment.postId
+    } else {
+      return postOrComment._id
+    }
+  }
+
+  const post = await Posts.findOne(getPostId())
+  return postGetPageUrl(post!, true)
+}
+
 const serverRegisterNotificationType = ({skip = async () => false, ...notificationTypeClass}: ServerRegisterNotificationType): ServerNotificationType => {
   const notificationType = {skip, ...notificationTypeClass};
   const name = notificationType.name;
   notificationTypes[name] = notificationType;
   return notificationType;
 }
+
 
 export const NewPostNotification = serverRegisterNotificationType({
   name: "newPost",
@@ -797,6 +810,7 @@ export const NewMentionNotification = serverRegisterNotificationType({
         taggerUsername: summary.associatedUserName,
         postTitle: summary.displayName,
         postContents: highlightFromHTML(summary.document.contents.html, 500),
+        postLink: await getPostUrlFromPostOrComment(summary.document as DbPost | DbComment),
         year: moment().year(),
       })
     }
