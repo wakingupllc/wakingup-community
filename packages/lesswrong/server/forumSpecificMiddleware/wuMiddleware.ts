@@ -19,7 +19,7 @@ import {devLoginsAllowedSetting, wuDefaultProfileImageCloudinaryIdSetting} from 
 import { sendEmailSendgridTemplate } from '../emails/sendEmail.ts'
 import moment from 'moment'
 
-const LOGIN_LIMIT_HOURS = 3
+const LOGIN_LIMIT_HOURS = 0.5
 const CODE_REQUEST_LIMIT = 5
 const CODE_ENTRY_LIMIT = 5
 const CODE_REQUEST_LIMIT_EXCEEDED_MSG = "User is locked out due to too many code requests"
@@ -258,6 +258,11 @@ function updateUserLoginProps(user: DbUser, oneTimeCode: string|null) {
   );
 }
 
+function userImmuneToLoginLimit(user: DbUser) {
+  // emails ending in @wakingup.com are immune to login limits
+  return user.email?.endsWith('@wakingup.com')
+}
+
 function wuServ(user: DbUser) {
   return user.services?.wakingUp
 }
@@ -274,14 +279,14 @@ function codeRequestLimitExpiresAt(user: DbUser) {
   const limitStartAt = codeRequestLimitActive(user)
   if (!limitStartAt) return null;
 
-  return moment(limitStartAt).add(LOGIN_LIMIT_HOURS, 'hours').format('h:mm a')
+  return moment(limitStartAt).add(LOGIN_LIMIT_HOURS, 'hours')
 }
 
 function codeEntryLockExpiresAt(user: DbUser) {
   const lockStartAt = wuServ(user)?.otcEntryLockedAt
   if (!lockStartAt) return null;
 
-  return moment(lockStartAt).add(LOGIN_LIMIT_HOURS, 'hours').format('h:mm a')
+  return moment(lockStartAt).add(LOGIN_LIMIT_HOURS, 'hours')
 }
 
 function isCodeRequestLocked(user: DbUser) {
@@ -289,6 +294,8 @@ function isCodeRequestLocked(user: DbUser) {
 }
 
 function assertCodeRequestNotLocked(user: DbUser) {
+  if (userImmuneToLoginLimit(user)) return;
+
   if (isCodeRequestLocked(user)) {
     throw new AuthorizationError({
       message: loginCodeRequestLockedMessage(user),
@@ -303,6 +310,8 @@ function isCodeEntryLocked(user: DbUser) {
 }
 
 function assertCodeEntryNotLocked(user: DbUser) {
+  if (userImmuneToLoginLimit(user)) return;
+
   if (isCodeEntryLocked(user)) {
     throw new AuthorizationError({
       message: loginCodeEntryLockedMessage(user),
@@ -311,14 +320,21 @@ function assertCodeEntryNotLocked(user: DbUser) {
   }
 }
 
+function minutesUntil(date: moment.Moment) {
+  const duration = moment.duration(moment(date).diff(moment()));
+  return Math.ceil(duration.asMinutes());
+}
+
 function loginCodeRequestLockedMessage(user: DbUser) {
   const limitExpiresAt = codeRequestLimitExpiresAt(user)
-  return `You have requested too many codes. Your account is locked until ${limitExpiresAt}.`
+
+  return `You've requested too many codes recently. You can request a new code in ${minutesUntil(limitExpiresAt!)} minutes or email community@wakingup.com for help.`;
 }
 
 function loginCodeEntryLockedMessage(user: DbUser) {
   const lockedAt = codeEntryLockExpiresAt(user);
-  return `You have attempted too many invalid codes. Your account is locked until ${lockedAt}.`
+
+  return `You have attempted too many invalid codes. You can try again in ${minutesUntil(lockedAt!)} minutes or email community@wakingup.com for help.`
 }
 
 async function incrementOtcEntryAttempts(user: DbUser) {
