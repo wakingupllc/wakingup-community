@@ -33,24 +33,24 @@ const VoteHistoryTab = ({classes}: {classes: ClassesType}) => {
       collectionNames: ["Posts", "Comments"],
     },
     collectionName: "Votes",
-    fragmentName: 'UserVotesWithDocument',
+    fragmentName: 'UserVotesWithNonDeletedDocument',
     limit: defaultLimit,
     itemsPerPage: pageSize,
   })
-  
+
   /**
    * Returns either a PostItem or CommentsNode, depending on the content type
   */
-  const getContentItemNode = (vote: UserVotesWithDocument) => {
-    if (vote.post) {
-      const item = vote.post;
+  const getContentItemNode = (vote: UserVotesWithNonDeletedDocument) => {
+    if (vote.nonDeletedPost) {
+      const item = vote.nonDeletedPost;
       return (
         <div key={item._id} className={classes.postItem}>
           <PostsItem post={item} isVoteable />
         </div>
       );
-    } else if (vote.comment) {
-      const item = vote.comment;
+    } else if (vote.nonDeletedComment) {
+      const item = vote.nonDeletedComment;
       return <CommentsNode
         key={item._id}
         comment={item}

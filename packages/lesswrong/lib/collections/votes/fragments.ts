@@ -50,3 +50,15 @@ registerFragment(`
     }
   }
 `);
+
+registerFragment(`
+  fragment UserVotesWithNonDeletedDocument on Vote {
+    ...UserVotes
+    nonDeletedComment {
+      ...CommentsListWithParentMetadata
+    }
+    nonDeletedPost {
+      ...PostsListWithVotes
+    }
+  }
+`);

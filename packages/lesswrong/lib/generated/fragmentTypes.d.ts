@@ -3111,6 +3111,11 @@ interface UserVotesWithDocument extends UserVotes { // fragment on Votes
   readonly post: PostsListWithVotes|null,
 }
 
+interface UserVotesWithNonDeletedDocument extends UserVotes { // fragment on Votes
+  readonly nonDeletedComment: CommentsListWithParentMetadata|null,
+  readonly nonDeletedPost: PostsListWithVotes|null,
+}
+
 interface SpotlightsDefaultFragment { // fragment on Spotlights
   readonly documentId: string,
   readonly documentType: "Sequence" | "Post",
@@ -3440,6 +3445,7 @@ interface FragmentTypes {
   TagVotingActivity: TagVotingActivity
   UserVotes: UserVotes
   UserVotesWithDocument: UserVotesWithDocument
+  UserVotesWithNonDeletedDocument: UserVotesWithNonDeletedDocument
   SpotlightsDefaultFragment: SpotlightsDefaultFragment
   SpotlightMinimumInfo: SpotlightMinimumInfo
   SpotlightDisplay: SpotlightDisplay
@@ -3645,6 +3651,7 @@ interface CollectionNamesByFragmentName {
   TagVotingActivity: "Votes"
   UserVotes: "Votes"
   UserVotesWithDocument: "Votes"
+  UserVotesWithNonDeletedDocument: "Votes"
   SpotlightsDefaultFragment: "Spotlights"
   SpotlightMinimumInfo: "Spotlights"
   SpotlightDisplay: "Spotlights"
