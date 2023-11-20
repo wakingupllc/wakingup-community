@@ -236,14 +236,27 @@ const loginData = `type LoginReturnData2 {
 addGraphQLSchema(loginData);
 addGraphQLSchema(requestedCodeData);
 
-function updateUserLoginProps(user: DbUser, oneTimeCode: string|null) {
+function updateUserLoginProps(user: DbUser, oneTimeCode: string|null, successfulLogin = false) {
   const limitStartAt = codeRequestLimitActive(user) ?? new Date()
   const otcRequests = (wuServ(user)?.otcRequests ?? 0) + 1
+
+  const loginFields = (() => {
+    if (successfulLogin) {
+      return {
+        otcRequests: 0,
+        otcEntryAttempts: 0,
+        otcEntryLockedAt: null,
+        codeRequestLimitStartAt: null
+      }
+    }
+    return {}
+  })()
 
   const fieldUpdates = {
     codeRequestLimitStartAt: limitStartAt,
     oneTimeCode,
     otcRequests,
+    ...loginFields
   }
 
   return Users.rawUpdateOne(
@@ -413,7 +426,7 @@ const authenticationResolvers = {
       const devCodeOkay = devLoginsAllowedSetting.get() && user && code === '1234';
 
       if (validCode || devCodeOkay) {
-        await updateUserLoginProps(user, null)
+        await updateUserLoginProps(user, null, true)
 
         const token = await createAndSetToken(req, res, user)
         return { token };
