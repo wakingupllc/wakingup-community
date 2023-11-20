@@ -6,10 +6,12 @@ import { useCurrentUser } from '../../common/withUser';
 import { preferredHeadingCase } from '../../../lib/forumTypeUtils';
 import { useNavigation } from '../../../lib/routeUtil';
 import { userGetProfileUrl } from '../../../lib/collections/users/helpers';
+import { useMessages } from '../../common/withMessages';
 
 const MoveToDraftDropdownItem = ({ post }: {
   post: PostsBase
 }) => {
+  const { flash } = useMessages();
   const currentUser = useCurrentUser();
   const { history } = useNavigation();
   const {DropdownItem} = Components;
@@ -23,8 +25,9 @@ const MoveToDraftDropdownItem = ({ post }: {
       selector: {_id: post._id},
       data: {draft:true}
     })
+    flash({messageString: "Post moved to draft", type: "success"});
     history.push(userGetProfileUrl(currentUser))
-  }, [updatePost, post, history, currentUser])
+  }, [updatePost, post, history, currentUser, flash])
 
   if (!post.draft && currentUser && canUserEditPostMetadata(currentUser, post)) {
     return (
