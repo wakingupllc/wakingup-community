@@ -271,11 +271,6 @@ function updateUserLoginProps(user: DbUser, oneTimeCode: string|null, successful
   );
 }
 
-function userImmuneToLoginLimit(user: DbUser) {
-  // emails ending in @wakingup.com are immune to login limits
-  return user.email?.endsWith('@wakingup.com')
-}
-
 function wuServ(user: DbUser) {
   return user.services?.wakingUp
 }
@@ -307,8 +302,6 @@ function isCodeRequestLocked(user: DbUser) {
 }
 
 function assertCodeRequestNotLocked(user: DbUser) {
-  if (userImmuneToLoginLimit(user)) return;
-
   if (isCodeRequestLocked(user)) {
     throw new AuthorizationError({
       message: loginCodeRequestLockedMessage(user),
@@ -323,8 +316,6 @@ function isCodeEntryLocked(user: DbUser) {
 }
 
 function assertCodeEntryNotLocked(user: DbUser) {
-  if (userImmuneToLoginLimit(user)) return;
-
   if (isCodeEntryLocked(user)) {
     throw new AuthorizationError({
       message: loginCodeEntryLockedMessage(user),
