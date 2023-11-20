@@ -18,6 +18,7 @@ import {cloudinaryPublicIdFromUrl, moveToCloudinary} from '../scripts/convertIma
 import {devLoginsAllowedSetting, wuDefaultProfileImageCloudinaryIdSetting} from '../../lib/publicSettings.ts'
 import { sendEmailSendgridTemplate } from '../emails/sendEmail.ts'
 import moment from 'moment'
+import { usernameIsBadWord } from '../../lib/collections/users/schema.ts'
 
 const LOGIN_LIMIT_HOURS = 0.5
 const CODE_REQUEST_LIMIT = 5
@@ -213,7 +214,7 @@ const rehostProfileImageToCloudinary = async (url: string) => {
   return cloudinaryPublicIdFromUrl(newUrl, folder)
 }
 
-function wuDisplayName(wuUser: WuUserData): string {
+const defaultName = (wuUser: WuUserData): string => {
   if (wuUser.first_name && wuUser.last_name) {
     return `${wuUser.first_name} ${wuUser.last_name}`
   } else if (wuUser.first_name) {
@@ -222,6 +223,16 @@ function wuDisplayName(wuUser: WuUserData): string {
     return wuUser.last_name
   } else {
     return wuUser.email!.split('@')[0]
+  }
+}
+
+function wuDisplayName(wuUser: WuUserData): string {
+  const name = defaultName(wuUser)
+
+  if (usernameIsBadWord(name)) {
+    return 'newuser'
+  } else {
+    return name
   }
 }
 

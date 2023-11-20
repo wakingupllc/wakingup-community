@@ -41,6 +41,10 @@ import badWords from '../../badWords.json';
 // Anything else..
 ///////////////////////////////////////
 
+export const usernameIsBadWord = (username: string) => {
+  return badWords.includes(username.toLowerCase().trim()) || badWords.includes(username.toLowerCase().replace(/[0-9]/g, "").trim())
+}
+
 const createDisplayName = (user: DbInsertion<DbUser>): string => {
   const profileName = getNestedProperty(user, 'profile.name');
   const twitterName = getNestedProperty(user, 'services.twitter.screenName');
@@ -283,7 +287,7 @@ export type RateLimitReason = "moderator"|"lowKarma"|"downvoteRatio"|"universal"
 const validateName = (name: string, field: string) => {
   if (!name) return;
 
-  if (badWords.includes(name.toLowerCase().trim()) || badWords.includes(name.toLowerCase().replace(/[0-9]/g, "").trim())) {
+  if (usernameIsBadWord(name)) {
     throwValidationError({
       typeName: "User",
       field,
