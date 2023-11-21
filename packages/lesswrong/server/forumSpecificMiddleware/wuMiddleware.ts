@@ -247,15 +247,18 @@ const loginData = `type LoginReturnData2 {
 addGraphQLSchema(loginData);
 addGraphQLSchema(requestedCodeData);
 
-function updateUserLoginProps(user: DbUser, oneTimeCode: string|null) {
-  const limitStartAt = codeRequestLimitActive(user) ?? new Date()
-  const otcRequests = (wuServ(user)?.otcRequests ?? 0) + 1
-
-  const fieldUpdates = {
-    codeRequestLimitStartAt: limitStartAt,
+function updateUserLoginProps(user: DbUser, oneTimeCode: string|null, successfulLogin = false) {
+  const fieldUpdates = successfulLogin ? {
+    otcRequests: 0,
+    otcEntryAttempts: 0,
+    otcEntryLockedAt: null,
+    codeRequestLimitStartAt: null,
+    oneTimeCode: null,
+} : {
+    codeRequestLimitStartAt: codeRequestLimitActive(user) ?? new Date(),
+    otcRequests: (wuServ(user)?.otcRequests ?? 0) + 1,
     oneTimeCode,
-    otcRequests,
-  }
+}
 
   return Users.rawUpdateOne(
     {_id: user._id},
@@ -267,11 +270,6 @@ function updateUserLoginProps(user: DbUser, oneTimeCode: string|null) {
       }
     }}}
   );
-}
-
-function userImmuneToLoginLimit(user: DbUser) {
-  // emails ending in @wakingup.com are immune to login limits
-  return user.email?.endsWith('@wakingup.com')
 }
 
 function wuServ(user: DbUser) {
@@ -305,8 +303,6 @@ function isCodeRequestLocked(user: DbUser) {
 }
 
 function assertCodeRequestNotLocked(user: DbUser) {
-  if (userImmuneToLoginLimit(user)) return;
-
   if (isCodeRequestLocked(user)) {
     throw new AuthorizationError({
       message: loginCodeRequestLockedMessage(user),
@@ -321,8 +317,6 @@ function isCodeEntryLocked(user: DbUser) {
 }
 
 function assertCodeEntryNotLocked(user: DbUser) {
-  if (userImmuneToLoginLimit(user)) return;
-
   if (isCodeEntryLocked(user)) {
     throw new AuthorizationError({
       message: loginCodeEntryLockedMessage(user),
@@ -424,7 +418,7 @@ const authenticationResolvers = {
       const devCodeOkay = devLoginsAllowedSetting.get() && user && code === '1234';
 
       if (validCode || devCodeOkay) {
-        await updateUserLoginProps(user, null)
+        await updateUserLoginProps(user, null, true)
 
         const token = await createAndSetToken(req, res, user)
         return { token };
