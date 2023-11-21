@@ -144,6 +144,11 @@ export default class CommentsRepo extends AbstractRepo<DbComment> {
         post."slug" AS "postSlug",
         COALESCE(post."isEvent", FALSE) AS "postIsEvent",
         post."groupId" AS "postGroupId",
+        CASE 
+          WHEN post."draft" IS TRUE OR post."deletedDraft" IS TRUE 
+            THEN TRUE 
+          ELSE FALSE 
+        END AS "postDeletedOrDraft",
         fm_post_tag_ids(post."_id") AS "tags",
         CASE WHEN c."tagId" IS NULL
           THEN fm_post_tag_ids(post."_id")
