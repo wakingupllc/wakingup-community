@@ -412,27 +412,27 @@ export const menuTabs: ForumOptions<Array<MenuTab>> = {
     // }, {
       id: 'events',
       title: 'Retreats & Events',
-      link: '/posts/fzFMWZvkNbbrYbK3s/retreats-and-events',
+      link: '/posts/FDGqhc2Z554onz6dj/retreats-and-events',
       subItem: true,
     }, {
       id: 'ideas',
       title: 'App Ideas',
-      link: '/posts/tD8mrWy6ApSBdDxYw/app-ideas',
+      link: '/posts/KFAYehECPshsrhNhH/app-ideas',
       subItem: true,
     }, {
       id: 'feedback',
       title: 'Forum Feedback',
-      link: '/posts/8P8fvgDDrriQ75Zvu/forum-feedback',
+      link: '/posts/exLAY7tRyroZtQPpZ/forum-feedback',
       subItem: true,
     }, {
       id: 'faq',
       title: 'Forum FAQ',
-      link: '/posts/CdfimAkFoQwjgkwo7/forum-faq',
+      link: '/posts/4ikorpg7BWj8hwdqC/forum-faq',
       subItem: true,
     }, {
       id: 'support',
       title: 'Support',
-      link: '/posts/dinC4G4eAhD7vdBQH/support-1',
+      link: '/posts/Kd5KHnhR7uzfSF4hB/support',
       subItem: true,
     }
   ]
