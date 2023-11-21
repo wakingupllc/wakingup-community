@@ -93,7 +93,7 @@ function validateTitleIsPresent(document: DbPost) {
   // This duplicates the functionality of the schema field being optional: false, for
   // the sole reason that it makes the error message become "Please add a post title"
   // rather than "Please add a title"
-  if (!document.title || document.title.length === 0) {
+  if (!document.title) {
     throwValidationError({
       typeName: "Post",
       field: "title",
