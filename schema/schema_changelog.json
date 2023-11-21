@@ -323,5 +323,10 @@
     "acceptsSchemaHash": "f23d5b34694ce7518a560c1b61f003d9",
     "acceptedByMigration": "20231109T010214.add_subscribe_welcome_emails_config.ts",
     "timestamp": "2023-11-09T01:02:14.000Z"
+  },
+  {
+    "acceptsSchemaHash": "661ad6cacfc4b24f6f6adc2135212254",
+    "acceptedByMigration": "20231117T194420.update_notification_defaults.ts",
+    "timestamp": "2023-11-17T19:44:20.000Z"
   }
 ]

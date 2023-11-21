@@ -1342,7 +1342,7 @@ const schema: SchemaType<DbUser> = {
     // Used to be "Comments on posts/events I'm subscribed to"
     // But we're hiding events and other post subscriptions for now
     label: `Comments on my posts`,
-    ...notificationTypeSettingsField({ channel: "both", batchingFrequency: "daily"}),
+    ...notificationTypeSettingsField({ channel: "both" }),
   },
   notificationShortformContent: {
     label: isEAForum
@@ -1353,7 +1353,7 @@ const schema: SchemaType<DbUser> = {
   },
   notificationRepliesToMyComments: {
     label: "Replies to my comments",
-    ...notificationTypeSettingsField({ channel: "both", batchingFrequency: "daily"}),
+    ...notificationTypeSettingsField({ channel: "both" }),
   },
   notificationRepliesToSubscribedComments: {
     label: "Replies to comments I'm subscribed to",
@@ -1422,7 +1422,7 @@ const schema: SchemaType<DbUser> = {
   },
   notificationNewMention: {
     label: "Mentions",
-    ...notificationTypeSettingsField({ channel: "both", batchingFrequency: "daily"}),
+    ...notificationTypeSettingsField({ channel: "both" }),
   },
   notificationDebateCommentsOnSubscribedPost: {
     label: "New dialogue content in a dialogue I'm subscribed to",
