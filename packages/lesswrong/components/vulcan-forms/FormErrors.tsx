@@ -15,9 +15,9 @@ const FormErrors = ({ errors, classes, filteredErrors = ['app.validation_error']
   errors: any[]
   classes: ClassesType,
   filteredErrors?: string[]
-}) => (
-  <div className={classNames(classes.root, "form-errors")}>
-    {!!errors.length && (
+}) => <>
+  {!!errors.length && (
+    <div className={classNames(classes.root, "form-errors")}>
       <Components.Alert className="flash-message" variant="danger">
         <ul>
           {errors.map((error, index) => (
@@ -28,9 +28,9 @@ const FormErrors = ({ errors, classes, filteredErrors = ['app.validation_error']
           ))}
         </ul>
       </Components.Alert>
-    )}
-  </div>
-);
+    </div>
+  )}
+</>;
 const FormErrorsComponent = registerComponent('FormErrors', FormErrors, {styles});
 
 declare global {
