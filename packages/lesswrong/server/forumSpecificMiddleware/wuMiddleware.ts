@@ -237,27 +237,17 @@ addGraphQLSchema(loginData);
 addGraphQLSchema(requestedCodeData);
 
 function updateUserLoginProps(user: DbUser, oneTimeCode: string|null, successfulLogin = false) {
-  const limitStartAt = codeRequestLimitActive(user) ?? new Date()
-  const otcRequests = (wuServ(user)?.otcRequests ?? 0) + 1
-
-  const loginFields = (() => {
-    if (successfulLogin) {
-      return {
-        otcRequests: 0,
-        otcEntryAttempts: 0,
-        otcEntryLockedAt: null,
-        codeRequestLimitStartAt: null
-      }
-    }
-    return {}
-  })()
-
-  const fieldUpdates = {
-    codeRequestLimitStartAt: limitStartAt,
+  const fieldUpdates = successfulLogin ? {
+    otcRequests: 0,
+    otcEntryAttempts: 0,
+    otcEntryLockedAt: null,
+    codeRequestLimitStartAt: null,
+    oneTimeCode: null,
+} : {
+    codeRequestLimitStartAt: codeRequestLimitActive(user) ?? new Date(),
+    otcRequests: (wuServ(user)?.otcRequests ?? 0) + 1,
     oneTimeCode,
-    otcRequests,
-    ...loginFields
-  }
+}
 
   return Users.rawUpdateOne(
     {_id: user._id},
