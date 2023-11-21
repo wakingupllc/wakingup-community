@@ -103,11 +103,7 @@ function validateTitleIsPresent(document: DbPost) {
   }
 }
 
-getCollectionHooks("Posts").createValidate.add(function DebateMustHaveCoauthor(validationErrors, { document }) {
-  if (document.debate && !document.coauthorStatuses?.length) {
-    throw new Error('Dialogue must have at least one co-author!');
-  }
-
+getCollectionHooks("Posts").createValidate.add((validationErrors, { document }) => {
   validateTitleIsPresent(document);
 
   return validationErrors;
