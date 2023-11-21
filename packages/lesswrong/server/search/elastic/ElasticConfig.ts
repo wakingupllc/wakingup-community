@@ -262,6 +262,7 @@ const elasticSearchConfig: Record<AlgoliaIndexCollectionName, IndexConfig> = {
     filters: [
       {range: {karma: {gte: 0}}},
       {term: {deleted: false}},
+      {term: {completedOnboarding: true}},
       {term: {deleteContent: false}},
     ],
     mappings: {
