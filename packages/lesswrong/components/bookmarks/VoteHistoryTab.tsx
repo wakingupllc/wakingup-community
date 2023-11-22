@@ -40,6 +40,7 @@ const VoteHistoryTab = ({classes}: {classes: ClassesType}) => {
   const getContentItemNode = (vote: UserVotesWithDocument) => {
     if (vote.post) {
       const item = vote.post;
+      // isVoteable={false} affects how the vote buttons are rendered, making them consistent with other post lists
       return (
         <div key={item._id} className={classes.postItem}>
           <PostsItem post={item} isVoteable={false} />
