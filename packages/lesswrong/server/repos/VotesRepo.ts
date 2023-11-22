@@ -319,4 +319,33 @@ export default class VotesRepo extends AbstractRepo<DbVote> {
         window_start_key;
     `, [postIds, startDate, endDate]);
   }
+
+  async getUserVotesWithNonDeletedDocuments({
+    userId,
+    offset = 0,
+    limit = 20,
+  }: {
+    userId: string
+    offset?: number,
+    limit?: number,
+  }): Promise<DbVote[]> {
+    return this.any(`
+      SELECT RecentVotes.*
+      FROM (
+          SELECT *,
+                ROW_NUMBER() OVER(PARTITION BY "Votes"."documentId" ORDER BY "Votes"."votedAt" DESC) as rn
+          FROM "Votes"
+          WHERE "Votes"."userId" = $1
+          AND cancelled IS NOT TRUE
+      ) AS RecentVotes
+      LEFT JOIN "Posts" ON RecentVotes."documentId" = "Posts"._id AND RecentVotes."collectionName" = 'Posts'
+      LEFT JOIN "Comments" ON RecentVotes."documentId" = "Comments"._id AND RecentVotes."collectionName" = 'Comments'
+      WHERE RecentVotes.rn = 1
+      AND "Posts"."draft" IS NOT TRUE AND "Posts"."deletedDraft" IS NOT TRUE AND ("Posts"."userId" <> $1 OR "Posts"."userId" IS NULL)
+      AND "Comments"."deleted" IS NOT TRUE AND "Comments"."deletedPublic" IS NOT TRUE AND ("Comments"."userId" <> $1 OR "Comments"."userId" IS NULL)
+      ORDER BY RecentVotes."votedAt" DESC
+      OFFSET $2
+      LIMIT $3
+    `, [userId, offset, limit]);
+  }
 }

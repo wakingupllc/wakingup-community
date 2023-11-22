@@ -203,3 +203,5 @@ import './server/search/elastic/elasticGraphQL';
 import './server/analytics/postViewsHybridView';
 import './server/analytics/postViewTimesHybridView';
 import './server/analytics/hybridViews';
+
+import './server/resolvers/voteResolvers';

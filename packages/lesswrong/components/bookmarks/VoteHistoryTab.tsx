@@ -2,8 +2,8 @@ import React from 'react';
 import { registerComponent, Components } from '../../lib/vulcan-lib';
 import {AnalyticsContext} from "../../lib/analyticsEvents";
 import moment from 'moment';
-import { useMulti } from '../../lib/crud/withMulti';
 import { commentsNodeRootMarginBottom, maxSmallish, maxTiny } from '../../themes/globalStyles/globalStyles';
+import { usePaginatedResolver } from '../hooks/usePaginatedResolver';
 
 const styles = (theme: ThemeType): JssStyles => ({
   loadMoreSpinner: {
@@ -27,30 +27,26 @@ const VoteHistoryTab = ({classes}: {classes: ClassesType}) => {
   const defaultLimit = 10;
   const pageSize = 30;
 
-  const { results: votes, loading, loadMoreProps } = useMulti({
-    terms: {
-      view: "userVotes",
-      collectionNames: ["Posts", "Comments"],
-    },
-    collectionName: "Votes",
-    fragmentName: 'UserVotesWithNonDeletedDocument',
+  const {loadMoreProps, loading, results: votes} = usePaginatedResolver({
+    fragmentName: "UserVotesWithDocument",
+    resolverName: "UserVotesWithNonDeletedDocuments",
     limit: defaultLimit,
     itemsPerPage: pageSize,
-  })
+  });
 
   /**
    * Returns either a PostItem or CommentsNode, depending on the content type
   */
-  const getContentItemNode = (vote: UserVotesWithNonDeletedDocument) => {
-    if (vote.nonDeletedPost) {
-      const item = vote.nonDeletedPost;
+  const getContentItemNode = (vote: UserVotesWithDocument) => {
+    if (vote.post) {
+      const item = vote.post;
       return (
         <div key={item._id} className={classes.postItem}>
-          <PostsItem post={item} isVoteable />
+          <PostsItem post={item} isVoteable={false} />
         </div>
       );
-    } else if (vote.nonDeletedComment) {
-      const item = vote.nonDeletedComment;
+    } else if (vote.comment) {
+      const item = vote.comment;
       return <CommentsNode
         key={item._id}
         comment={item}
@@ -74,7 +70,7 @@ const VoteHistoryTab = ({classes}: {classes: ClassesType}) => {
   const todaysContent = votes.filter(v => moment(v.votedAt).isSame(moment(), 'day'))
   const yesterdaysContent = votes.filter(v => moment(v.votedAt).isSame(moment().subtract(1, 'day'), 'day'))
   const olderContent = votes.filter(v => moment(v.votedAt).isBefore(moment().subtract(1, 'day'), 'day'))
-  
+
   return <AnalyticsContext pageSectionContext="voteHistoryTab">
     {!!todaysContent.length && <SectionTitle title="Today"/>}
     {todaysContent.map((vote) => getContentItemNode(vote))}
