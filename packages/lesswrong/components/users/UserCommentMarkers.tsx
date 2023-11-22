@@ -2,6 +2,7 @@ import React from "react";
 import { registerComponent, Components } from "../../lib/vulcan-lib";
 import { isNewUser } from "../../lib/collections/users/helpers";
 import { isFriendlyUI } from "../../themes/forumTheme";
+import {showNewUserIconSetting} from '../../lib/publicSettings.ts'
 
 const styles = (theme: ThemeType): JssStyles => ({
   iconWrapper: {
@@ -23,11 +24,13 @@ const styles = (theme: ThemeType): JssStyles => ({
 const UserCommentMarkers = ({
   user,
   isPostAuthor,
+  enableNewUserIcon = showNewUserIconSetting.get,
   className,
   classes,
 }: {
   user?: UsersMinimumInfo|null,
   isPostAuthor?: boolean,
+  enableNewUserIcon?: () => boolean,
   className?: string,
   classes: ClassesType,
 }) => {
@@ -36,7 +39,7 @@ const UserCommentMarkers = ({
   }
 
   const showAuthorIcon = isFriendlyUI && isPostAuthor;
-  const showNewUserIcon = isNewUser(user);
+  const showNewUserIcon = enableNewUserIcon() && isNewUser(user)
 
   if (!showAuthorIcon && !showNewUserIcon) {
     return null;
