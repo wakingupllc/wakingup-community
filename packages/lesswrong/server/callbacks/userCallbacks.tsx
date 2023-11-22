@@ -32,6 +32,7 @@ import keyBy from 'lodash/keyBy';
 import {userFindOneByEmail} from "../commonQueries";
 import { addToSendgridList, removeFromSendgridList } from '../emails/sendgridListManagement';
 import { sendEmailSendgridTemplate } from '../emails/sendEmail';
+import { throwValidationError } from '../vulcan-lib';
 
 const MODERATE_OWN_PERSONAL_THRESHOLD = 50
 const TRUSTLEVEL1_THRESHOLD = 2000
@@ -559,7 +560,12 @@ async function sendWelcomeMessageTo(userId: string) {
 getCollectionHooks("Users").updateBefore.add(async function UpdateDisplayName(data: DbUser, {oldDocument}) {
   if (data.displayName !== undefined && data.displayName !== oldDocument.displayName) {
     if (!data.displayName) {
-      throw new Error("You must enter a display name");
+      throwValidationError({
+        typeName: "User",
+        field: 'displayName',
+        alias: 'display name',
+        errorType: "errors.required",
+      });
     }
     if (await Users.findOne({displayName: data.displayName})) {
       throw new Error("This display name is already taken");
