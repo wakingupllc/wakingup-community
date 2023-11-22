@@ -160,25 +160,6 @@ const schema: SchemaType<DbVote> = {
     }
   }),
 
-  nonDeletedComment: resolverOnlyField({
-    type: "Comment",
-    graphQLtype: 'Comment',
-    canRead: ['guests'],
-    resolver: async (vote: DbVote, args: void, context: ResolverContext): Promise<DbComment|null> => {
-      if (vote.collectionName === "Comments") {
-        const comment = await context.loaders.Comments.load(vote.documentId);
-        if (comment?.deleted || comment?.deletedPublic) return null;
-
-        const post = await context.loaders.Posts.load(comment.postId);
-        if (post?.deletedDraft) return null;
-
-        return comment
-      } else {
-        return null;
-      }
-    }
-  }),
-
   post: resolverOnlyField({
     type: "Post",
     graphQLtype: 'Post',
@@ -186,21 +167,6 @@ const schema: SchemaType<DbVote> = {
     resolver: async (vote: DbVote, args: void, context: ResolverContext): Promise<DbPost|null> => {
       if (vote.collectionName === "Posts") {
         return await context.loaders.Posts.load(vote.documentId);
-      } else {
-        return null;
-      }
-    }
-  }),
-
-  nonDeletedPost: resolverOnlyField({
-    type: "Post",
-    graphQLtype: 'Post',
-    canRead: ['guests'],
-    resolver: async (vote: DbVote, args: void, context: ResolverContext): Promise<DbPost|null> => {
-      if (vote.collectionName === "Posts") {
-        const post = await context.loaders.Posts.load(vote.documentId);
-        if (post.deletedDraft) return null;
-        return post
       } else {
         return null;
       }
