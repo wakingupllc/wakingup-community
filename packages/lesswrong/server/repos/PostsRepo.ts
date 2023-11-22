@@ -74,7 +74,7 @@ export default class PostsRepo extends AbstractRepo<DbPost> {
       SELECT p.*, rs."lastUpdated"
       FROM "Posts" p
       JOIN "ReadStatuses" rs ON rs."postId" = p."_id"
-      WHERE rs."userId" = '${userId}'
+      WHERE rs."userId" = '${userId}' AND p."draft" IS NOT TRUE AND p."deletedDraft" IS NOT TRUE
       ORDER BY rs."lastUpdated" desc
       LIMIT $1
     `, [limit]), "getReadHistoryForUser");

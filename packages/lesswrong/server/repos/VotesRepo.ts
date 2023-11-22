@@ -319,4 +319,34 @@ export default class VotesRepo extends AbstractRepo<DbVote> {
         window_start_key;
     `, [postIds, startDate, endDate]);
   }
+
+  async getUserVotesWithNonDeletedDocuments({
+    userId,
+    offset = 0,
+    limit = 20,
+  }: {
+    userId: string
+    offset?: number,
+    limit?: number,
+  }): Promise<DbVote[]> {
+    // The inner query gets the most recent non-cancelled vote for each document, and the outer query joins the votes
+    // to the documents so we can filter out deleted/draft ones.
+    return this.any(`
+      SELECT RecentVotes.*
+      FROM (
+          SELECT DISTINCT ON ("Votes"."documentId") *
+          FROM "Votes"
+          WHERE "Votes"."userId" = $1
+          AND cancelled IS NOT TRUE
+          ORDER BY "Votes"."documentId", "Votes"."votedAt" DESC
+      ) AS RecentVotes
+      LEFT JOIN "Posts" ON RecentVotes."documentId" = "Posts"._id AND RecentVotes."collectionName" = 'Posts'
+      LEFT JOIN "Comments" ON RecentVotes."documentId" = "Comments"._id AND RecentVotes."collectionName" = 'Comments'
+      WHERE "Posts"."draft" IS NOT TRUE AND "Posts"."deletedDraft" IS NOT TRUE AND ("Posts"."userId" <> $1 OR "Posts"."userId" IS NULL)
+      AND "Comments"."deleted" IS NOT TRUE AND "Comments"."deletedPublic" IS NOT TRUE AND ("Comments"."userId" <> $1 OR "Comments"."userId" IS NULL)
+      ORDER BY RecentVotes."votedAt" DESC
+      OFFSET $2
+      LIMIT $3
+    `, [userId, offset, limit]);
+  }
 }
