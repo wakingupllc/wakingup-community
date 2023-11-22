@@ -161,9 +161,8 @@ const WUUserOnboarding: React.FC<WUUserOnboardingProps> = ({currentUser, classes
 
   const isErrorField = function(name: string) {
     return serverValidationErrors.some((err) => {
-      // Errors are processed into some complicated thing that, usually, a Vulcan form would handle. Since this isn't
-      // a Vulcan form, we delve into the error fields to check the error field ourselves.
-      const path = err?.graphQLErrors?.[0]?.data?.errors?.[0]?.path
+      // Detects SimpleValidationErrors but would probably need adjusting for regular validation errors
+      const path = err?.graphQLErrors?.[0]?.data?.path
       return name === path
     })
   }
