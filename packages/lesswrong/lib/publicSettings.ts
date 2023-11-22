@@ -178,3 +178,4 @@ export const notificationBatchHourInUserTzSetting = new DatabasePublicSetting<nu
 export const showVersionHistorySetting = new DatabasePublicSetting<boolean>('showVersionHistory', true);
 export const sendAutoMessageOnCommentRemovalSetting = new DatabasePublicSetting<boolean>('sendAutoMessageOnCommentRemoval', true);
 export const commentPermalinksAtTopSetting = new DatabasePublicSetting<boolean>('commentPermalinksAtTop', true);
+export const showNewUserIconSetting = new DatabasePublicSetting<boolean>('showNewUserIcon', true);
