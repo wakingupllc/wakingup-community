@@ -1,5 +1,5 @@
 import SimpleSchema from 'simpl-schema';
-import { Utils, slugify, getNestedProperty, throwValidationError } from '../../vulcan-lib';
+import { Utils, slugify, getNestedProperty, throwValidationError, SimpleValidationError } from '../../vulcan-lib';
 import {userGetProfileUrl, getAuth0Id, getUserEmail, userOwnsAndInGroup } from "./helpers";
 import { userGetEditUrl } from '../../vulcan-users/helpers';
 import {
@@ -288,11 +288,10 @@ const validateName = (name: string, field: string) => {
   if (!name) return;
 
   if (usernameIsBadWord(name)) {
-    throwValidationError({
-      typeName: "User",
-      field,
-      errorType: "errors.disallowedUsername",
-    });
+    throw new SimpleValidationError({
+      message: "Sorry, that username isn't allowed. Please try another.",
+      data: { path: field }
+    })
   }
 }
 

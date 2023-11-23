@@ -8,6 +8,7 @@ import {Components, registerComponent} from '../../lib/vulcan-lib'
 import {TosLink} from '../posts/PostsAcceptTos'
 import {textFieldContainerStyles, textFieldStyles} from '../form-components/MuiTextField.tsx'
 import {useTimezone} from '../common/withTimezone.tsx'
+import classNames from 'classnames'
 
 const styles = (theme: ThemeType): JssStyles => ({
   root: {
@@ -56,6 +57,10 @@ const styles = (theme: ThemeType): JssStyles => ({
     border: theme.palette.border.grey300,
     flexGrow: 1,
     marginRight: '0.5em',
+    marginTop: '0.5em',
+    "&.WUUserOnboarding-inputErrors": {
+      border: `2px solid ${theme.palette.error.main}`,
+    }
   },
   nameContainer: {
     display: 'flex',
@@ -70,14 +75,14 @@ type WUUserOnboardingProps = {
   currentUser: UsersCurrent
   classes: ClassesType
 }
-
-const WUTextField = ({classes, ...props}: TextFieldProps & { classes: ClassesType }) =>
-  <div className={classes.inputContainer}>
+const WUTextField = ({classes, ...props}: TextFieldProps & { classes: ClassesType }) => {
+  return <div className={classNames(classes.inputContainer, { [classes.inputErrors]: props.error })}>
     <TextField
       {...props}
       InputProps={{disableUnderline: true}}
       className={classes.formInput}
     /></div>
+}
 
 const WUUserOnboarding: React.FC<WUUserOnboardingProps> = ({currentUser, classes}) => {
   const [username, setUsername] = useState('')
@@ -150,6 +155,14 @@ const WUUserOnboarding: React.FC<WUUserOnboardingProps> = ({currentUser, classes
     }
   }
 
+  const isErrorField = function(name: string) {
+    return serverValidationErrors.some((err) => {
+      // Detects SimpleValidationErrors but would probably need adjusting for regular validation errors
+      const path = err?.graphQLErrors?.[0]?.data?.path
+      return name === path
+    })
+  }
+
   return <SingleColumnSection>
     <div className={classes.root}>
       <Typography variant="display2" gutterBottom className={classes.title}>
@@ -180,6 +193,7 @@ const WUUserOnboarding: React.FC<WUUserOnboardingProps> = ({currentUser, classes
           onBlur={(_event) => validateUsername(username)}
           classes={classes}
           inputProps={{maxLength: 70}}
+          error={isErrorField('username')}
         />
       </div>
 
