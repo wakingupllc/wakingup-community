@@ -89,11 +89,7 @@ if (HAS_EMBEDDINGS_FOR_RECOMMENDATIONS) {
   );
 }
 
-getCollectionHooks("Posts").createValidate.add(function DebateMustHaveCoauthor(validationErrors, { document }) {
-  if (document.debate && !document.coauthorStatuses?.length) {
-    throw new Error('Dialogue must have at least one co-author!');
-  }
-
+function validateTitleIsPresent(document: DbPost) {
   // This duplicates the functionality of the schema field being optional: false, for
   // the sole reason that it makes the error message become "Please add a post title"
   // rather than "Please add a title"
@@ -105,6 +101,16 @@ getCollectionHooks("Posts").createValidate.add(function DebateMustHaveCoauthor(v
       alias: "post title"
     });
   }
+}
+
+getCollectionHooks("Posts").createValidate.add((validationErrors, { document }) => {
+  validateTitleIsPresent(document);
+
+  return validationErrors;
+});
+
+getCollectionHooks("Posts").updateValidate.add((validationErrors, { document }) => {
+  validateTitleIsPresent(document);
 
   return validationErrors;
 });

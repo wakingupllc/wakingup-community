@@ -145,6 +145,7 @@ const elasticSearchConfig: Record<AlgoliaIndexCollectionName, IndexConfig> = {
     tiebreaker: "publicDateMs",
     filters: [
       {term: {deleted: false}},
+      {term: {postDeletedOrDraft: false}},
       {term: {rejected: false}},
       {term: {retracted: false}},
       {term: {spam: false}},
@@ -261,6 +262,7 @@ const elasticSearchConfig: Record<AlgoliaIndexCollectionName, IndexConfig> = {
     filters: [
       {range: {karma: {gte: 0}}},
       {term: {deleted: false}},
+      {term: {completedOnboarding: true}},
       {term: {deleteContent: false}},
     ],
     mappings: {

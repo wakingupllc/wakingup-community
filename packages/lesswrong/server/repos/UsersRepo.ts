@@ -177,6 +177,7 @@ export default class UsersRepo extends AbstractRepo<DbUser> {
         u."first_name" AS "firstName",
         u."last_name" AS "lastName",
         u."wu_created_at" AS "wuCreatedAt",
+        u."acceptedTos" AS "completedOnboarding",
         NOW() AS "exportedAt"
       FROM "Users" u
     `;

@@ -41,6 +41,10 @@ import badWords from '../../badWords.json';
 // Anything else..
 ///////////////////////////////////////
 
+export const usernameIsBadWord = (username: string) => {
+  return badWords.includes(username.toLowerCase().trim()) || badWords.includes(username.toLowerCase().replace(/[0-9]/g, "").trim())
+}
+
 const createDisplayName = (user: DbInsertion<DbUser>): string => {
   const profileName = getNestedProperty(user, 'profile.name');
   const twitterName = getNestedProperty(user, 'services.twitter.screenName');
@@ -283,7 +287,7 @@ export type RateLimitReason = "moderator"|"lowKarma"|"downvoteRatio"|"universal"
 const validateName = (name: string, field: string) => {
   if (!name) return;
 
-  if (badWords.includes(name.toLowerCase().trim()) || badWords.includes(name.toLowerCase().replace(/[0-9]/g, "").trim())) {
+  if (usernameIsBadWord(name)) {
     throw new SimpleValidationError({
       message: "Sorry, that username isn't allowed. Please try another.",
       data: { path: field }
@@ -1341,7 +1345,7 @@ const schema: SchemaType<DbUser> = {
     // Used to be "Comments on posts/events I'm subscribed to"
     // But we're hiding events and other post subscriptions for now
     label: `Comments on my posts`,
-    ...notificationTypeSettingsField({ channel: "both", batchingFrequency: "daily"}),
+    ...notificationTypeSettingsField({ channel: "both" }),
   },
   notificationShortformContent: {
     label: isEAForum
@@ -1352,7 +1356,7 @@ const schema: SchemaType<DbUser> = {
   },
   notificationRepliesToMyComments: {
     label: "Replies to my comments",
-    ...notificationTypeSettingsField({ channel: "both", batchingFrequency: "daily"}),
+    ...notificationTypeSettingsField({ channel: "both" }),
   },
   notificationRepliesToSubscribedComments: {
     label: "Replies to comments I'm subscribed to",
@@ -1421,7 +1425,7 @@ const schema: SchemaType<DbUser> = {
   },
   notificationNewMention: {
     label: "Mentions",
-    ...notificationTypeSettingsField({ channel: "both", batchingFrequency: "daily"}),
+    ...notificationTypeSettingsField({ channel: "both" }),
   },
   notificationDebateCommentsOnSubscribedPost: {
     label: "New dialogue content in a dialogue I'm subscribed to",

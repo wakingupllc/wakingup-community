@@ -15,8 +15,8 @@ const styles = (theme: ThemeType): JssStyles => ({
     background: theme.palette.panelBackground.default,
     padding: '40px 22px',
     borderRadius: 6,
-    
-    "& .MuiIconButton-root": {
+
+    '& .MuiIconButton-root': {
       paddingTop: 7,
       paddingBottom: 7,
     },
@@ -89,19 +89,17 @@ const WUUserOnboarding: React.FC<WUUserOnboardingProps> = ({currentUser, classes
   const [firstName, setFirstName] = useState(currentUser.first_name)
   const [lastName, setLastName] = useState(currentUser.last_name)
   const [subscribeToDigest, setSubscribeToDigest] = useState(true)
-  const [allowNewPrivateMessageRequests, setAllowNewPrivateMessageRequests] = useState(true)
   const [acceptedTos, setAcceptedTos] = useState(false)
   const [mapLocation, setMapLocation] = useState(currentUser.mapLocation)
   const [validationError, setValidationError] = useState('Username is empty by default')
   const [serverValidationErrors, setServerValidationErrors] = useState<any[]>([])
   const {timezone} = useTimezone()
-  
+
   const [updateUser] = useMutation(gql`
     mutation WUUserOnboarding(
     $username: String!, 
     $subscribeToDigest: Boolean!, 
     $acceptedTos: Boolean!,
-    $allowNewPrivateMessageRequests: Boolean!,
     $firstName: String, 
     $lastName: String, 
     $mapLocation: JSON,
@@ -111,7 +109,6 @@ const WUUserOnboarding: React.FC<WUUserOnboardingProps> = ({currentUser, classes
       username: $username, 
       subscribeToDigest: $subscribeToDigest, 
       acceptedTos: $acceptedTos,
-      allowNewPrivateMessageRequests: $allowNewPrivateMessageRequests,
       firstName: $firstName, 
       lastName: $lastName, 
       mapLocation: $mapLocation,
@@ -143,7 +140,6 @@ const WUUserOnboarding: React.FC<WUUserOnboardingProps> = ({currentUser, classes
           subscribeToDigest,
           firstName,
           lastName,
-          allowNewPrivateMessageRequests,
           mapLocation,
           acceptedTos,
           timezone,
@@ -174,25 +170,24 @@ const WUUserOnboarding: React.FC<WUUserOnboardingProps> = ({currentUser, classes
       </Typography>
 
       <Typography variant="body2">
-        We're glad you're here. This is a new place for Waking Up members to connect, ask questions, share experiences,
+        We're glad you're here. This is a place for Waking Up members to ask questions, share experiences,
         and support each other in meditation and beyond.
       </Typography>
       <br/>
       <Typography variant="body2">
-        Before joining us on the forum, take a moment to complete your community profile.
+        Before joining us in the community, take a moment to complete your profile.
       </Typography>
-      <br/>
 
       <div className={classes.section}>
         <Typography variant="display1" className={classes.sectionHeadingText} gutterBottom>
-          Create a username
+          Create a unique username
         </Typography>
         <Typography variant="body2" gutterBottom>
-          Your username will appear next to your posts and comments, and your full name will show up on your profile.
-          We recommend using your real name in the community.
+          Your username will appear next to your posts and comments. You’ll need to email us if you want to change this
+          later.
         </Typography>
         <WUTextField
-          label={'Username'}
+          label={'Unique Username (required)'}
           value={username}
           onChange={(event) => setUsername(event.target.value)}
           onBlur={(_event) => validateUsername(username)}
@@ -200,6 +195,16 @@ const WUUserOnboarding: React.FC<WUUserOnboardingProps> = ({currentUser, classes
           inputProps={{maxLength: 70}}
           error={isErrorField('username')}
         />
+      </div>
+
+      <div className={classes.section}>
+        <Typography variant="display1" className={classes.sectionHeadingText} gutterBottom>
+          Share your first and last name
+        </Typography>
+        <Typography variant="body2" gutterBottom>
+          Your first and last name will appear on your profile page. We recommend using your real name in the community
+          to encourage the highest quality interactions.
+        </Typography>
         <div className={classes.nameContainer}>
           <WUTextField
             label="First Name (optional)"
@@ -221,8 +226,8 @@ const WUUserOnboarding: React.FC<WUUserOnboardingProps> = ({currentUser, classes
           Set your city
         </Typography>
         <Typography variant="body2" gutterBottom>
-          Your city will appear on your profile. (And we may explore features that help you connect with other members
-          near you in the future.)
+          Your city will appear on your profile. (We may explore features that help you connect with other members near
+          you in the future.)
         </Typography>
         <div className={classes.inputContainer}>
           <LocationPicker
@@ -240,7 +245,7 @@ const WUUserOnboarding: React.FC<WUUserOnboardingProps> = ({currentUser, classes
 
       <div className={classes.section}>
         <Typography variant="display1" className={classes.sectionHeadingText} gutterBottom>
-          Add a photo
+          Add a profile photo
         </Typography>
         <Typography variant="body2" gutterBottom>
           You can use a default avatar from the Waking Up app or add a photo of yourself (encouraged).
@@ -251,28 +256,10 @@ const WUUserOnboarding: React.FC<WUUserOnboardingProps> = ({currentUser, classes
 
       <div className={classes.section}>
         <Typography variant="display1" className={classes.sectionHeadingText} gutterBottom>
-          Control private messages
-        </Typography>
-        <Typography variant="body2" className={classes.sectionHelperText} gutterBottom>
-          Decide whether you want to receive private messages from other members.
-        </Typography>
-        <FormControlLabel
-          control={
-            <Checkbox
-              checked={allowNewPrivateMessageRequests}
-              onChange={event => setAllowNewPrivateMessageRequests(event.target.checked)}
-            />
-          }
-          label="Allow new private message requests"
-        />
-      </div>
-
-      <div className={classes.section}>
-        <Typography variant="display1" className={classes.sectionHeadingText} gutterBottom>
           Get a weekly email
         </Typography>
         <Typography variant="body2" className={classes.sectionHelperText} gutterBottom>
-          We’ll send notes and recommended posts from the community. You can always unsubscribe.
+          We’ll send notes and recommended posts from the community about once a week. You can unsubscribe anytime.
         </Typography>
         <FormControlLabel
           control={
@@ -281,7 +268,7 @@ const WUUserOnboarding: React.FC<WUUserOnboardingProps> = ({currentUser, classes
               onChange={event => setSubscribeToDigest(event.target.checked)}
             />
           }
-          label="Get the weekly community email"
+          label="Subscribe to the weekly community digest"
         />
       </div>
 
@@ -298,14 +285,14 @@ const WUUserOnboarding: React.FC<WUUserOnboardingProps> = ({currentUser, classes
           }
           label={
             <Typography variant="body2" className={classes.sectionHelperText} gutterBottom>
-              I acknowledge and agree that the Waking Up <TosLink>Terms of Service</TosLink> (last updated October 27,
-              2023) apply to my access to and use of the Community.
+              I accept the version of the Waking Up <TosLink>Terms of Service</TosLink> that was last updated on
+              November 16, 2023.
             </Typography>}
         />
       </div>
 
       <FormErrors errors={serverValidationErrors}/>
-      
+
       <div className={classes.submitButtonSection}>
         <EAButton onClick={handleSave} disabled={!!validationError || !acceptedTos}>
           Join the Community

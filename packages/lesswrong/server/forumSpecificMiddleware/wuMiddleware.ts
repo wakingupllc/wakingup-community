@@ -18,8 +18,9 @@ import {cloudinaryPublicIdFromUrl, moveToCloudinary} from '../scripts/convertIma
 import {devLoginsAllowedSetting, wuDefaultProfileImageCloudinaryIdSetting} from '../../lib/publicSettings.ts'
 import { sendEmailSendgridTemplate } from '../emails/sendEmail.ts'
 import moment from 'moment'
+import { usernameIsBadWord } from '../../lib/collections/users/schema.ts'
 
-const LOGIN_LIMIT_HOURS = 3
+const LOGIN_LIMIT_HOURS = 0.5
 const CODE_REQUEST_LIMIT = 5
 const CODE_ENTRY_LIMIT = 5
 const CODE_REQUEST_LIMIT_EXCEEDED_MSG = "User is locked out due to too many code requests"
@@ -88,7 +89,8 @@ async function getWakingUpUserData(email: string): Promise<any> {
   const wakingUpKey = wakingUpKeySetting.get()
   const wakingUpEndpoint = wakingUpEndpointSetting.get()
 
-  const url = `${wakingUpEndpoint}${email}`;
+  // The Waking Up API expects email addresses to be in lowercase.
+  const url = `${wakingUpEndpoint}${email.toLowerCase()}`;
   const headers = {
     'x-community-key': wakingUpKey,
   };
@@ -212,7 +214,7 @@ const rehostProfileImageToCloudinary = async (url: string) => {
   return cloudinaryPublicIdFromUrl(newUrl, folder)
 }
 
-function wuDisplayName(wuUser: WuUserData): string {
+const defaultName = (wuUser: WuUserData): string => {
   if (wuUser.first_name && wuUser.last_name) {
     return `${wuUser.first_name} ${wuUser.last_name}`
   } else if (wuUser.first_name) {
@@ -221,6 +223,16 @@ function wuDisplayName(wuUser: WuUserData): string {
     return wuUser.last_name
   } else {
     return wuUser.email!.split('@')[0]
+  }
+}
+
+function wuDisplayName(wuUser: WuUserData): string {
+  const name = defaultName(wuUser)
+
+  if (usernameIsBadWord(name)) {
+    return 'newuser'
+  } else {
+    return name
   }
 }
 
@@ -235,15 +247,18 @@ const loginData = `type LoginReturnData2 {
 addGraphQLSchema(loginData);
 addGraphQLSchema(requestedCodeData);
 
-function updateUserLoginProps(user: DbUser, oneTimeCode: string|null) {
-  const limitStartAt = codeRequestLimitActive(user) ?? new Date()
-  const otcRequests = (wuServ(user)?.otcRequests ?? 0) + 1
-
-  const fieldUpdates = {
-    codeRequestLimitStartAt: limitStartAt,
+function updateUserLoginProps(user: DbUser, oneTimeCode: string|null, successfulLogin = false) {
+  const fieldUpdates = successfulLogin ? {
+    otcRequests: 0,
+    otcEntryAttempts: 0,
+    otcEntryLockedAt: null,
+    codeRequestLimitStartAt: null,
+    oneTimeCode: null,
+} : {
+    codeRequestLimitStartAt: codeRequestLimitActive(user) ?? new Date(),
+    otcRequests: (wuServ(user)?.otcRequests ?? 0) + 1,
     oneTimeCode,
-    otcRequests,
-  }
+}
 
   return Users.rawUpdateOne(
     {_id: user._id},
@@ -273,14 +288,14 @@ function codeRequestLimitExpiresAt(user: DbUser) {
   const limitStartAt = codeRequestLimitActive(user)
   if (!limitStartAt) return null;
 
-  return moment(limitStartAt).add(LOGIN_LIMIT_HOURS, 'hours').format('h:mm a')
+  return moment(limitStartAt).add(LOGIN_LIMIT_HOURS, 'hours')
 }
 
 function codeEntryLockExpiresAt(user: DbUser) {
   const lockStartAt = wuServ(user)?.otcEntryLockedAt
   if (!lockStartAt) return null;
 
-  return moment(lockStartAt).add(LOGIN_LIMIT_HOURS, 'hours').format('h:mm a')
+  return moment(lockStartAt).add(LOGIN_LIMIT_HOURS, 'hours')
 }
 
 function isCodeRequestLocked(user: DbUser) {
@@ -310,14 +325,21 @@ function assertCodeEntryNotLocked(user: DbUser) {
   }
 }
 
+function minutesUntil(date: moment.Moment) {
+  const duration = moment.duration(moment(date).diff(moment()));
+  return Math.ceil(duration.asMinutes());
+}
+
 function loginCodeRequestLockedMessage(user: DbUser) {
   const limitExpiresAt = codeRequestLimitExpiresAt(user)
-  return `You have requested too many codes. Your account is locked until ${limitExpiresAt}.`
+
+  return `You've requested too many codes recently. You can request a new code in ${minutesUntil(limitExpiresAt!)} minutes or email community@wakingup.com for help.`;
 }
 
 function loginCodeEntryLockedMessage(user: DbUser) {
   const lockedAt = codeEntryLockExpiresAt(user);
-  return `You have attempted too many invalid codes. Your account is locked until ${lockedAt}.`
+
+  return `You have attempted too many invalid codes. You can try again in ${minutesUntil(lockedAt!)} minutes or email community@wakingup.com for help.`
 }
 
 async function incrementOtcEntryAttempts(user: DbUser) {
@@ -396,7 +418,7 @@ const authenticationResolvers = {
       const devCodeOkay = devLoginsAllowedSetting.get() && user && code === '1234';
 
       if (validCode || devCodeOkay) {
-        await updateUserLoginProps(user, null)
+        await updateUserLoginProps(user, null, true)
 
         const token = await createAndSetToken(req, res, user)
         return { token };

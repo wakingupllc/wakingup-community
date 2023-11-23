@@ -124,7 +124,6 @@ type WUUserOnboarding = {
   username: string
   subscribeToDigest: boolean
   acceptedTos: boolean
-  allowNewPrivateMessageRequests: boolean
   firstName?: string
   lastName?: string
   mapLocation: any 
@@ -212,8 +211,7 @@ addGraphQLResolvers({
     },
     async WUUserOnboarding(
       root: void,
-      // todo: allowNewPrivateMessageRequests doesn't exist for now, this need to be updated later when it's added
-      {username, subscribeToDigest, firstName, lastName, acceptedTos, allowNewPrivateMessageRequests, mapLocation, timezone}: WUUserOnboarding,
+      {username, subscribeToDigest, firstName, lastName, acceptedTos, mapLocation, timezone}: WUUserOnboarding,
       context: ResolverContext,
     ) {
       const {currentUser} = context
@@ -541,7 +539,6 @@ addGraphQLMutation(
   username: String!, 
   subscribeToDigest: Boolean!, 
   acceptedTos: Boolean!,
-  allowNewPrivateMessageRequests: Boolean!,
   firstName: String, 
   lastName: String, 
   mapLocation: JSON,
