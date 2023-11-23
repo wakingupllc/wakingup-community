@@ -44,6 +44,7 @@ const styles = (theme: ThemeType): JssStyles => ({
       color: theme.palette.primary.main,
       textDecoration: 'underline',
     },
+    marginBottom: "0.8em",
   },
   submitButtonSection: {
     marginTop: theme.spacing.unit * 3,
@@ -60,7 +61,7 @@ const styles = (theme: ThemeType): JssStyles => ({
     marginTop: '0.5em',
     "&.WUUserOnboarding-inputErrors": {
       border: `2px solid ${theme.palette.error.main}`,
-    }
+    },
   },
   nameContainer: {
     display: 'flex',
@@ -164,7 +165,7 @@ const WUUserOnboarding: React.FC<WUUserOnboardingProps> = ({currentUser, classes
   }
 
   return <SingleColumnSection>
-    <div className={classes.root}>
+    <form className={classes.root}>
       <Typography variant="display2" gutterBottom className={classes.title}>
         Welcome to {siteNameWithArticleSetting.get()} Beta
       </Typography>
@@ -180,43 +181,46 @@ const WUUserOnboarding: React.FC<WUUserOnboardingProps> = ({currentUser, classes
 
       <div className={classes.section}>
         <Typography variant="display1" className={classes.sectionHeadingText} gutterBottom>
-          Create a unique username
+          Create a username
         </Typography>
-        <Typography variant="body2" gutterBottom>
+        <Typography variant="body2" className={classes.sectionHelperText}>
           Your username will appear next to your posts and comments. You’ll need to email us if you want to change this
           later.
         </Typography>
         <WUTextField
-          label={'Unique Username (required)'}
+          label={'Username'}
           value={username}
           onChange={(event) => setUsername(event.target.value)}
           onBlur={(_event) => validateUsername(username)}
           classes={classes}
           inputProps={{maxLength: 70}}
           error={isErrorField('username')}
+          required
         />
       </div>
 
       <div className={classes.section}>
         <Typography variant="display1" className={classes.sectionHeadingText} gutterBottom>
-          Share your first and last name
+          Add your name
         </Typography>
-        <Typography variant="body2" gutterBottom>
+        <Typography variant="body2" className={classes.sectionHelperText}>
           Your first and last name will appear on your profile page. We recommend using your real name in the community
           to encourage the highest quality interactions.
         </Typography>
         <div className={classes.nameContainer}>
           <WUTextField
-            label="First Name (optional)"
+            label="First name"
             value={firstName || ''}
             onChange={(event) => setFirstName(event.target.value)}
             classes={classes}
+            required
           />
           <WUTextField
-            label="Last Name (optional)"
+            label="Last name or initial"
             value={lastName || ''}
             onChange={(event) => setLastName(event.target.value)}
             classes={classes}
+            required
           />
         </div>
       </div>
@@ -225,7 +229,7 @@ const WUUserOnboarding: React.FC<WUUserOnboardingProps> = ({currentUser, classes
         <Typography variant="display1" className={classes.sectionHeadingText} gutterBottom>
           Set your city
         </Typography>
-        <Typography variant="body2" gutterBottom>
+        <Typography variant="body2" className={classes.sectionHelperText}>
           Your city will appear on your profile. (We may explore features that help you connect with other members near
           you in the future.)
         </Typography>
@@ -234,7 +238,7 @@ const WUUserOnboarding: React.FC<WUUserOnboardingProps> = ({currentUser, classes
             document={currentUser}
             path={'mapLocation'}
             value={mapLocation}
-            label="City (optional)"
+            label="City"
             updateCurrentValues={(it: any) => {
               setMapLocation(it['mapLocation'])
             }}
@@ -245,10 +249,10 @@ const WUUserOnboarding: React.FC<WUUserOnboardingProps> = ({currentUser, classes
 
       <div className={classes.section}>
         <Typography variant="display1" className={classes.sectionHeadingText} gutterBottom>
-          Add a profile photo
+          Upload a profile photo
         </Typography>
-        <Typography variant="body2" gutterBottom>
-          You can use a default avatar from the Waking Up app or add a photo of yourself (encouraged).
+        <Typography variant="body2" className={classes.sectionHelperText}>
+          You can use a default avatar or add a photo of yourself (encouraged).
         </Typography>
         <br/>
         <EAUsersProfileImage user={currentUser}/>
@@ -258,7 +262,7 @@ const WUUserOnboarding: React.FC<WUUserOnboardingProps> = ({currentUser, classes
         <Typography variant="display1" className={classes.sectionHeadingText} gutterBottom>
           Get a weekly email
         </Typography>
-        <Typography variant="body2" className={classes.sectionHelperText} gutterBottom>
+        <Typography variant="body2" className={classes.sectionHelperText}>
           We’ll send notes and recommended posts from the community about once a week. You can unsubscribe anytime.
         </Typography>
         <FormControlLabel
@@ -268,13 +272,19 @@ const WUUserOnboarding: React.FC<WUUserOnboardingProps> = ({currentUser, classes
               onChange={event => setSubscribeToDigest(event.target.checked)}
             />
           }
-          label="Subscribe to the weekly community digest"
+          label={
+            <Typography variant="body2">
+              Subscribe to the weekly community digest
+            </Typography>}
         />
       </div>
 
       <div className={classes.section}>
         <Typography variant="display1" className={classes.sectionHeadingText} gutterBottom>
           One last thing
+        </Typography>
+        <Typography variant="body2" className={classes.sectionHelperText}>
+          Please accept our updated Terms of Service before joining the community.
         </Typography>
         <FormControlLabel
           control={
@@ -284,9 +294,9 @@ const WUUserOnboarding: React.FC<WUUserOnboardingProps> = ({currentUser, classes
             />
           }
           label={
-            <Typography variant="body2" className={classes.sectionHelperText} gutterBottom>
+            <Typography variant="body2">
               I accept the version of the Waking Up <TosLink>Terms of Service</TosLink> that was last updated on
-              November 16, 2023.
+              November 28, 2023.
             </Typography>}
         />
       </div>
@@ -294,11 +304,11 @@ const WUUserOnboarding: React.FC<WUUserOnboardingProps> = ({currentUser, classes
       <FormErrors errors={serverValidationErrors}/>
 
       <div className={classes.submitButtonSection}>
-        <EAButton onClick={handleSave} disabled={!!validationError || !acceptedTos}>
+        <EAButton onClick={handleSave} disabled={!!validationError || !acceptedTos || !firstName || !lastName}>
           Join the Community
         </EAButton>
       </div>
-    </div>
+    </form>
   </SingleColumnSection>
 }
 
