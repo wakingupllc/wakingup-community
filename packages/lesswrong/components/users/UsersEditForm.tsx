@@ -1,8 +1,7 @@
 import { Components, registerComponent, getFragment } from '../../lib/vulcan-lib';
 import { useMessages } from '../common/withMessages';
 import React from 'react';
-import Users from '../../lib/collections/users/collection';
-import { getUserEmail, userCanEditUser, userGetDisplayName, userGetProfileUrl} from '../../lib/collections/users/helpers';
+import { getUserEmail, isLoginLocked, loginLockedUntil, userCanEditUser, userGetProfileUrl} from '../../lib/collections/users/helpers';
 import Button from '@material-ui/core/Button';
 import { useCurrentUser } from '../common/withUser';
 import { useNavigation } from '../../lib/routeUtil';
@@ -12,6 +11,7 @@ import { captureEvent } from '../../lib/analyticsEvents';
 import { configureDatadogRum } from '../../client/datadogRum';
 import { preferredHeadingCase } from '../../lib/forumTypeUtils';
 import {textFieldContainerStyles} from '../form-components/MuiTextField.tsx'
+import { useSingle } from '../../lib/crud/withSingle.ts';
 
 // TODO: would be great to have this part of the theme 🤔
 const smallLabelFont = 12
@@ -101,11 +101,33 @@ const styles = (theme: ThemeType): JssStyles => ({
     flexBasis: "48%",
     marginBottom: "0.5em",
   },
+  loginLockInfoItem: {
+    flexGrow: 1,
+    flexBasis: "48%",
+    marginBottom: "0.5em",
+    marginTop: "1em",
+    color: theme.palette.text.warning,
+  },
+  loginLockItem: {
+    fontWeight: 600,
+    color: theme.palette.text.warning,
+  },
+  unlockButton: {
+    marginBottom:theme.spacing.unit * 4,
+    color: theme.palette.text.warning,
+    borderColor: theme.palette.text.warning,
+  },
 })
 
 const passwordResetMutation = gql`
   mutation resetPassword($email: String) {
     resetPassword(email: $email)
+  }
+`
+
+const unlockMutation = gql`
+  mutation unlockLogin($userSlug: String) {
+    unlockLogin(userSlug: $userSlug)
   }
 `
 
@@ -120,8 +142,19 @@ const UsersEditForm = ({terms, classes, enableResetPassword = false}: {
   const client = useApolloClient();
   const { Typography } = Components;
   const [ mutate, loading ] = useMutation(passwordResetMutation, { errorPolicy: 'all' })
+  const [ mutateUnlock ] = useMutation(unlockMutation, { errorPolicy: 'all' })
   const currentThemeOptions = useThemeOptions();
   const setTheme = useSetTheme();
+
+  // loadedUser is account settings user, usually yourself, but admins can edit other users.
+  // Because of the skip parameter, this query is only run if the user is an admin.
+  const loadedUser = useSingle({
+    slug: terms.slug,
+    collectionName: "Users",
+    fragmentName: "UsersAdmin",
+    fetchPolicy: "no-cache",
+    skip: !currentUser?.isAdmin,
+  })?.document;
 
   if(!terms.slug && !terms.documentId) {
     // No user specified and not logged in
@@ -154,6 +187,13 @@ const UsersEditForm = ({terms, classes, enableResetPassword = false}: {
   // check both slug and documentId
   const isCurrentUser = (terms.slug && terms.slug === currentUser?.slug) || (terms.documentId && terms.documentId === currentUser?._id)
 
+  const unlock = async () => {
+    const { data } = await mutateUnlock({variables: { userSlug: terms.slug }})
+    flash('Login unlocked')
+
+    window.location.reload()
+  }
+
   return (
     <div className={classes.root}>
       <Typography variant="display2" className={classes.header}>
@@ -165,7 +205,7 @@ const UsersEditForm = ({terms, classes, enableResetPassword = false}: {
             Username
           </Typography>
           <Typography variant="body2" className={classes.userName}>
-            {currentUser?.username}
+            {loadedUser?.username || currentUser?.username}
           </Typography>
         </div>
 
@@ -174,10 +214,34 @@ const UsersEditForm = ({terms, classes, enableResetPassword = false}: {
             Email
           </Typography>
           <Typography variant="body2" className={classes.userName}>
-            {currentUser?.email}
+            {loadedUser?.email || currentUser?.email}
           </Typography>
         </div>
       </div>
+
+      {loadedUser && isLoginLocked(loadedUser) && <>
+        <div className={classes.nonEditableUserInfo}>
+          <div className={classes.loginLockInfoItem}>
+            <Typography variant="body2" className={classes.smallLabel}>
+              Login locked until:
+            </Typography>
+            <Typography variant="body2" className={classes.loginLockItem}>
+              {loginLockedUntil(loadedUser)?.format("h:mma, MM/D")}
+            </Typography>
+          </div>
+          <div className={classes.loginLockInfoItem}>
+            <Button
+              color="secondary"
+              variant="outlined"
+              className={classes.unlockButton}
+              onClick={unlock}
+            >
+              Unlock login
+            </Button>
+          </div>
+        </div>
+      </>}
+
       {isCurrentUser && enableResetPassword && <Button
         color="secondary"
         variant="outlined"

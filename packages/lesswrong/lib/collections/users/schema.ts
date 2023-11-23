@@ -2680,6 +2680,28 @@ const schema: SchemaType<DbUser> = {
   'moderatorActions.$': {
     type: 'Object'
   },
+
+  // wuLocked: resolverOnlyField({
+  //   type: Boolean,
+  //   graphQLtype: "Boolean",
+  //   canRead: ['sunshineRegiment', 'admins'],
+  //   canUpdate: ['sunshineRegiment', 'admins'],
+  //   canCreate: ['sunshineRegiment', 'admins'],
+  //   // resolver: async (doc, args, context) => {
+  //     // const { ModeratorActions, loaders } = context;
+  //     // return ModeratorActions.find({ userId: doc._id }).fetch();
+  //   resolver: async (user: DbUser, args: void, context: ResolverContext): Promise<Boolean> => {
+  //     // TODO: account for LOGIN_LIMIT_HOURS
+  //     return await (!!(user.services?.wakingUp?.otcEntryLockedAt || user.services?.wakingUp?.otcRequests >= 5));
+  //   },
+  //   group: formGroups.adminOptions,
+  //   label: "Locked"
+  // }),
+
+  // 'wuLocked.$': {
+  //   type: Boolean
+  // },
+
   subforumPreferredLayout: {
     type: String,
     allowedValues: Array.from(postsLayouts),
