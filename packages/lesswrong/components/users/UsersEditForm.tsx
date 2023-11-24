@@ -43,9 +43,8 @@ const styles = (theme: ThemeType): JssStyles => ({
         paddingRight: "3em",
       },
     },
-    "& .form-input.input-displayName .form-input-errors": {
-      // Validation errors are displayed at the top of the form, and the displayName is the first field, so we don't
-      // need to display the error again immediately under it.
+    "& .FieldErrors-root": {
+      // Remove inline error messages for fields 
       display: 'none',
     },
     "& .input-first_name, & .input-last_name": {
