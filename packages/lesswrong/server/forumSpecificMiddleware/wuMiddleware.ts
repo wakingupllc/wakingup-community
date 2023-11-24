@@ -405,23 +405,7 @@ const authenticationResolvers = {
       const user = (await Users.findOne({slug: userSlug}));
       if (!user) throw Error("Can't find user with given slug")
 
-      await updateMutator({
-        collection: Users,
-        documentId: user._id,
-        set: {
-          services: {
-            ...user.services,
-            wakingUp: {
-              ...user.services.wakingUp,
-              otcEntryLockedAt: null,
-              otcRequests: null,
-              otcEntryAttempts: null,
-            }
-          },
-        } as any,
-        unset: {},
-        validate: false,
-      })
+      await updateUserLoginProps(user, null, true)
     }
   } 
 };

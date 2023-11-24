@@ -146,8 +146,10 @@ const UsersEditForm = ({terms, classes, enableResetPassword = false}: {
   const currentThemeOptions = useThemeOptions();
   const setTheme = useSetTheme();
 
-  // loadedUser is account settings user, usually yourself, but admins can edit other users.
+  // loadedUser is the account settings user, usually yourself, but admins can edit other users.
   // Because of the skip parameter, this query is only run if the user is an admin.
+  // Regrettably, the WrappedSmartForm will also load this user, but we can't get the user
+  // value back out of the form, so we have to load it here as well.
   const loadedUser = useSingle({
     slug: terms.slug,
     collectionName: "Users",
@@ -155,6 +157,8 @@ const UsersEditForm = ({terms, classes, enableResetPassword = false}: {
     fetchPolicy: "no-cache",
     skip: !currentUser?.isAdmin,
   })?.document;
+
+  const user = loadedUser || currentUser;
 
   if(!terms.slug && !terms.documentId) {
     // No user specified and not logged in
@@ -205,7 +209,7 @@ const UsersEditForm = ({terms, classes, enableResetPassword = false}: {
             Username
           </Typography>
           <Typography variant="body2" className={classes.userName}>
-            {loadedUser?.username || currentUser?.username}
+            {user?.username}
           </Typography>
         </div>
 
@@ -214,7 +218,7 @@ const UsersEditForm = ({terms, classes, enableResetPassword = false}: {
             Email
           </Typography>
           <Typography variant="body2" className={classes.userName}>
-            {loadedUser?.email || currentUser?.email}
+            {user?.email}
           </Typography>
         </div>
       </div>
