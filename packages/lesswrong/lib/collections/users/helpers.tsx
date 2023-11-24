@@ -13,6 +13,7 @@ import moment from 'moment';
 import { MODERATOR_ACTION_TYPES } from '../moderatorActions/schema';
 import { isFriendlyUI } from '../../../themes/forumTheme';
 import {isMobile} from '../../utils/isMobile.ts'
+import { CODE_ENTRY_LIMIT, CODE_ENTRY_LIMIT_EXCEEDED_MSG, CODE_REQUEST_LIMIT, CODE_REQUEST_LIMIT_EXCEEDED_MSG, LOGIN_LIMIT_HOURS } from './constants.ts'
 
 const newUserIconKarmaThresholdSetting = new DatabasePublicSetting<number|null>('newUserIconKarmaThreshold', null)
 
@@ -591,3 +592,50 @@ export const userCanVote = (user: UsersMinimumInfo|DbUser|null): PermissionResul
     reason: `You need ${lowKarmaUserVotingCutoffKarmaSetting.get()} karma to vote`,
   }
 };
+
+function wuProps(user: DbUser|UsersAdmin) {
+  return user.services?.wakingUp
+}
+
+export function codeRequestLimitActive(user: DbUser|UsersAdmin) {
+  const limitStartAt = wuProps(user)?.codeRequestLimitStartAt
+  if (moment(limitStartAt).toDate() > moment().subtract(LOGIN_LIMIT_HOURS, 'hours').toDate()) {
+    return limitStartAt;
+  }
+  return null;
+}
+
+export function isCodeRequestLocked(user: DbUser|UsersAdmin) {
+  return codeRequestLimitActive(user) && wuProps(user)?.otcRequests > CODE_REQUEST_LIMIT - 1
+}
+
+export function codeRequestLockUntil(user: DbUser|UsersAdmin) {
+  return codeRequestLimitActive(user) && wuProps(user)?.otcRequests > CODE_REQUEST_LIMIT - 1
+}
+
+export function isCodeEntryLocked(user: DbUser|UsersAdmin) {
+  const lockedAt = wuProps(user)?.otcEntryLockedAt
+  return lockedAt && moment(lockedAt).toDate() > moment().subtract(LOGIN_LIMIT_HOURS, 'hours').toDate()
+}
+
+export function isLoginLocked(user: DbUser|UsersAdmin) {
+  return isCodeEntryLocked(user) || isCodeRequestLocked(user)
+}
+
+export function codeRequestLimitExpiresAt(user: DbUser|UsersAdmin) {
+  const limitStartAt = codeRequestLimitActive(user)
+  if (!limitStartAt) return null;
+
+  return moment(limitStartAt).add(LOGIN_LIMIT_HOURS, 'hours')
+}
+
+export function codeEntryLockExpiresAt(user: DbUser|UsersAdmin) {
+  const lockStartAt = wuProps(user)?.otcEntryLockedAt
+  if (!lockStartAt) return null;
+
+  return moment(lockStartAt).add(LOGIN_LIMIT_HOURS, 'hours')
+}
+
+export function loginLockedUntil(user: DbUser|UsersAdmin) {
+  return codeEntryLockExpiresAt(user) || codeRequestLimitExpiresAt(user)
+}

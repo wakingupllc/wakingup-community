@@ -19,12 +19,8 @@ import {devLoginsAllowedSetting, wuDefaultProfileImageCloudinaryIdSetting} from 
 import { sendEmailSendgridTemplate } from '../emails/sendEmail.ts'
 import moment from 'moment'
 import { usernameIsBadWord } from '../../lib/collections/users/schema.ts'
-
-const LOGIN_LIMIT_HOURS = 0.5
-const CODE_REQUEST_LIMIT = 5
-const CODE_ENTRY_LIMIT = 5
-const CODE_REQUEST_LIMIT_EXCEEDED_MSG = "User is locked out due to too many code requests"
-const CODE_ENTRY_LIMIT_EXCEEDED_MSG = "Locked after entering too many invalid codes"
+import { CODE_ENTRY_LIMIT, CODE_ENTRY_LIMIT_EXCEEDED_MSG, CODE_REQUEST_LIMIT_EXCEEDED_MSG } from '../../lib/collections/users/constants.ts'
+import { codeEntryLockExpiresAt, codeRequestLimitActive, codeRequestLimitExpiresAt, isCodeEntryLocked, isCodeRequestLocked } from '../../lib/collections/users/helpers.tsx'
 
 // This file has middleware for redirecting logged-out users to the login page,
 // but it also manages authentication with the Waking Up app. This latter thing
@@ -247,6 +243,10 @@ const loginData = `type LoginReturnData2 {
 addGraphQLSchema(loginData);
 addGraphQLSchema(requestedCodeData);
 
+function wuProps(user: DbUser) {
+  return user.services?.wakingUp
+}
+
 function updateUserLoginProps(user: DbUser, oneTimeCode: string|null, successfulLogin = false) {
   const fieldUpdates = successfulLogin ? {
     otcRequests: 0,
@@ -256,7 +256,7 @@ function updateUserLoginProps(user: DbUser, oneTimeCode: string|null, successful
     oneTimeCode: null,
 } : {
     codeRequestLimitStartAt: codeRequestLimitActive(user) ?? new Date(),
-    otcRequests: (wuServ(user)?.otcRequests ?? 0) + 1,
+    otcRequests: (wuProps(user)?.otcRequests ?? 0) + 1,
     oneTimeCode,
 }
 
@@ -265,41 +265,11 @@ function updateUserLoginProps(user: DbUser, oneTimeCode: string|null, successful
     {$set: {services: {
       ...(user.services),
       "wakingUp": {
-        ...wuServ(user),
+        ...wuProps(user),
         ...fieldUpdates,
       }
     }}}
   );
-}
-
-function wuServ(user: DbUser) {
-  return user.services?.wakingUp
-}
-
-function codeRequestLimitActive(user: DbUser) {
-  const limitStartAt = wuServ(user)?.codeRequestLimitStartAt
-  if (moment(limitStartAt).toDate() > moment().subtract(LOGIN_LIMIT_HOURS, 'hours').toDate()) {
-    return limitStartAt;
-  }
-  return null;
-}
-
-function codeRequestLimitExpiresAt(user: DbUser) {
-  const limitStartAt = codeRequestLimitActive(user)
-  if (!limitStartAt) return null;
-
-  return moment(limitStartAt).add(LOGIN_LIMIT_HOURS, 'hours')
-}
-
-function codeEntryLockExpiresAt(user: DbUser) {
-  const lockStartAt = wuServ(user)?.otcEntryLockedAt
-  if (!lockStartAt) return null;
-
-  return moment(lockStartAt).add(LOGIN_LIMIT_HOURS, 'hours')
-}
-
-function isCodeRequestLocked(user: DbUser) {
-  return codeRequestLimitActive(user) && wuServ(user)?.otcRequests > CODE_REQUEST_LIMIT - 1
 }
 
 function assertCodeRequestNotLocked(user: DbUser) {
@@ -309,11 +279,6 @@ function assertCodeRequestNotLocked(user: DbUser) {
       internalData: { error: CODE_REQUEST_LIMIT_EXCEEDED_MSG }}
     );
   }
-}
-
-function isCodeEntryLocked(user: DbUser) {
-  const lockedAt = wuServ(user)?.otcEntryLockedAt
-  return lockedAt && moment(lockedAt).toDate() > moment().subtract(LOGIN_LIMIT_HOURS, 'hours').toDate()
 }
 
 function assertCodeEntryNotLocked(user: DbUser) {
@@ -343,7 +308,7 @@ function loginCodeEntryLockedMessage(user: DbUser) {
 }
 
 async function incrementOtcEntryAttempts(user: DbUser) {
-  const otcEntryAttempts = (wuServ(user)?.otcEntryAttempts ?? 0) + 1;
+  const otcEntryAttempts = (wuProps(user)?.otcEntryAttempts ?? 0) + 1;
 
   const fieldUpdates = otcEntryAttempts > CODE_ENTRY_LIMIT - 1 ? {
     otcEntryLockedAt: new Date(),
@@ -353,14 +318,14 @@ async function incrementOtcEntryAttempts(user: DbUser) {
     otcEntryAttempts: otcEntryAttempts
   }
 
-  wuServ(user).otcEntryLockedAt = fieldUpdates.otcEntryLockedAt
+  wuProps(user).otcEntryLockedAt = fieldUpdates.otcEntryLockedAt
 
   return await Users.rawUpdateOne(
     {_id: user._id},
     {$set: {services: {
       ...(user.services),
       "wakingUp": {
-        ...wuServ(user),
+        ...wuProps(user),
         ...fieldUpdates,
       }
     }}}
@@ -414,7 +379,7 @@ const authenticationResolvers = {
 
       assertCodeEntryNotLocked(user);
 
-      const validCode = user && code?.length > 0 && wuServ(user)?.oneTimeCode === code;
+      const validCode = user && code?.length > 0 && wuProps(user)?.oneTimeCode === code;
       const devCodeOkay = devLoginsAllowedSetting.get() && user && code === '1234';
 
       if (validCode || devCodeOkay) {
@@ -432,6 +397,16 @@ const authenticationResolvers = {
         });
       }
     },
+
+    async unlockLogin(root: void, { userSlug }: {userSlug: string}, context: ResolverContext) {
+      const { currentUser } = context;
+      if (!currentUser?.isAdmin) throw new AuthorizationError({ message: "Non-admin user attempted to unlock login." });
+
+      const user = (await Users.findOne({slug: userSlug}));
+      if (!user) throw Error("Can't find user with given slug")
+
+      await updateUserLoginProps(user, null, true)
+    }
   } 
 };
 
@@ -439,3 +414,4 @@ addGraphQLResolvers(authenticationResolvers);
 
 addGraphQLMutation('requestLoginCode(email: String): requestedCodeData');
 addGraphQLMutation('codeLogin(email: String, code: String): LoginReturnData2');
+addGraphQLMutation('unlockLogin(userSlug: String): String');

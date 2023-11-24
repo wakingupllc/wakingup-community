@@ -2680,6 +2680,7 @@ const schema: SchemaType<DbUser> = {
   'moderatorActions.$': {
     type: 'Object'
   },
+
   subforumPreferredLayout: {
     type: String,
     allowedValues: Array.from(postsLayouts),
