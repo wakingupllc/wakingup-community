@@ -131,6 +131,13 @@ const WUUserOnboarding: React.FC<WUUserOnboardingProps> = ({currentUser, classes
     setValidationError('')
   }
 
+  function updateUsername(username: string): void {
+    setUsername(username);
+    setServerValidationErrors(
+      serverValidationErrors.filter((err) => err?.graphQLErrors?.[0]?.data?.path !== 'username')
+    )
+  }
+
   async function handleSave() {
     try {
       if (validationError) return
@@ -190,7 +197,7 @@ const WUUserOnboarding: React.FC<WUUserOnboardingProps> = ({currentUser, classes
         <WUTextField
           label={'Username'}
           value={username}
-          onChange={(event) => setUsername(event.target.value)}
+          onChange={(event) => updateUsername(event.target.value)}
           onBlur={(_event) => validateUsername(username)}
           classes={classes}
           inputProps={{maxLength: 70}}
