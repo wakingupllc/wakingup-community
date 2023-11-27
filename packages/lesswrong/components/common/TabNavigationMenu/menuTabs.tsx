@@ -36,6 +36,7 @@ import GroupsIcon from "@heroicons/react/24/outline/UsersIcon";
 import GroupsSelectedIcon from "@heroicons/react/24/solid/UsersIcon";
 import { eaSequencesHomeDescription } from '../../ea-forum/EASequencesHome';
 import PencilSquareIcon from '@heroicons/react/24/outline/PencilSquareIcon';
+import { sidebarLinksSetting } from '../../../lib/publicSettings';
 
 // The sidebar / bottom bar of the Forum contain 10 or so similar tabs, unique to each Forum. The
 // tabs can appear in
@@ -365,76 +366,11 @@ export const menuTabs: ForumOptions<Array<MenuTab>> = {
       showOnMobileStandalone: true,
       showOnCompressed: true,
     }, {
-    /* Tags (topics) are removed for launch, but will be added back later, so I'm leaving this commented out. */
-    //   id: 'wiki',
-    //   title: 'Wiki',
-    //   mobileTitle: 'Wiki',
-    //   link: getAllTagsPath(),
-    //   iconComponent: LocalOffer,
-    //   tooltip: 'Collaboratively edited Tags and Wiki Articles',
-    //   showOnMobileStandalone: true,
-    //   showOnCompressed: true,
-    // }, {
-    /* Sequences are removed for launch, but might be added back later, so I'm leaving this commented out. */
-    //   id: 'library',
-    //   title: 'Library',
-    //   link: '/library',
-    //   iconComponent: LocalLibrary,
-    //   tooltip: eaSequencesHomeDescription,
-    //   showOnMobileStandalone: true,
-    //   showOnCompressed: true,
-    // }, {
-    /* Events are removed for launch, but will be added back later, so I'm leaving this commented out. */
-    //   id: 'events',
-    //   title: 'Community and Events',
-    //   mobileTitle: 'Events',
-    //   link: communityPath,
-    //   iconComponent: SupervisedUserCircleIcon,
-    //   tooltip: 'See groups and events in your area',
-    //   showOnMobileStandalone: true,
-    //   showOnCompressed: true
-    // }, {
-    //   id: 'eventsList',
-    //   customComponentName: "EventsList",
-    // }, {
       id: 'divider',
       divider: true,
       showOnCompressed: true,
-    }, {
-    /* Quick takes are removed for launch, but may be added back later, so I'm leaving this commented out. */
-    //   id: 'shortform',
-    //   title: 'Shortform',
-    //   link: '/shortform',
-    //   subItem: true,
-    // }, {
-    //   id: 'subscribeWidget',
-    //   customComponentName: "SubscribeWidget",
-    // }, {
-      id: 'events',
-      title: 'Retreats & Events',
-      link: '/posts/FDGqhc2Z554onz6dj/retreats-and-events',
-      subItem: true,
-    }, {
-      id: 'ideas',
-      title: 'App Ideas',
-      link: '/posts/KFAYehECPshsrhNhH/app-ideas',
-      subItem: true,
-    }, {
-      id: 'feedback',
-      title: 'Forum Feedback',
-      link: '/posts/exLAY7tRyroZtQPpZ/forum-feedback',
-      subItem: true,
-    }, {
-      id: 'faq',
-      title: 'Forum FAQ',
-      link: '/posts/4ikorpg7BWj8hwdqC/forum-faq',
-      subItem: true,
-    }, {
-      id: 'support',
-      title: 'Support',
-      link: '/posts/Kd5KHnhR7uzfSF4hB/support',
-      subItem: true,
-    }
+    },
+    ...sidebarLinksSetting.get()
   ]
 }
 
