@@ -17,8 +17,11 @@ const styles = (theme: ThemeType): JssStyles => ({
     borderRadius: 6,
 
     '& .MuiIconButton-root': {
-      paddingTop: 7,
-      paddingBottom: 7,
+      paddingTop: 0,
+      paddingBottom: 0,
+    },
+    '& .MuiFormControlLabel-root': {
+      alignItems: 'flex-start',
     },
   },
   title: {
