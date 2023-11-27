@@ -174,9 +174,9 @@ export const EditorFormComponent = ({form, formType, formProps, document, name, 
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
   
   const saveBackup = useCallback((newContents: EditorContents) => {
-    const sameAsSaved = newContents.value === document?.[fieldName]?.ckEditorMarkup
+    const sameAsDatabaseSaved = newContents.value === document?.[fieldName]?.ckEditorMarkup
 
-    if (isBlank(newContents) || sameAsSaved) {
+    if (isBlank(newContents) || sameAsDatabaseSaved) {
       getLocalStorageHandlers(currentEditorType).reset();
       hasUnsavedDataRef.current.hasUnsavedData = false;
     } else {
