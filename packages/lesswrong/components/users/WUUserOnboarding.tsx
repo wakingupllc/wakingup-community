@@ -17,8 +17,11 @@ const styles = (theme: ThemeType): JssStyles => ({
     borderRadius: 6,
 
     '& .MuiIconButton-root': {
-      paddingTop: 7,
-      paddingBottom: 7,
+      paddingTop: 0,
+      paddingBottom: 0,
+    },
+    '& .MuiFormControlLabel-root': {
+      alignItems: 'flex-start',
     },
   },
   title: {
@@ -32,6 +35,10 @@ const styles = (theme: ThemeType): JssStyles => ({
   },
   section: {
     marginTop: theme.spacing.unit * 3,
+    '& a': {
+      color: theme.palette.primary.main,
+      textDecoration: 'underline',
+    },
   },
   sectionHeadingText: {
     fontFamily: theme.typography.fontFamily,
@@ -40,10 +47,6 @@ const styles = (theme: ThemeType): JssStyles => ({
     fontSize: 22,
   },
   sectionHelperText: {
-    '& a': {
-      color: theme.palette.primary.main,
-      textDecoration: 'underline',
-    },
     marginBottom: "0.8em",
   },
   submitButtonSection: {
