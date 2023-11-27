@@ -10,6 +10,7 @@ import { useCommentByLegacyId } from '../comments/useComment';
 import { useHover } from '../common/withHover';
 import { usePostByLegacyId, usePostBySlug } from '../posts/usePost';
 import { isClient } from '../../lib/executionEnvironment';
+import {onSiteLinkSignifierSetting} from '../../lib/publicSettings.ts'
 
 let missingLinkPreviewsLogged = new Set<string>();
 
@@ -188,7 +189,7 @@ const PostLinkPreviewVariantCheckComponent = registerComponent('PostLinkPreviewV
 
 export const linkStyle = (theme: ThemeType) => ({
   '&:after': {
-    content: '"°"',
+    content: onSiteLinkSignifierSetting.get(),
     marginLeft: 1,
   }
 })
