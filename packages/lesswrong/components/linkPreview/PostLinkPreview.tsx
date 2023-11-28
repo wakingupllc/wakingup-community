@@ -10,7 +10,7 @@ import { useCommentByLegacyId } from '../comments/useComment';
 import { useHover } from '../common/withHover';
 import { usePostByLegacyId, usePostBySlug } from '../posts/usePost';
 import { isClient } from '../../lib/executionEnvironment';
-import {onSiteLinkSignifierSetting} from '../../lib/publicSettings.ts'
+import {onSiteLinkSignifierSetting, showLivePreviewsSetting} from '../../lib/publicSettings.ts'
 
 let missingLinkPreviewsLogged = new Set<string>();
 
@@ -227,12 +227,13 @@ const PostLinkCommentPreview = ({href, commentId, post, innerHTML, id}: {
 }
 const PostLinkCommentPreviewComponent = registerComponent('PostLinkCommentPreview', PostLinkCommentPreview);
 
-const PostLinkPreviewWithPost = ({classes, href, innerHTML, post, id, error}: {
+const PostLinkPreviewWithPost = ({classes, href, innerHTML, post, id, showLivePreview = showLivePreviewsSetting.get, error}: {
   classes: ClassesType,
   href: string,
   innerHTML: string,
   post: PostsList|null,
   id: string,
+  showLivePreview?: () => boolean,
   error: any,
 }) => {
   const { PostsPreviewTooltip, LWPopper } = Components
@@ -240,10 +241,8 @@ const PostLinkPreviewWithPost = ({classes, href, innerHTML, post, id, error}: {
   
   const hash = (href.indexOf("#")>=0) ? (href.split("#")[1]) : null;
 
-  if (!post) {
-    return <span {...eventHandlers}>
-      <Link to={href}  dangerouslySetInnerHTML={{__html: innerHTML}}/>
-    </span>
+  if (!post || !showLivePreview()) {
+    return <Components.DefaultPreview href={href} innerHTML={innerHTML} id={id} onsite/>
   }
   return (
     <span {...eventHandlers}>
@@ -263,22 +262,21 @@ const PostLinkPreviewWithPostComponent = registerComponent('PostLinkPreviewWithP
   styles
 });
 
-const CommentLinkPreviewWithComment = ({classes, href, innerHTML, comment, post, id, error}: {
+const CommentLinkPreviewWithComment = ({classes, href, innerHTML, comment, post, id, showLivePreview = showLivePreviewsSetting.get, error}: {
   classes: ClassesType,
   href: string,
   innerHTML: string,
   comment: any,
   post: PostsList|null,
   id: string,
+  showLivePreview?: () => boolean,
   error: any,
 }) => {
   const { PostsPreviewTooltip, LWPopper } = Components
   const { eventHandlers, anchorEl, hover } = useHover();
 
-  if (!comment) {
-    return <span {...eventHandlers}>
-      <Link to={href} dangerouslySetInnerHTML={{__html: innerHTML}}/>
-    </span>
+  if (!comment || !showLivePreview()) {
+    return <Components.DefaultPreview href={href} innerHTML={innerHTML} id={id} onsite/>
   }
   return (
     <span {...eventHandlers}>
