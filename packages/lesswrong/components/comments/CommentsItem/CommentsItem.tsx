@@ -15,7 +15,7 @@ import { REVIEW_NAME_IN_SITU, REVIEW_YEAR, reviewIsActive, eligibleToNominate } 
 import { useCurrentTime } from '../../../lib/utils/timeUtil';
 import startCase from 'lodash/startCase';
 import FlagIcon from '@material-ui/icons/Flag';
-import { hideUnreviewedAuthorCommentsSettings } from '../../../lib/publicSettings';
+import {hideUnreviewedAuthorCommentsSettings, showLivePreviewsSetting} from '../../../lib/publicSettings'
 import { metaNoticeStyles } from './CommentsItemMeta';
 import { getVotingSystemByName } from '../../../lib/voting/votingSystems';
 import { useVote } from '../../votes/withVote';
@@ -185,7 +185,7 @@ const styles = (theme: ThemeType): JssStyles => ({
  *
  * Before adding more props to this, consider whether you should instead be adding a field to the CommentTreeOptions interface.
  */
-export const CommentsItem = ({ treeOptions, comment, nestingLevel=1, isChild, collapsed, isParentComment, parentCommentId, scrollIntoView, toggleCollapse, setSingleLine, truncated, showPinnedOnProfile, parentAnswerId, enableGuidelines=true, showParentDefault=false, displayTagIcon=false, classes }: {
+export const CommentsItem = ({ treeOptions, comment, nestingLevel=1, isChild, collapsed, isParentComment, parentCommentId, scrollIntoView, toggleCollapse, setSingleLine, truncated, showPinnedOnProfile, parentAnswerId, enableGuidelines=true, showParentDefault=false, displayTagIcon=false, showPostLivePreview = showLivePreviewsSetting.get, classes }: {
   treeOptions: CommentTreeOptions,
   comment: CommentsList|CommentsListWithParentMetadata,
   nestingLevel: number,
@@ -202,6 +202,7 @@ export const CommentsItem = ({ treeOptions, comment, nestingLevel=1, isChild, co
   enableGuidelines?: boolean,
   showParentDefault?: boolean,
   displayTagIcon?: boolean,
+  showPostLivePreview?: () => boolean,
   classes: ClassesType,
 }) => {
   const commentItemRef = useRef<HTMLDivElement|null>(null); // passed into CommentsItemBody for use in InlineReactSelectionWrapper
@@ -385,7 +386,8 @@ export const CommentsItem = ({ treeOptions, comment, nestingLevel=1, isChild, co
             <Components.ForumIcon icon="Pin" className={classes.pinnedIcon} />
           </div>}
           {moderatedCommentId === comment._id && <FlagIcon className={classes.flagIcon} />}
-          {showPostTitle && !isChild && hasPostField(comment) && comment.post && <LWTooltip tooltip={false} title={<PostsPreviewTooltipSingle postId={comment.postId}/>}>
+          {showPostTitle && !isChild && hasPostField(comment) && comment.post && 
+            <LWTooltip tooltip={false} title={showPostLivePreview() && <PostsPreviewTooltipSingle postId={comment.postId}/>}>
               <Link className={classes.postTitle} to={commentGetPageUrlFromIds({postId: comment.postId, commentId: comment._id, postSlug: ""})}>
                 {comment.post.draft && (comment.post.deletedDraft ? "[Deleted] " : "[Draft] ")}
                 {comment.post.title}

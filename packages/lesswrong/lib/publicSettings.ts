@@ -180,3 +180,5 @@ export const sendAutoMessageOnCommentRemovalSetting = new DatabasePublicSetting<
 export const commentPermalinksAtTopSetting = new DatabasePublicSetting<boolean>('commentPermalinksAtTop', true);
 export const showNewUserIconSetting = new DatabasePublicSetting<boolean>('showNewUserIcon', true);
 export const sidebarLinksSetting = new DatabasePublicSetting<Array<{id: string, title: string, link: string, subItem: boolean}>>('sidebarLinks', []);
+export const onSiteLinkSignifierSetting = new DatabasePublicSetting<string>('onSiteLinkSignifier', '"°"');
+export const showLivePreviewsSetting = new DatabasePublicSetting<boolean>('showLivePreviews', true);
