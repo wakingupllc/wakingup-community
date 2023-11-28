@@ -5,7 +5,7 @@ import React from 'react';
 import { useSingle } from '../../lib/crud/withSingle';
 import { Link } from '../../lib/reactRouterWrapper';
 import { looksLikeDbIdString } from '../../lib/routeUtil';
-import { Components, registerComponent } from '../../lib/vulcan-lib';
+import {Components, makeAbsolute, registerComponent} from '../../lib/vulcan-lib'
 import { useCommentByLegacyId } from '../comments/useComment';
 import { useHover } from '../common/withHover';
 import { usePostByLegacyId, usePostBySlug } from '../posts/usePost';
@@ -242,7 +242,7 @@ const PostLinkPreviewWithPost = ({classes, href, innerHTML, post, id, showLivePr
   const hash = (href.indexOf("#")>=0) ? (href.split("#")[1]) : null;
 
   if (!post || !showLivePreview()) {
-    return <Components.DefaultPreview href={href} innerHTML={innerHTML} id={id} onsite/>
+    return <Components.DefaultPreview href={makeAbsolute(href)} innerHTML={innerHTML} id={id} onsite/>
   }
   return (
     <span {...eventHandlers}>
@@ -276,7 +276,7 @@ const CommentLinkPreviewWithComment = ({classes, href, innerHTML, comment, post,
   const { eventHandlers, anchorEl, hover } = useHover();
 
   if (!comment || !showLivePreview()) {
-    return <Components.DefaultPreview href={href} innerHTML={innerHTML} id={id} onsite/>
+    return <Components.DefaultPreview href={makeAbsolute(href)} innerHTML={innerHTML} id={id} onsite/>
   }
   return (
     <span {...eventHandlers}>
