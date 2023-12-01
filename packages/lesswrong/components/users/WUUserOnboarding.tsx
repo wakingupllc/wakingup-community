@@ -306,7 +306,7 @@ const WUUserOnboarding: React.FC<WUUserOnboardingProps> = ({currentUser, classes
           label={
             <Typography variant="body2">
               I accept the version of the Waking Up <TosLink>Terms of Service</TosLink> that was last updated on
-              November 28, 2023.
+              December 1, 2023.
             </Typography>}
         />
       </div>
