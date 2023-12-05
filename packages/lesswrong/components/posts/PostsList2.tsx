@@ -37,6 +37,7 @@ const PostsList2 = ({classes, ...props}: PostsList2Props) => {
     maybeMorePosts,
     orderedResults,
     itemProps,
+    hideContentPreviewIfSticky,
   }= usePostsList(props);
 
   const { Loading, LoadMore, PostsNoResults, SectionFooter, PostsItem } = Components;
@@ -56,7 +57,7 @@ const PostsList2 = ({classes, ...props}: PostsList2Props) => {
       {orderedResults && !orderedResults.length && <PostsNoResults />}
 
       <div className={boxShadow ? classes.posts : null}>
-        {itemProps?.map((props) => <PostsItem key={props.post._id} {...props} />)}
+        {itemProps?.map((props) => <PostsItem key={props.post._id} {...props} hideContentPreviewIfSticky={hideContentPreviewIfSticky} />)}
       </div>
       {showLoadMore && <SectionFooter>
         <LoadMore

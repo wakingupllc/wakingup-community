@@ -21,7 +21,11 @@ import { getPostViewOptions } from '../../lib/postViewOptions';
 import Button from '@material-ui/core/Button';
 import qs from 'qs'
 import { Link } from '../../lib/reactRouterWrapper';
-import { frontpagePostsCountSetting, frontpagePostsLoadMoreCountSetting } from '../../lib/publicSettings';
+import {
+  frontpagePostsCountSetting,
+  frontpagePostsLoadMoreCountSetting,
+  showPinnedPostPreviewOnHomepageSetting,
+} from '../../lib/publicSettings'
 
 const titleWrapper = isLW ? {
   marginBottom: 8
@@ -220,6 +224,7 @@ const HomeLatestPosts = ({classes}:{classes: ClassesType}) => {
                 alwaysShowLoadMore
                 hideHiddenFrontPagePosts
                 itemsPerPage={frontpagePostsLoadMoreCountSetting.get()}
+                hideContentPreviewIfSticky={showPinnedPostPreviewOnHomepageSetting.get()}
               >
               </PostsList2>
             </AllowHidingFrontPagePostsContext.Provider>
