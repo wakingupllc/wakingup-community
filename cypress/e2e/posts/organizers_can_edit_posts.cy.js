@@ -10,33 +10,33 @@ describe('Groups', function() {
     });
   });
 
-  // Commented out until WakingUp re-adds groups
+  // Disabled until WakingUp re-adds groups
 
-  // it('can create a post in a group', function() {
-  //   // Go to local group page and click "New event"
-  //   cy.visit(`/groups/test-seeded-localgroup`);
-  //   cy.contains('New event').click();
-  //   cy.url().should('include', 'newPost');
+  it.skip('can create a post in a group', function() {
+    // Go to local group page and click "New event"
+    cy.visit(`/groups/test-seeded-localgroup`);
+    cy.contains('New event').click();
+    cy.url().should('include', 'newPost');
     
-  //   // Fill in some event fields and submit
-  //   cy.get('.EditTitle-root').type('Test event 123');
-  //   cy.get('.ck-editor__editable').type('Test body 123');
-  //   cy.contains("Submit").click();
+    // Fill in some event fields and submit
+    cy.get('.EditTitle-root').type('Test event 123');
+    cy.get('.ck-editor__editable').type('Test body 123');
+    cy.contains("Submit").click();
     
-  //   // Wait for submission to finish
-  //   cy.url().should('include', 'test-event-123');
+    // Wait for submission to finish
+    cy.url().should('include', 'test-event-123');
     
-  //   // Log in as the other user
-  //   cy.loginAs(this.testOtherUser);
-  //   cy.reload(true);
+    // Log in as the other user
+    cy.loginAs(this.testOtherUser);
+    cy.reload(true);
     
-  //   // Try to edit the post. This should work because we're a group organizer.
-  //   cy.get('.PostActionsButton-root').first().click();
-  //   cy.contains('.DropdownItem-title', 'Edit').click();
-  //   const newEventBody = "Modied test body 123";
-  //   cy.get('.input-contents .ck-editor__editable').click().clear().type(newEventBody);
-  //   cy.contains('Publish Changes').click();
-  //   cy.contains('.PostsPage-postContent', newEventBody).should('exist');
-  // });
+    // Try to edit the post. This should work because we're a group organizer.
+    cy.get('.PostActionsButton-root').first().click();
+    cy.contains('.DropdownItem-title', 'Edit').click();
+    const newEventBody = "Modied test body 123";
+    cy.get('.input-contents .ck-editor__editable').click().clear().type(newEventBody);
+    cy.contains('Publish Changes').click();
+    cy.contains('.PostsPage-postContent', newEventBody).should('exist');
+  });
 });
 

@@ -7,6 +7,6 @@ export const getCloudinaryConfig = () => ({
   // Note this currently has an effect of crashing the editor if these settings are missing
   cloudinary: {
     cloudName: cloudinaryCloudNameSetting.getOrThrow(),
-    uploadPreset: cloudinaryUploadPresetEditorName.get(),
+    uploadPreset: cloudinaryUploadPresetEditorName.getOrThrow(),
   },
 })
