@@ -232,6 +232,7 @@ const EAPostsItem = ({classes, ...props}: EAPostsItemProps) => {
     isRepeated,
     analyticsProps,
     isVoteable,
+    hideContentPreviewIfSticky,
   } = usePostsItem(props);
   const {onClick} = useClickableCell({href: postLink});
   const authorExpandContainer = useRef(null);
@@ -275,6 +276,8 @@ const EAPostsItem = ({classes, ...props}: EAPostsItemProps) => {
   );
 
 
+  const showContents = !(sticky && hideContentPreviewIfSticky) && post.contents && post.contents.wordCount > 1
+  
   return (
     <AnalyticsContext {...analyticsProps}>
       <div className={classes.root}>
@@ -365,8 +368,7 @@ const EAPostsItem = ({classes, ...props}: EAPostsItemProps) => {
                 }}
               />
             </InteractionWrapper>
-            {post.contents && post.contents.wordCount > 1 &&
-              <div className={classes.contentPreviewContainer}>
+            {showContents && <div className={classes.contentPreviewContainer}>
                 <PostsHighlight post={post} maxLengthWords={50} smallerFonts={false} />
               </div>
             }
