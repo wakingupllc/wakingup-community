@@ -29,6 +29,7 @@ import { DatabaseServerSetting } from '../databaseSettings';
 import { isPostAllowedType3Audio, postGetPageUrl } from '../../lib/collections/posts/helpers';
 import { postStatuses } from '../../lib/collections/posts/constants';
 import { HAS_EMBEDDINGS_FOR_RECOMMENDATIONS, updatePostEmbeddings } from '../embeddings';
+import { linkifyFinalURL } from '../../lib/helpers';
 
 const MINIMUM_APPROVAL_KARMA = 5
 
@@ -633,4 +634,23 @@ getCollectionHooks("Posts").updateAsync.add(async function updatedPostMaybeTrigg
   if (oldDocument.contents?.html !== document.contents?.html) {
     void callType3Webhook('post_edited', url);
   }
+});
+
+getCollectionHooks("Posts").newSync.add(function linkifyFinalPostUrlOnNew(data) {
+  const contents = data.contents?.originalContents?.data;
+  if (!contents) return data;
+
+  data.contents!.originalContents.data = linkifyFinalURL(contents)
+  data.contents!.html = linkifyFinalURL(contents)
+
+  return data;
+});
+
+getCollectionHooks("Posts").updateBefore.add(function linkifyFinalPostUrlOnUpdate(data) {
+  const contents = data.contents?.originalContents?.data;
+  if (!contents) return data;
+
+  data.contents!.originalContents.data = linkifyFinalURL(contents)
+
+  return data;
 });

@@ -119,3 +119,26 @@ export const generateDateSeries = (startDate: moment.Moment | Date, endDate: mom
   }
   return dateSeries;
 };
+
+// Used in post and comment callbacks, this function converts non-linkified URLs to linkified URLs.
+// CkEditor's Autolink doesn't convert links until after you hit space or enter, but we want URLs to still be
+// links if it's the last thing the user typed in their comment or post, so we check the very last part of
+// the post to check whether it's a link, and if so, we convert it to a link.
+// Autolink has a feature request for this but it doesn't look like they're going to implement it any time soon:
+// https://github.com/ckeditor/ckeditor5/issues/7988
+export const linkifyFinalURL = (contents: string) => {
+  // Example strings that we handle:
+  //   <p>Some text with a space before the final non-linkified URL https://google.com</p>
+  //   <p>Some text with the final non-linkified URL in its own p tag line</p><p>https://google.com</p>
+  //   <p>Some text with the final non-linkified URL in its own p tag line, and we end the preceding line with a linkified URL that shouldn't be greedy-matched by the regex: <a href="https://google.com">https://google.com</a></p><p>https://google.com</p>
+
+  // A not-yet-linkified URL at the end of the post can be preceded with a space or with a <p> tag, so [^\s>] matches characters
+  // that are definitely within the last URL, and aren't part of a previous URL that's getting greedy-matched.
+  const regex = /(https?:\/\/[^\s>]+)<\/p>$/
+  const lastUrl = contents?.match(regex)
+  if (lastUrl) {
+    return contents.replace(regex, `<a href="${lastUrl[1]}">${lastUrl[1]}</a></p>`);
+  }
+
+  return contents
+}
