@@ -224,7 +224,7 @@ const HomeLatestPosts = ({classes}:{classes: ClassesType}) => {
                 alwaysShowLoadMore
                 hideHiddenFrontPagePosts
                 itemsPerPage={frontpagePostsLoadMoreCountSetting.get()}
-                hideContentPreviewIfSticky={showPinnedPostPreviewOnHomepageSetting.get()}
+                hideContentPreviewIfSticky={!showPinnedPostPreviewOnHomepageSetting.get()}
               >
               </PostsList2>
             </AllowHidingFrontPagePostsContext.Provider>
