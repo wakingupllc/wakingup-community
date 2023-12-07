@@ -9,8 +9,7 @@ describe('Posts', function() {
     cy.fixture('posts/testPost').as('testPost');
   });
 
-  // disabled because it fails when it can't get cloudinary.uploadPresetEditor setting
-  it.skip('can edit an existing post', function() {
+  it('can edit an existing post', function() {
     cy.visit(`posts/${this.testPost._id}/${this.testPost.slug}`);
     cy.contains('.banner-actions-container', 'Close').click() // close OneTrust banner
     const newPostTitle = 'New Post Title';

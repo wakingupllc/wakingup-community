@@ -8,8 +8,7 @@ describe('Posts', function() {
     });
   });
   
-  // disabled because it fails when it can't get cloudinary.uploadPresetEditor setting
-  it.skip('can create new post and view it', function() {
+  it('can create new post and view it', function() {
     cy.visit('/newPost');
     cy.get('.EditTitle-root').type('Test post 123');
     cy.get('.ck-editor__editable').type('Test body 123');
