@@ -25,10 +25,13 @@ export type QueryFilter = {
 } & ({
   type: "facet",
   value: boolean | string,
+  negated: boolean,
 } | {
   type: "numeric",
   value: number,
   op: QueryFilterOperator,
+} | {
+  type: "exists"
 });
 
 export type QueryData = {
@@ -40,6 +43,8 @@ export type QueryData = {
   preTag?: string,
   postTag?: string,
   filters: QueryFilter[],
+  // Providing coordinates will trigger a special case, which sorts results by distance and ignores relevance
+  coordinates?: number[],
 }
 
 export type Fuzziness = "AUTO" | number;
@@ -99,11 +104,21 @@ class ElasticQuery {
     for (const filter of this.queryData.filters) {
       switch (filter.type) {
       case "facet":
-        terms.push({
+        const term: QueryDslQueryContainer = {
           term: {
             [filter.field]: filter.value,
           },
-        });
+        };
+        terms.push(
+          filter.negated
+            ? {
+              bool: {
+                should: [],
+                must_not: [term],
+              },
+            }
+            : term,
+        );
         break;
       case "numeric":
         terms.push({
@@ -112,6 +127,18 @@ class ElasticQuery {
               [filter.op]: filter.value,
             },
           },
+        });
+        break;
+      case "exists":
+        terms.push({
+          bool: {
+            should: [],
+            must: [{
+              exists: {
+                field: filter.field
+              }
+            }]
+          }
         });
         break;
       }
@@ -294,7 +321,24 @@ class ElasticQuery {
       : this.compileSimpleQuery();
   }
 
-  private compileSort(sorting?: string): Sort {
+  private compileSort(sorting?: string, coordinates?: number[]): Sort {
+    // Special case:
+    // When providing coordinates in the format [lng, lat], we sort by distance
+    // and ignore the relevance score. See also parseLatLng()
+    if (coordinates) {
+      if (!this.config.locationField) {
+        throw new Error("Index cannot be sorted by location");
+      }
+      return [
+        {
+          _geo_distance : {
+            [this.config.locationField]: coordinates,
+            order : "asc",
+          },
+        },
+        {[this.config.tiebreaker]: {order: "desc"}},
+      ];
+    }
     const sort: Sort = [
       {_score: {order: "desc"}},
       {[this.config.tiebreaker]: {order: "desc"}},
@@ -328,6 +372,7 @@ class ElasticQuery {
       sorting,
       offset = 0,
       limit = 10,
+      coordinates,
     } = this.queryData;
     const {privateFields} = this.config;
     const {
@@ -387,7 +432,7 @@ class ElasticQuery {
             },
           },
         },
-        sort: this.compileSort(sorting),
+        sort: this.compileSort(sorting, coordinates),
         _source: {
           exclude: ["exportedAt", ...privateFields],
         },

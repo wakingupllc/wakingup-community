@@ -1,11 +1,10 @@
 import {Components, registerComponent} from '../../lib/vulcan-lib'
-import {Link} from '../../lib/reactRouterWrapper'
+import {Link, useNavigate} from '../../lib/reactRouterWrapper'
 import React from 'react'
 import type {Hit} from 'react-instantsearch-core'
 import {Snippet} from 'react-instantsearch-dom'
 import TagIcon from '@material-ui/icons/LocalOffer'
 import {userGetProfileUrlFromSlug} from '../../lib/collections/users/helpers'
-import {useNavigation} from '../../lib/routeUtil'
 import {showKarmaSetting} from '../../lib/publicSettings.ts'
 import {getCommentSearchHitUrl} from './CommentsSearchHit.tsx'
 
@@ -73,14 +72,13 @@ const ExpandedCommentsSearchHit = ({hit, showKarma = showKarmaSetting.get, class
   showKarma?: () => boolean,
   classes: ClassesType,
 }) => {
-  const { history } = useNavigation()
-
+  const navigate = useNavigate();
   const { FormatDate, UserNameDeleted } = Components
   const comment: AlgoliaComment = hit
 
   const url = getCommentSearchHitUrl(comment)  
   const handleClick = () => {
-    history.push(url)
+    navigate(url)
   }
 
   return <div className={classes.root} onClick={handleClick}>

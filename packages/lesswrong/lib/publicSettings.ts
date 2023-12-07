@@ -63,7 +63,7 @@ export const reCaptchaSiteKeySetting = new DatabasePublicSetting<string | null>(
 // Algolia Search Settings
 export const algoliaAppIdSetting = new DatabasePublicSetting<string | null>('algolia.appId', null)
 export const algoliaSearchKeySetting = new DatabasePublicSetting<string | null>('algolia.searchKey', null)
-export const algoliaPrefixSetting = new DatabasePublicSetting<string | null>('algolia.indexPrefix', null)
+export const algoliaPrefixSetting = new DatabasePublicSetting<string>('algolia.indexPrefix', '')
 
 export const ckEditorUploadUrlSetting = new DatabasePublicSetting<string | null>('ckEditor.uploadUrl', null) // Image Upload URL for CKEditor
 export const ckEditorWebsocketUrlSetting = new DatabasePublicSetting<string | null>('ckEditor.webSocketUrl', null) // Websocket URL for CKEditor (for collaboration)
@@ -129,34 +129,8 @@ export const ddTracingSampleRate = new DatabasePublicSetting<number>('datadog.tr
 export const ddRumSampleRate = new DatabasePublicSetting<number>('datadog.rumSampleRate', 100) // Sample rate for backend traces, between 0 and 100
 export const ddSessionReplaySampleRate = new DatabasePublicSetting<number>('datadog.sessionReplaySampleRate', 100) // Sample rate for backend traces, between 0 and 100
 
-export type CurrentEventHeader = {
-  name: string,
-  link: string,
-}
-
-export const currentEventHeader = new DatabasePublicSetting<CurrentEventHeader | null>("currentEventHeader", null);
-
-/** TODO; doc */
-export const hasDigestSetting = new DatabasePublicSetting<boolean>("hasDigest", false);
-
-/** TODO; doc */
-export const hasCommentOnSelectionSetting = new DatabasePublicSetting<boolean>("hasCommentOnSelection", true);
-
-/** TODO; doc */
-export const hasLogoSetting = new DatabasePublicSetting<boolean>("hasLogo", false);
-
-/** TODO; doc */
-export const communityNameSetting = new DatabasePublicSetting<String>("communityName", 'Community');
-
-/** TODO; doc */
-export const showCuratedSetting = new DatabasePublicSetting<boolean>("showCurated", false);
-
-/** TODO; doc */
-export const showCommunityMapSetting = new DatabasePublicSetting<boolean>("showCommunityMap", false);
-
-// TODO: make this an instance setting if JP confirms that makes sense
-// /** main theme color, needed here for server/emails/renderEmail */
-// export const mainThemeColorSetting = new DatabasePublicSetting<string>("mainThemeColor", "#5f9b65");
+/** Will we show our logo prominently, such as in the header */
+export const hasProminentLogoSetting = new DatabasePublicSetting<boolean>("hasProminentLogo", false);
 
 export const showTableOfContentsSetting = new DatabasePublicSetting<boolean>('showTableOfContents', true);
 export const showReadingTimeSetting = new DatabasePublicSetting<boolean>('showReadingTime', true);
@@ -182,3 +156,5 @@ export const showNewUserIconSetting = new DatabasePublicSetting<boolean>('showNe
 export const sidebarLinksSetting = new DatabasePublicSetting<Array<{id: string, title: string, link: string, subItem: boolean}>>('sidebarLinks', []);
 export const onSiteLinkSignifierSetting = new DatabasePublicSetting<string>('onSiteLinkSignifier', '"°"');
 export const showLivePreviewsSetting = new DatabasePublicSetting<boolean>('showLivePreviews', true);
+
+export const dialogueMatchmakingEnabled = new DatabasePublicSetting<boolean>('dialogueMatchmakingEnabled', false)

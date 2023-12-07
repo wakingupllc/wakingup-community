@@ -4,7 +4,7 @@ import Button from "@material-ui/core/Button";
 import { useCurrentUser } from "../common/withUser";
 import { forumHeaderTitleSetting } from "../common/Header";
 import { gql, useMutation } from "@apollo/client";
-import { hasLogoSetting } from "../../lib/publicSettings";
+import { hasProminentLogoSetting } from "../../lib/publicSettings";
 
 const styles = (theme: ThemeType): JssStyles => ({
   root: {
@@ -62,12 +62,12 @@ const CrosspostLoginPage = ({classes}: {
     }
   }
 
-  const {WrappedLoginForm, SiteLogo, Loading, Typography} = Components;
+  const {LoginForm, SiteLogo, Loading, Typography} = Components;
 
   return (
     <div className={classes.root}>
       <div className={classes.heading}>
-        {hasLogoSetting.get() && <SiteLogo />}
+        {hasProminentLogoSetting.get() && <SiteLogo />}
         <Typography variant="title" className={classes.headingText}>
           {forumHeaderTitleSetting.get()}
         </Typography>
@@ -94,7 +94,7 @@ const CrosspostLoginPage = ({classes}: {
           </>
         )
         : (
-          <WrappedLoginForm immediateRedirect />
+          <LoginForm immediateRedirect />
         )
       }
     </div>

@@ -1,4 +1,4 @@
-import React, {useRef, useState, useCallback, useEffect} from 'react';
+import React, {useRef, useState, useCallback, useEffect, FC, ReactNode, useMemo} from 'react';
 import { Components, registerComponent } from '../lib/vulcan-lib';
 import { useUpdate } from '../lib/crud/withUpdate';
 import { Helmet } from 'react-helmet';
@@ -9,7 +9,7 @@ import { AnalyticsContext } from '../lib/analyticsEvents'
 import { UserContext } from './common/withUser';
 import { TimezoneWrapper } from './common/withTimezone';
 import { DialogManager } from './common/withDialog';
-import { CommentBoxManager } from './common/withCommentBox';
+import { CommentBoxManager } from './hooks/useCommentBox';
 import { ItemsReadContextWrapper } from './hooks/useRecordPostView';
 import { pBodyStyle } from '../themes/stylePiping';
 import {DatabasePublicSetting, googleTagManagerIdSetting, onetrustDomainScriptSetting} from '../lib/publicSettings'
@@ -21,13 +21,18 @@ import NoSSR from 'react-no-ssr';
 import { DisableNoKibitzContext } from './users/UsersNameDisplay';
 import { LayoutOptions, LayoutOptionsContext } from './hooks/useLayoutOptions';
 // enable during ACX Everywhere
-import { HIDE_MAP_COOKIE } from '../lib/cookies/cookies';
-import { useCookiePreferences, useCookiesWithConsent } from './hooks/useCookiesWithConsent';
+// import { HIDE_MAP_COOKIE } from '../lib/cookies/cookies';
 import { HEADER_HEIGHT } from './common/Header';
+import { useCookiePreferences } from './hooks/useCookiesWithConsent';
+import { useHeaderVisible } from './hooks/useHeaderVisible';
+import StickyBox from '../lib/vendor/react-sticky-box';
 import { isFriendlyUI } from '../themes/forumTheme';
+import { useIsGivingSeason } from './ea-forum/giving-portal/hooks';
 
 export const petrovBeforeTime = new DatabasePublicSetting<number>('petrov.beforeTime', 0)
 const petrovAfterTime = new DatabasePublicSetting<number>('petrov.afterTime', 0)
+
+const STICKY_SECTION_TOP_MARGIN = 20;
 
 // These routes will have the standalone TabNavigationMenu (aka sidebar)
 //
@@ -67,6 +72,9 @@ const styles = (theme: ThemeType): JssStyles => ({
       paddingRight: 8,
     },
   },
+  mainNoFooter: {
+    paddingBottom: 0,
+  },
   mainFullscreen: {
     height: "100%",
     padding: 0,
@@ -90,6 +98,9 @@ const styles = (theme: ThemeType): JssStyles => ({
     flexBasis: 0,
     flexGrow: 1,
     overflow: "auto",
+    [theme.breakpoints.down('xs')]: {
+      overflow: "visible",
+    },
   },
   spacedGridActivated: {
     '@supports (grid-template-areas: "title")': {
@@ -129,29 +140,15 @@ const styles = (theme: ThemeType): JssStyles => ({
       display: 'block'
     }
   },
-  eaHomeGrid: {
-    '@supports (grid-template-areas: "title")': {
-      display: 'grid',
-      gridTemplateAreas: `
-        "navSidebar ... main rhs ..."
-      `,
-      gridTemplateColumns: `
-        min-content
-        1fr
-        min-content
-        minmax(50px, max-content)
-        1fr
-      `,
-    },
+  eaHomeLayout: {
+    display: "flex",
+    alignItems: "start",
     [theme.breakpoints.down('md')]: {
       display: 'block'
     }
   },
   navSidebar: {
     gridArea: 'navSidebar'
-  },
-  rhs: {
-    gridArea: 'rhs',
   },
   sunshine: {
     gridArea: 'sunshine'
@@ -195,7 +192,34 @@ const styles = (theme: ThemeType): JssStyles => ({
       display: "none"
     }
   },
-})
+  stickyWrapper: {
+    transition: "transform 200ms ease-in-out",
+    transform: `translateY(${STICKY_SECTION_TOP_MARGIN}px)`,
+    marginBottom: 20,
+  },
+  stickyWrapperHeaderVisible: {
+    transform: `translateY(${HEADER_HEIGHT + STICKY_SECTION_TOP_MARGIN}px)`,
+  },
+});
+
+const StickyWrapper: FC<{
+  eaHomeLayout: boolean,
+  headerVisible: boolean,
+  headerAtTop: boolean,
+  children: ReactNode,
+  classes: ClassesType,
+}> = ({eaHomeLayout, headerVisible, headerAtTop, children, classes}) =>
+  eaHomeLayout
+    ? (
+      <StickyBox offsetTop={0} offsetBottom={20}>
+        <div className={classNames(classes.stickyWrapper, {
+          [classes.stickyWrapperHeaderVisible]: headerVisible && !headerAtTop,
+        })}>
+          {children}
+        </div>
+      </StickyBox>
+    )
+    : <>{children}</>;
 
 const Layout = ({currentUser, children, classes}: {
   currentUser: UsersCurrent|null,
@@ -203,14 +227,14 @@ const Layout = ({currentUser, children, classes}: {
   classes: ClassesType,
 }) => {
   const searchResultsAreaRef = useRef<HTMLDivElement|null>(null);
-  const [sideCommentsActive,setSideCommentsActive] = useState(false);
   const [disableNoKibitz, setDisableNoKibitz] = useState(false);
   const [hideNavigationSidebar,setHideNavigationSidebar] = useState(!!(currentUser?.hideNavigationSidebar));
   const theme = useTheme();
-  const { currentRoute, params: { slug }, pathname} = useLocation();
+  const {currentRoute, pathname} = useLocation();
   const layoutOptionsState = React.useContext(LayoutOptionsContext);
   const { explicitConsentGiven: cookieConsentGiven, explicitConsentRequired: cookieConsentRequired } = useCookiePreferences();
   const showCookieBanner = !onetrustDomainScriptSetting.get() && cookieConsentRequired === true && !cookieConsentGiven;
+  const {headerVisible, headerAtTop} = useHeaderVisible();
 
   // enable during ACX Everywhere
   // const [cookies] = useCookiesWithConsent()
@@ -260,7 +284,15 @@ const Layout = ({currentUser, children, classes}: {
   if (!layoutOptionsState) {
     throw new Error("LayoutOptionsContext not set");
   }
-  
+
+  const noKibitzContext = useMemo(
+    () => ({ disableNoKibitz, setDisableNoKibitz }),
+    [disableNoKibitz, setDisableNoKibitz]
+  );
+
+  const isGivingSeason = useIsGivingSeason();
+  const renderGivingSeason = isGivingSeason && pathname === "/";
+
   const render = () => {
     const {
       NavigationStandalone,
@@ -281,6 +313,7 @@ const Layout = ({currentUser, children, classes}: {
       AdminToggle,
       SunshineSidebar,
       EAHomeRightHandSide,
+      GivingSeasonBanner,
     } = Components;
 
     const baseLayoutOptions: LayoutOptions = {
@@ -302,7 +335,10 @@ const Layout = ({currentUser, children, classes}: {
     const shouldUseGridLayout = overrideLayoutOptions.shouldUseGridLayout ?? baseLayoutOptions.shouldUseGridLayout
     const unspacedGridLayout = overrideLayoutOptions.unspacedGridLayout ?? baseLayoutOptions.unspacedGridLayout
     // The friendly home page has a unique grid layout, to account for the right hand side column.
-    const friendlyGridLayout = isFriendlyUI && currentRoute?.name === 'home'
+    const friendlyHomeLayout = isFriendlyUI && currentRoute?.name === 'home'
+
+    const showNewUserCompleteProfile = currentUser?.usernameUnset &&
+      !allowedIncompletePaths.includes(currentRoute?.name ?? "404");
 
     const renderPetrovDay = () => {
       const currentTime = (new Date()).valueOf()
@@ -320,7 +356,7 @@ const Layout = ({currentUser, children, classes}: {
       <TimezoneWrapper>
       <ItemsReadContextWrapper>
       <SidebarsWrapper>
-      <DisableNoKibitzContext.Provider value={{ disableNoKibitz, setDisableNoKibitz }}>
+      <DisableNoKibitzContext.Provider value={noKibitzContext}>
       <CommentOnSelectionPageWrapper>
         <div className={classNames(
           "wrapper",
@@ -354,27 +390,39 @@ const Layout = ({currentUser, children, classes}: {
                 standaloneNavigationPresent={standaloneNavigation}
                 sidebarHidden={hideNavigationSidebar}
                 toggleStandaloneNavigation={toggleStandaloneNavigation}
-                stayAtTop={Boolean(currentRoute?.fullscreen || currentRoute?.staticHeader)}
+                stayAtTop={!!currentRoute?.staticHeader}
               />}
               {/* enable during ACX Everywhere */}
               {renderCommunityMap && <span className={classes.hideHomepageMapOnMobile}><HomepageCommunityMap dontAskUserLocation={true}/></span>}
               {renderPetrovDay() && <PetrovDayWrapper/>}
-              
+              {renderGivingSeason && <GivingSeasonBanner />}
+
               <div className={classNames(classes.standaloneNavFlex, {
                 [classes.spacedGridActivated]: shouldUseGridLayout && !unspacedGridLayout,
                 [classes.unspacedGridActivated]: shouldUseGridLayout && unspacedGridLayout,
-                [classes.eaHomeGrid]: friendlyGridLayout && !renderSunshineSidebar,
-                [classes.fullscreenBodyWrapper]: currentRoute?.fullscreen}
+                [classes.eaHomeLayout]: friendlyHomeLayout && !renderSunshineSidebar,
+                [classes.fullscreenBodyWrapper]: currentRoute?.fullscreen,
+              }
               )}>
                 {isFriendlyUI && <AdminToggle />}
-                {currentUser && standaloneNavigation && <NavigationStandalone
-                  sidebarHidden={hideNavigationSidebar}
-                  unspacedGridLayout={unspacedGridLayout}
-                  className={classes.standaloneNav}
-                />}
+                {currentUser && standaloneNavigation &&
+                  <StickyWrapper
+                    eaHomeLayout={friendlyHomeLayout}
+                    headerVisible={headerVisible}
+                    headerAtTop={headerAtTop}
+                    classes={classes}
+                  >
+                    <NavigationStandalone
+                      sidebarHidden={hideNavigationSidebar}
+                      unspacedGridLayout={unspacedGridLayout}
+                      noTopMargin={friendlyHomeLayout}
+                    />
+                  </StickyWrapper>
+                }
                 <div ref={searchResultsAreaRef} className={classes.searchResultsArea} />
                 <div className={classNames(classes.main, {
                   [classes.whiteBackground]: useWhiteBackground,
+                  [classes.mainNoFooter]: currentRoute?.noFooter,
                   [classes.mainFullscreen]: currentRoute?.fullscreen,
                   [classes.mainUnspacedGrid]: shouldUseGridLayout && unspacedGridLayout,
                 })}>
@@ -382,16 +430,25 @@ const Layout = ({currentUser, children, classes}: {
                     <FlashMessages />
                   </ErrorBoundary>
                   <ErrorBoundary>
-                    {currentUser?.usernameUnset && !allowedIncompletePaths.includes(currentRoute?.name ?? "404")
+                    {showNewUserCompleteProfile
                       ? <WUUserOnboarding currentUser={currentUser}/>
                       : children
                     }
                   </ErrorBoundary>
-                  {!currentRoute?.fullscreen && <Footer />}
+                  {!currentRoute?.fullscreen && !currentRoute?.noFooter && <Footer />}
                 </div>
-                {!renderSunshineSidebar && friendlyGridLayout && <div className={classes.rhs}>
-                  <EAHomeRightHandSide />
-                </div>}
+                {!renderSunshineSidebar &&
+                  friendlyHomeLayout &&
+                  !showNewUserCompleteProfile &&
+                  <StickyWrapper
+                    eaHomeLayout={friendlyHomeLayout}
+                    headerVisible={headerVisible}
+                    headerAtTop={headerAtTop}
+                    classes={classes}
+                  >
+                    <EAHomeRightHandSide />
+                  </StickyWrapper>
+                }
                 {renderSunshineSidebar && <div className={classes.sunshine}>
                   <NoSSR>
                     <SunshineSidebar/>

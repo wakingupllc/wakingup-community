@@ -2,12 +2,11 @@ import React from 'react';
 import { Components, registerComponent } from '../../../lib/vulcan-lib';
 import { postGetPageUrl } from '../../../lib/collections/posts/helpers';
 import { forumTitleSetting } from '../../../lib/instanceSettings';
-import { preferredHeadingCase } from '../../../lib/forumTypeUtils';
+import { useMessages } from '../../common/withMessages';
 import Paper from '@material-ui/core/Paper';
 import { useTracking } from '../../../lib/analyticsEvents';
-import { isFriendlyUI } from '../../../themes/forumTheme';
+import { isFriendlyUI, preferredHeadingCase } from '../../../themes/forumTheme';
 import { showSocialMediaShareLinksSetting } from '../../../lib/publicSettings';
-import { useMessages } from '../../common/withMessages';
 
 const styles = (theme: ThemeType): JssStyles => ({
   icon: {
@@ -22,14 +21,14 @@ const SharePostActions = ({post, onClick, classes}: {
   classes: ClassesType,
 }) => {
   const { DropdownMenu, DropdownItem, DropdownDivider, SocialMediaIcon } = Components;
-  const postUrl = postGetPageUrl(post, true);
   const { captureEvent } = useTracking()
   const { flash } = useMessages();
-
+  
+  const postUrl = (source: string) => `${postGetPageUrl(post, true)}?utm_campaign=post_share&utm_source=${source}`
+  
   const copyLink = () => {
     captureEvent('sharePost', {option: 'copyLink'})
-    const postUrl = postGetPageUrl(post, true);
-    void navigator.clipboard.writeText(postUrl);
+    void navigator.clipboard.writeText(postUrl('link'));
     flash("Link copied to clipboard");
   }
 
@@ -42,18 +41,18 @@ const SharePostActions = ({post, onClick, classes}: {
   
   const shareToTwitter = () => {
     captureEvent('sharePost', {option: 'twitter'})
-    const tweetText = `${linkTitle} ${postUrl}`;
+    const tweetText = `${linkTitle} ${postUrl('twitter')}`;
     const destinationUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`;
     openLinkInNewTab(destinationUrl);
   }
   const shareToFacebook = () => {
     captureEvent('sharePost', {option: 'facebook'})
-    const destinationUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(postUrl)}&t=${encodeURIComponent(linkTitle)}`;
+    const destinationUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(postUrl('facebook'))}&t=${encodeURIComponent(linkTitle)}`;
     openLinkInNewTab(destinationUrl);
   }
   const shareToLinkedIn = () => {
     captureEvent('sharePost', {option: 'linkedIn'})
-    const destinationUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(postUrl)}`;
+    const destinationUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(postUrl('linkedin'))}`;
     openLinkInNewTab(destinationUrl);
   }
 
@@ -93,5 +92,3 @@ declare global {
     SharePostActions: typeof SharePostActionsComponent
   }
 }
-
-

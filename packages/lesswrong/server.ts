@@ -17,6 +17,7 @@ import './server/karmaInflation/cron';
 import './server/useractivities/cron';
 import './server/pageCache/cron';
 import './server/users/cron'
+import './server/gwwcFundraisers/cron';
 import './server/database-import/force_batch_update_scores';
 import './server/database-import/cleanup_scripts';
 import './server/robots';
@@ -56,6 +57,7 @@ import './server/scripts/sendWrappedNotifications';
 import './server/scripts/removeRsvp';
 import './server/scripts/regenerateUnicodeSlugs';
 import './server/scripts/checkPostForSockpuppetVoting';
+import './server/scripts/convertAllPostsToEAEmojis';
 
 import './server/scripts/oneOffBanSpammers'
 import './server/scripts/ensureEmailInEmails';
@@ -143,6 +145,8 @@ import './server/callbacks/tagFlagCallbacks';
 import './server/callbacks/moderatorActionCallbacks';
 import './server/callbacks/advisorRequestsCallbacks';
 import './server/callbacks/digestCallbacks';
+import './server/callbacks/dialogueMatchPreferenceCallbacks';
+
 
 import './server/resolvers/alignmentForumMutations';
 import './server/callbacks/alignment-forum/callbacks';
@@ -169,6 +173,9 @@ import './server/resolvers/petrovDayResolvers';
 import './server/resolvers/analyticsResolvers';
 import './server/resolvers/moderationResolvers';
 import './server/resolvers/typingIndicatorsResolvers';
+import './server/resolvers/dialogueChecksResolvers';
+import './server/resolvers/electionCandidateResolvers';
+
 
 import './server/intercomSetup';
 import './server/callbacks/intercomCallbacks';

@@ -10,7 +10,7 @@ import { isFriendlyUI } from '../../../themes/forumTheme';
 import { showFirstPostReviewMessageSetting } from '../../../lib/publicSettings';
 
 const shortformDraftMessage = isFriendlyUI
-  ? "This is a special post that holds your Quick takes. Because it's marked as a draft, your Quick takes will not be displayed. To un-draft it, pick Edit from the menu above, then click Publish."
+  ? "This is a special post that holds your quick takes. Because it's marked as a draft, your quick takes will not be displayed. To un-draft it, pick Edit from the menu above, then click Publish."
   : "This is a special post that holds your short-form writing. Because it's marked as a draft, your short-form posts will not be displayed. To un-draft it, pick Edit from the menu above, then click Publish.";
 
 const styles = (theme: ThemeType): JssStyles => ({

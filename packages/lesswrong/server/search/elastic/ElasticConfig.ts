@@ -82,6 +82,10 @@ export type IndexConfig = {
    * `baseScore` if not defined.
    */
   karmaField?: string,
+  /**
+   * Field used for location based geo-sorting
+   */
+  locationField?: string,
 }
 
 /**
@@ -116,6 +120,10 @@ const shingleTextMapping: MappingProperty = {
       analyzer: "fm_exact_analyzer",
     },
   },
+};
+
+const geopointMapping: MappingProperty = {
+  type: "geo_point",
 };
 
 /**
@@ -258,7 +266,7 @@ const elasticSearchConfig: Record<AlgoliaIndexCollectionName, IndexConfig> = {
         scoring: {type: "date"},
       },
     ],
-    tiebreaker: "publicDateMs",
+    tiebreaker: "karma",
     filters: [
       {range: {karma: {gte: 0}}},
       {term: {deleted: false}},
@@ -281,6 +289,7 @@ const elasticSearchConfig: Record<AlgoliaIndexCollectionName, IndexConfig> = {
       website: keywordMapping,
       profileImageId: keywordMapping,
       tags: keywordMapping,
+      _geoloc: geopointMapping,
     },
     privateFields: [
       "deleteContent",
@@ -288,6 +297,7 @@ const elasticSearchConfig: Record<AlgoliaIndexCollectionName, IndexConfig> = {
       "isAdmin",
     ],
     karmaField: "karma",
+    locationField: "_geoloc",
   },
   Sequences: {
     fields: [

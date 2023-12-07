@@ -168,7 +168,7 @@ export const CommentsItemMeta = ({
 
   const {
     postPage, showCollapseButtons, post, tag, singleLineCollapse, isSideComment,
-    hideActionsMenu, hideParentCommentToggle,
+    hideActionsMenu, hideParentCommentToggle, hideParentCommentToggleForTopLevel,
   } = treeOptions;
 
   const authorIsPostAuthor = post &&
@@ -252,6 +252,9 @@ export const CommentsItemMeta = ({
       {post && <CommentShortformIcon comment={comment} post={post} />}
       {!showCommentTitle && <CommentDiscussionIcon comment={comment} small />}
       {!hideParentCommentToggle &&
+          !(hideParentCommentToggleForTopLevel &&
+            comment.parentCommentId === comment.topLevelCommentId
+          ) &&
           parentCommentId != comment.parentCommentId &&
           parentAnswerId != comment.parentCommentId &&
         <ShowParentComment

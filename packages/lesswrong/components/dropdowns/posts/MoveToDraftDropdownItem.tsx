@@ -3,8 +3,8 @@ import { useUpdate } from '../../../lib/crud/withUpdate';
 import React, { useCallback } from 'react';
 import { canUserEditPostMetadata } from '../../../lib/collections/posts/helpers';
 import { useCurrentUser } from '../../common/withUser';
-import { preferredHeadingCase } from '../../../lib/forumTypeUtils';
-import { useNavigation } from '../../../lib/routeUtil';
+import { preferredHeadingCase } from '../../../themes/forumTheme';
+import { useNavigate } from '../../../lib/routeUtil';
 import { userGetProfileUrl } from '../../../lib/collections/users/helpers';
 import { useMessages } from '../../common/withMessages';
 
@@ -13,7 +13,7 @@ const MoveToDraftDropdownItem = ({ post }: {
 }) => {
   const { flash } = useMessages();
   const currentUser = useCurrentUser();
-  const { history } = useNavigation();
+  const navigate = useNavigate();
   const {DropdownItem} = Components;
   const {mutate: updatePost} = useUpdate({
     collectionName: "Posts",
@@ -26,8 +26,8 @@ const MoveToDraftDropdownItem = ({ post }: {
       data: {draft:true}
     })
     flash({messageString: "Post moved to draft", type: "success"});
-    history.push(userGetProfileUrl(currentUser))
-  }, [updatePost, post, history, currentUser, flash])
+    navigate(userGetProfileUrl(currentUser))
+  }, [updatePost, post, navigate, currentUser, flash])
 
   if (!post.draft && currentUser && canUserEditPostMetadata(currentUser, post)) {
     return (

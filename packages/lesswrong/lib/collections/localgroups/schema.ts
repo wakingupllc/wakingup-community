@@ -3,7 +3,7 @@ import { arrayOfForeignKeysField, denormalizedField, googleLocationToMongoLocati
 import { localGroupTypeFormOptions } from './groupTypes';
 import { schemaDefaultValue } from '../../collectionUtils';
 import { isEAForum, isLW } from '../../instanceSettings';
-import { isFriendlyUI } from '../../../themes/forumTheme';
+import { isFriendlyUI, preferredHeadingCase } from '../../../themes/forumTheme';
 
 export const GROUP_CATEGORIES = [
   {value: 'national', label: 'National'},
@@ -60,8 +60,8 @@ const schema: SchemaType<DbLocalgroup> = {
     canCreate: ['members'],
     canUpdate: ['members'],
     order: 20,
-    control: "UsersListEditor",
-    label: isFriendlyUI ? "Add organizers" : "Add Organizers",
+    control: "FormUsersListEditor",
+    label: preferredHeadingCase("Add Organizers"),
   },
 
   'organizerIds.$': {

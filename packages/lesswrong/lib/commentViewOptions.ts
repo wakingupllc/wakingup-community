@@ -1,5 +1,4 @@
-import { isFriendlyUI } from "../themes/forumTheme";
-import { preferredHeadingCase } from "./forumTypeUtils";
+import { isFriendlyUI, preferredHeadingCase } from "../themes/forumTheme";
 import { isAF, sortMagicNameSetting, sortTopCommentNameSetting, sortNewNameSetting, sortOldNameSetting, sortRecentRepliesNameSetting } from "./instanceSettings";
 
 const customViewNames: Partial<Record<CommentsViewName,string>> = {

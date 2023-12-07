@@ -3,6 +3,7 @@ import { Components, registerComponent } from '../../lib/vulcan-lib';
 import moment from 'moment';
 import { isEAForum } from '../../lib/instanceSettings';
 import AlarmIcon from '@material-ui/icons/Alarm';
+import { isFriendlyUI } from '../../themes/forumTheme';
 import { interpolateRateLimitMessage, timeFromNowInWords } from '../../lib/rateLimits/utils';
 
 const styles = (theme: ThemeType): JssStyles => ({
@@ -33,7 +34,7 @@ const RateLimitWarning = ({lastRateLimitExpiry, rateLimitMessage, classes}: {
 
   const message = interpolateRateLimitMessage(rateLimitMessage ?? '', timeFromNowInWords(lastRateLimitExpiry));
 
-  if (isEAForum) {
+  if (isFriendlyUI) {
     return <Components.WarningBanner message={message}/>
   } else {
     return <ContentStyles contentType="comment" className={classes.lwBanner}>

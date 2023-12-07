@@ -2,7 +2,6 @@ import React from 'react';
 import { registerComponent, Components } from '../../lib/vulcan-lib';
 import classNames from 'classnames';
 import { postGetPageUrl } from '../../lib/collections/posts/helpers';
-import DebateIcon from '@material-ui/icons/Forum';
 import { curatedUrl } from '../recommendations/RecommendationsAndCurated';
 import { Link } from '../../lib/reactRouterWrapper';
 import { isFriendlyUI } from '../../themes/forumTheme';
@@ -26,14 +25,14 @@ const styles = (theme: ThemeType): JssStyles => ({
     // not sure if this is best way to do this
     '&&': {
       fontSize: "1.2rem",
-      color: theme.palette.icon.dim4,
+      color: isFriendlyUI ? theme.palette.grey[600] : theme.palette.icon.dim4,
       position: "relative",
       top: 3,
     },
   },
   curatedIcon: {
     fontSize: "1.2rem",
-    color: isFriendlyUI ? theme.palette.icon.dim55 : theme.palette.icon.dim4,
+    color: isFriendlyUI ? theme.palette.grey[600] : theme.palette.icon.dim4,
     position: "relative",
     top: isFriendlyUI ? 2 : 3,
   },
@@ -42,7 +41,7 @@ const styles = (theme: ThemeType): JssStyles => ({
   },
   question: {
     fontSize: "1.2rem",
-    color: isFriendlyUI ? theme.palette.icon.dim55 : theme.palette.icon.dim4,
+    color: isFriendlyUI ? theme.palette.grey[600] : theme.palette.icon.dim4,
     fontWeight: '600'
   },
   alignmentIcon: {
@@ -56,7 +55,7 @@ const styles = (theme: ThemeType): JssStyles => ({
       ? {
         fontSize: "1.2rem",
         top: 1,
-        color: theme.palette.icon.dim55,
+        color: theme.palette.grey[600],
       }
       : {
         fontSize: "1.2rem",
@@ -64,11 +63,14 @@ const styles = (theme: ThemeType): JssStyles => ({
         color: theme.palette.icon.dim4,
       }),
   },
+  dialogueIcon: {
+    strokeWidth: isFriendlyUI ? "2px" : undefined,
+  },
 });
 
 export const CuratedIcon = ({hasColor, classes}:{
   hasColor?: boolean,
-  classes: ClassesType
+  classes: ClassesType<typeof styles>,
 }) => {
   const { LWTooltip, ForumIcon } = Components;
 
@@ -89,9 +91,9 @@ const CuratedIconComponent = registerComponent('CuratedIcon', CuratedIcon, {styl
 
 const PostsItemIcons = ({post, classes, hideCuratedIcon, hidePersonalIcon}: {
   post: PostsBase,
-  classes: ClassesType,
   hideCuratedIcon?: boolean,
   hidePersonalIcon?: boolean
+  classes: ClassesType<typeof styles>,
 }) => {
   const { OmegaIcon, LWTooltip, CuratedIcon, ForumIcon } = Components;
 
@@ -110,9 +112,16 @@ const PostsItemIcons = ({post, classes, hideCuratedIcon, hidePersonalIcon}: {
       </LWTooltip>
     </span>}
 
-    {post.debate && <span className={classes.postIcon}>
+    {(post.debate || post.collabEditorDialogue) && <span className={classes.postIcon}>
       <LWTooltip title="Dialogue" placement="right">
-        <DebateIcon className={classes.icon} />
+        <ForumIcon
+          icon={
+            isFriendlyUI
+              ? "ChatBubbleLeftRight"
+              : "ChatBubbleLeftRightFilled"
+          }
+          className={classNames(classes.icon, classes.dialogueIcon)}
+        />
       </LWTooltip>
     </span>}
     {showPersonalBlogpostIconSetting.get() && !hidePersonalIcon && !post.frontpageDate && !post.isEvent && <span className={classes.postIcon}>

@@ -13,6 +13,7 @@ import {
   createDummyUserRateLimit,
 } from '../utils';
 import moment from 'moment';
+import { Comments } from "../../lib/collections/comments";
 
 const { assert } = chai;
 
@@ -177,7 +178,9 @@ describe('moderator-applied user comment rate limit', () => {
     const rateLimitedUser = await createDummyUser()
     const post = await createDummyPost(postAuthorUser)
 
-    await createDummyComment(rateLimitedUser, {postId: post._id})
+    const comment = await createDummyComment(rateLimitedUser, {postId: post._id})
+    await Comments.rawUpdateOne(comment._id, {$set: {postedAt: moment().subtract(1, 'hour').toDate()}}); // (can't set postedAt in createDummyComment)
+
     await createDummyUserRateLimit(rateLimitedUser, {
       type: 'allComments',
       intervalUnit: 'days',
@@ -207,7 +210,7 @@ describe('moderator-applied user comment rate limit', () => {
     }
 
     const result = runQuery(createCommentQuery(post._id), {}, {currentUser: rateLimitedUser})
-    await (result).should.be.rejected;
+    await (result as any).should.be.rejected;
 
     graphQLerrors.getErrors()[0][0].message.startsWith("You're currently limited to 1 comment per day").should.equal(true)
   })

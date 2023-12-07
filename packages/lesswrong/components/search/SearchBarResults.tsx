@@ -11,7 +11,7 @@ const styles = (theme: ThemeType): JssStyles => ({
     color: theme.palette.text.normal,
     transition: "opacity .1s ease-in-out",
     zIndex: theme.zIndexes.searchResults,
-    width:520,
+    width: 520,
     position: "fixed",
     right: 0,
     top: HEADER_HEIGHT,
@@ -21,7 +21,6 @@ const styles = (theme: ThemeType): JssStyles => ({
       width: "100%"
     },
     [theme.breakpoints.down('xs')]: {
-      // TODO; this is a correct imo functional change for LWAF
       top: MOBILE_HEADER_HEIGHT,
     },
   },

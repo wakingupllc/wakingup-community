@@ -4,12 +4,12 @@ import React from 'react';
 import { getUserEmail, isLoginLocked, loginLockedUntil, userCanEditUser, userGetProfileUrl} from '../../lib/collections/users/helpers';
 import Button from '@material-ui/core/Button';
 import { useCurrentUser } from '../common/withUser';
-import { useNavigation } from '../../lib/routeUtil';
 import { gql, useMutation, useApolloClient } from '@apollo/client';
 import { useThemeOptions, useSetTheme } from '../themes/useTheme';
 import { captureEvent } from '../../lib/analyticsEvents';
 import { configureDatadogRum } from '../../client/datadogRum';
-import { preferredHeadingCase } from '../../lib/forumTypeUtils';
+import { preferredHeadingCase } from '../../themes/forumTheme';
+import { useNavigate } from '../../lib/reactRouterWrapper';
 import {textFieldContainerStyles} from '../form-components/MuiTextField.tsx'
 import { useSingle } from '../../lib/crud/withSingle.ts';
 
@@ -137,7 +137,7 @@ const UsersEditForm = ({terms, classes, enableResetPassword = false}: {
 }) => {
   const currentUser = useCurrentUser();
   const { flash } = useMessages();
-  const { history } = useNavigation();
+  const navigate = useNavigate();
   const client = useApolloClient();
   const { Typography } = Components;
   const [ mutate, loading ] = useMutation(passwordResetMutation, { errorPolicy: 'all' })
@@ -272,7 +272,7 @@ const UsersEditForm = ({terms, classes, enableResetPassword = false}: {
           try {
             await client.resetStore()
           } finally {
-            history.push(userGetProfileUrl(user))
+            navigate(userGetProfileUrl(user))
           }
         }}
         queryFragment={getFragment('UsersEdit')}

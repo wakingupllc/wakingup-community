@@ -6,7 +6,7 @@ import { useLocation } from '../../../lib/routeUtil';
 import { Link } from '../../../lib/reactRouterWrapper';
 import { AnalyticsContext } from "../../../lib/analyticsEvents";
 import { userCanDo } from '../../../lib/vulcan-users/permissions';
-import { userCanEditUser, userGetDisplayName, userGetProfileUrlFromSlug } from "../../../lib/collections/users/helpers";
+import { showDonatedIcon, userCanEditUser, userGetDisplayName, userGetProfileUrlFromSlug } from "../../../lib/collections/users/helpers";
 import { getBrowserLocalStorage } from '../../editor/localStorageHandlers';
 import { siteNameWithArticleSetting, taggingNameIsSet, taggingNameCapitalSetting, taglineSetting } from '../../../lib/instanceSettings';
 import { DEFAULT_LOW_KARMA_THRESHOLD } from '../../../lib/collections/posts/views'
@@ -113,6 +113,7 @@ const styles = (theme: ThemeType): JssStyles => ({
     marginBottom: 8,
     fontFamily: theme.palette.fonts.sansSerifStack,
     fontWeight: 500,
+    overflowWrap: "break-word",
   },
   deletedUsername: {
     textDecoration: 'line-through'
@@ -160,6 +161,13 @@ const styles = (theme: ThemeType): JssStyles => ({
     columnGap: 26,
     alignItems: 'baseline',
     marginBottom: 20
+  },
+  donationIcon: {
+    position: "relative",
+    bottom: 1,
+    color: theme.palette.givingPortal[1000],
+    fontSize: 24,
+    marginLeft: 8
   },
 })
 
@@ -243,7 +251,7 @@ const EAUsersProfile = ({terms, slug, subscriptionsEnabled = true, postSortingEn
     PostsList2, ContentItemBody, Loading, Error404, PermanentRedirect, HeadTags,
     Typography, ContentStyles, EAUsersProfileTabbedSection, PostsListSettings,
     RecentComments, SectionButton, SequencesGridWrapper, ReportUserButton, DraftsList,
-    ProfileShortform, EAUsersProfileImage, WUUsersMetaInfo, EAUsersProfileLinks,
+    ProfileShortform, EAUsersProfileImage, WUUsersMetaInfo, EAUsersProfileLinks, ForumIcon
   } = Components
 
   if (loading) {
@@ -447,6 +455,15 @@ const EAUsersProfile = ({terms, slug, subscriptionsEnabled = true, postSortingEn
           <EAUsersProfileImage user={user} />
           <Typography variant="headline" className={classNames(classes.username, {[classes.deletedUsername]: user.deleted})}>
             {username}{user.deleted && <span className={classes.accountDeletedText}>(account deleted)</span>}
+            {showDonatedIcon(user) &&
+              <LWTooltip
+                placement="bottom-start"
+                title={`Donated to the Donation Election fund`}
+                className={classes.iconWrapper}
+              >
+                <ForumIcon icon="GivingHand" className={classes.donationIcon} />
+              </LWTooltip>
+            }
           </Typography>
           {(user.jobTitle || user.organization) && <ContentStyles contentType="comment" className={classes.roleAndOrg}>
             {user.jobTitle} {user.organization ? `@ ${user.organization}` : ''}

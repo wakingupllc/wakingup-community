@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Components, registerComponent } from '../../lib/vulcan-lib';
 import { useCurrentUser } from '../common/withUser';
-import { useLocation, useNavigation } from '../../lib/routeUtil';
+import { useLocation, useNavigate } from '../../lib/routeUtil';
 import { useTimezone } from './withTimezone';
 import { AnalyticsContext, useOnMountTracking } from '../../lib/analyticsEvents';
 import { FilterSettings, useFilterSettings } from '../../lib/filterSettings';
@@ -23,7 +23,7 @@ import qs from 'qs'
 import { Link } from '../../lib/reactRouterWrapper';
 import { frontpagePostsCountSetting, frontpagePostsLoadMoreCountSetting } from '../../lib/publicSettings';
 
-const titleWrapper = isLW ? {
+const titleWrapper = isLWorAF ? {
   marginBottom: 8
 } : {
   display: "flex",
@@ -158,7 +158,7 @@ const HomeLatestPosts = ({classes}:{classes: ClassesType}) => {
     SingleColumnSection, PostsList2, TagFilterSettings, LWTooltip, SettingsButton,
     CuratedPostsList, SectionTitle, StickiedPosts, Typography, InlineSelect
   } = Components
-  const { history } = useNavigation();
+  const navigate = useNavigate();
 
   const limit = frontpagePostsCountSetting.get() ?? (parseInt(query.limit) || defaultLimit);
 
@@ -172,7 +172,7 @@ const HomeLatestPosts = ({classes}:{classes: ClassesType}) => {
     const view = opt.value
     const { query } = location;
     const newQuery = {...query, view: view}
-    history.push({...location.location, search: `?${qs.stringify(newQuery)}`})
+    navigate({...location.location, search: `?${qs.stringify(newQuery)}`})
   };
 
   const postsTerms = {

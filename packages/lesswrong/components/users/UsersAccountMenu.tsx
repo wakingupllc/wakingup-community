@@ -74,7 +74,7 @@ class UsersAccountMenu extends PureComponent<UsersAccountMenuProps,UsersAccountM
 
   render() {
     const { classes, location } = this.props
-    const { EAButton, WrappedLoginForm } = Components
+    const { EAButton, LoginForm } = Components
     
     // Location is always passed in by hoc. We can't make it a required prop due
     // to a limitation in our typings
@@ -102,7 +102,7 @@ class UsersAccountMenu extends PureComponent<UsersAccountMenuProps,UsersAccountM
             onClose={this.handleRequestClose}
           >
             <div className={classes.devMessage}>(Dev server only: password-based logins are enabled)</div>
-            {this.state.open && <WrappedLoginForm />}
+            {this.state.open && <LoginForm />}
           </Popover>
           </>}
         </>}

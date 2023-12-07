@@ -22,8 +22,8 @@ import { nofollowKarmaThreshold } from '../../lib/publicSettings';
 import CopyToClipboard from 'react-copy-to-clipboard';
 import { useMessages } from '../common/withMessages';
 import CopyIcon from '@material-ui/icons/FileCopy'
-import { preferredHeadingCase } from '../../lib/forumTypeUtils';
 import { getUserStructuredData } from './UsersSingle';
+import { preferredHeadingCase } from '../../themes/forumTheme';
 
 export const sectionFooterLeftStyles = {
   flexGrow: 1,
@@ -274,8 +274,7 @@ const UsersProfileFn = ({terms, slug, classes}: {
                     actions={[]}
                     trigger={<a>Register RSS</a>}
                   >
-                    { /*eslint-disable-next-line react/jsx-pascal-case*/ }
-                    <div><Components.newFeedButton user={user} /></div>
+                    <div><Components.NewFeedButton user={user} /></div>
                   </DialogGroup>
                 </div>
               }

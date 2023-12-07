@@ -12,8 +12,8 @@ import { getCollectionHooks, UpdateCallbackProperties } from '../mutationCallbac
 import { voteCallbacks, VoteDocTuple } from '../../lib/voting/vote';
 import { encodeIntlError } from '../../lib/vulcan-lib/utils';
 import { sendVerificationEmail } from "../vulcan-lib/apollo-server/authentication";
-import {forumTypeSetting, isEAForum, isLW, isWakingUp, verifyEmailsSetting } from "../../lib/instanceSettings";
-import { hasDigestSetting, mailchimpEAForumListIdSetting, mailchimpForumDigestListIdSetting, sendgridDigestListIdSetting, sendgridWelcomeListIdSetting } from "../../lib/publicSettings";
+import { isEAForum, isLW, isWakingUp, verifyEmailsSetting } from "../../lib/instanceSettings";
+import { mailchimpEAForumListIdSetting, mailchimpForumDigestListIdSetting, sendgridDigestListIdSetting, sendgridWelcomeListIdSetting } from "../../lib/publicSettings";
 import { mailchimpAPIKeySetting } from "../../server/serverSettings";
 import {userGetLocation, getUserEmail} from "../../lib/collections/users/helpers";
 import { captureException } from "@sentry/core";
@@ -30,6 +30,7 @@ import { FilterSettings, FilterTag, getDefaultFilterSettings } from '../../lib/f
 import Tags from '../../lib/collections/tags/collection';
 import keyBy from 'lodash/keyBy';
 import {userFindOneByEmail} from "../commonQueries";
+import { hasDigests } from '../../lib/betas';
 import { addToSendgridList, removeFromSendgridList } from '../emails/sendgridListManagement';
 import { sendEmailSendgridTemplate } from '../emails/sendEmail';
 import { throwValidationError } from '../vulcan-lib';
@@ -315,7 +316,7 @@ getCollectionHooks("Users").editSync.add(async function usersEditCheckEmail (mod
 getCollectionHooks("Users").editAsync.add(async function subscribeToForumDigest (newUser: DbUser, oldUser: DbUser) {
   if (
     isAnyTest ||
-    !hasDigestSetting.get() ||
+    !hasDigests ||
     newUser.subscribedToDigest === oldUser.subscribedToDigest
   ) {
     return;

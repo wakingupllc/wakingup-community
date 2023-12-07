@@ -12,9 +12,10 @@ import { postBodyStyles } from '../../themes/stylePiping';
 import { useCurrentUser } from '../common/withUser';
 import { isBookUI, isFriendlyUI } from '../../themes/forumTheme';
 import { SECTION_WIDTH } from '../common/SingleColumnSection';
+import { getSpotlightUrl } from '../../lib/collections/spotlights/helpers';
 
 
-export const descriptionStyles = (theme: JssStyles) => ({
+export const descriptionStyles = (theme: ThemeType) => ({
   ...postBodyStyles(theme),
   ...(isBookUI ? theme.typography.body2 : {}),
   lineHeight: '1.65rem',
@@ -157,8 +158,8 @@ const styles = (theme: ThemeType): JssStyles => ({
     ...(isFriendlyUI && {width: "100%", objectFit: "cover"}),
   },
   imageFade: {
-    mask: "linear-gradient(to right, transparent 0,rgb(255, 255, 255) 80%,#fff 100%)",
-    "-webkit-mask-image": "linear-gradient(to right, transparent 0,rgb(255, 255, 255) 80%,#fff 100%)",
+    mask: `linear-gradient(to right, transparent 0, ${theme.palette.text.alwaysWhite} 80%, ${theme.palette.text.alwaysWhite} 100%)`,
+    "-webkit-mask-image": `linear-gradient(to right, transparent 0, ${theme.palette.text.alwaysWhite} 80%, ${theme.palette.text.alwaysWhite} 100%)`,
   },
   author: {
     marginTop: 4,
@@ -241,16 +242,6 @@ const styles = (theme: ThemeType): JssStyles => ({
   }
 });
 
-const getUrlFromDocument = (document: SpotlightDisplay_document, documentType: SpotlightDocumentType) => {
-  switch (documentType) {
-    case "Sequence":
-      return `/s/${document._id}`;
-    case "Post":
-      return `/posts/${document._id}/${document.slug}`
-  }
-}
-
-
 export const SpotlightItem = ({
   spotlight,
   showAdminInfo,
@@ -277,7 +268,7 @@ export const SpotlightItem = ({
   const [edit, setEdit] = useState<boolean>(false)
   const [editDescription, setEditDescription] = useState<boolean>(false)
 
-  const url = getUrlFromDocument(spotlight.document, spotlight.documentType)
+  const url = getSpotlightUrl(spotlight);
 
   const duration = spotlight.duration
 

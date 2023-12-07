@@ -183,7 +183,7 @@ export const lowKarmaUserVotingCutoffDateSetting = new PublicInstanceSetting<str
 export const lowKarmaUserVotingCutoffKarmaSetting = new PublicInstanceSetting<number>("lowKarmaUserVotingCutoffKarma", 1, "optional");
 
 /** Whether to include a Share button. (Forums with no public access, or a more conservative style wouldn't want one.) */
-export const shareButtonSetting = new PublicInstanceSetting<boolean>("shareButton", true, "optional");
+export const hasShareButtonsSetting = new PublicInstanceSetting<boolean>("hasShareButtons", true, "optional");
 
 /** Whether posts and other content is visible to non-logged-in users (TODO: actually implement this) */
 export const publicAccess = new PublicInstanceSetting<boolean>("publicAccess", true, "optional");
@@ -198,6 +198,11 @@ export const tabLongTitleSetting = new PublicInstanceSetting<string | null>('for
 
 export const noIndexSetting = new PublicInstanceSetting<boolean>('noindex', false, "optional")
 
+/** Whether this forum verifies user emails */
+export const verifyEmailsSetting = new PublicInstanceSetting<boolean>("verifyEmails", true, "optional");
+
+export const hasCuratedPostsSetting = new PublicInstanceSetting<boolean>("hasCuratedPosts", false, "optional");
+
 
 // These settings set the name of sorting options for posts and comments. If they're left as null,
 // the name will use the default FriendlyUI/BookUI name.
@@ -208,5 +213,3 @@ export const sortNewNameSetting = new PublicInstanceSetting<string | null>('sort
 export const sortOldNameSetting = new PublicInstanceSetting<string | null>('sortOldName', null, "optional");
 export const sortRecentRepliesNameSetting = new PublicInstanceSetting<string | null>('sortRecentRepliesName', null, "optional");
 export const sortRecentCommentsNameSetting = new PublicInstanceSetting<string | null>('sortRecentCommentsName', null, "optional");
-
-export const verifyEmailsSetting = new PublicInstanceSetting<boolean>("verifyEmails", true, "optional");

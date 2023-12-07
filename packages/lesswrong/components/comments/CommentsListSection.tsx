@@ -14,8 +14,8 @@ import { CommentsNewFormProps } from './CommentsNewForm';
 import { Link } from '../../lib/reactRouterWrapper';
 import { isEAForum } from '../../lib/instanceSettings';
 import { userIsAdmin } from '../../lib/vulcan-users';
-import { preferredHeadingCase } from '../../lib/forumTypeUtils';
-import { isFriendlyUI } from '../../themes/forumTheme';
+
+import { isFriendlyUI, preferredHeadingCase } from '../../themes/forumTheme';
 
 export const NEW_COMMENT_MARGIN_BOTTOM = "0"
 
@@ -98,6 +98,8 @@ const CommentsListSection = ({
   startThreadTruncated,
   newForm=true,
   newFormProps={},
+  highlightDate,
+  setHighlightDate,
   classes,
 }: {
   post?: PostsDetails,
@@ -112,6 +114,8 @@ const CommentsListSection = ({
   startThreadTruncated?: boolean,
   newForm: boolean,
   newFormProps?: Partial<CommentsNewFormProps>,
+  highlightDate: Date|undefined,
+  setHighlightDate: (newValue: Date|undefined) => void,
   classes: ClassesType,
 }) => {
   const currentUser = useCurrentUser();
@@ -122,7 +126,6 @@ const CommentsListSection = ({
     CommentsNewForm, QuickTakesEntry,
   } = Components;
 
-  const [highlightDate,setHighlightDate] = useState<Date|undefined>(post?.lastVisitedAt && new Date(post.lastVisitedAt));
   const [anchorEl,setAnchorEl] = useState<HTMLElement|null>(null);
   const newCommentsSinceDate = highlightDate
     ? filter(

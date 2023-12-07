@@ -1,6 +1,6 @@
 import { Components, registerComponent } from '../../lib/vulcan-lib';
 import { postGetPageUrl } from '../../lib/collections/posts/helpers';
-import React, {useState, useCallback} from 'react';
+import React, { FC, MouseEvent, useState, useCallback } from 'react';
 import { Link } from '../../lib/reactRouterWrapper';
 import { useSingle } from '../../lib/crud/withSingle';
 import { nofollowKarmaThreshold } from '../../lib/publicSettings';
@@ -8,8 +8,8 @@ import { useForeignCrosspost, isPostWithForeignId, PostWithForeignId } from "../
 import { useForeignApolloClient } from "../hooks/useForeignApolloClient";
 import { captureException }from "@sentry/core";
 import classNames from 'classnames';
-import { preferredHeadingCase } from '../../lib/forumTypeUtils';
-import { isFriendlyUI } from '../../themes/forumTheme';
+
+import { isFriendlyUI, preferredHeadingCase } from '../../themes/forumTheme';
 
 const styles = (theme: ThemeType): JssStyles => ({
   highlightContinue: {
@@ -30,6 +30,33 @@ const styles = (theme: ThemeType): JssStyles => ({
     }
   }
 })
+
+const TruncatedSuffix: FC<{
+  post: PostsList,
+  forceSeeMore?: boolean,
+  wordsLeft: number,
+  clickExpand: (ev: MouseEvent) => void,
+}> = ({post, forceSeeMore, wordsLeft, clickExpand}) => {
+  if (forceSeeMore || wordsLeft < 1000) {
+    return (
+      <Link
+        to={postGetPageUrl(post)}
+        onClick={clickExpand}
+        eventProps={{intent: 'expandPost'}}
+      >
+        ({preferredHeadingCase("See More")} – {wordsLeft} more words)
+      </Link>
+    );
+  }
+  return (
+    <Link to={postGetPageUrl(post)} eventProps={{intent: 'expandPost'}}>
+      {isFriendlyUI
+        ? "Continue reading"
+        : `(Continue Reading – ${wordsLeft} more words)`
+      }
+    </Link>
+  );
+}
 
 const foreignFetchProps = {
   collectionName: "Posts",
@@ -65,7 +92,7 @@ const HighlightBody = ({
 }) => {
   const { htmlHighlight = "", wordCount = 0 } = post.contents || {};
 
-  const clickExpand = useCallback((ev) => {
+  const clickExpand = useCallback((ev: MouseEvent) => {
     setExpanded(true);
     ev.preventDefault();
   }, [setExpanded]);

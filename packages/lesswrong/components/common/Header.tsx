@@ -1,4 +1,4 @@
-import React, { useContext, useState, useCallback } from 'react';
+import React, { useContext, useState, useCallback, useEffect } from 'react';
 import { Components, registerComponent } from '../../lib/vulcan-lib';
 import { Link } from '../../lib/reactRouterWrapper';
 import NoSSR from 'react-no-ssr';
@@ -11,21 +11,23 @@ import { SidebarsContext } from './SidebarsWrapper';
 import withErrorBoundary from '../common/withErrorBoundary';
 import classNames from 'classnames';
 import { AnalyticsContext, useTracking } from '../../lib/analyticsEvents';
-import { isEAForum, PublicInstanceSetting } from '../../lib/instanceSettings';
+import { PublicInstanceSetting } from '../../lib/instanceSettings';
 import { useUnreadNotifications } from '../hooks/useUnreadNotifications';
 import { isBookUI, isFriendlyUI } from '../../themes/forumTheme';
-import { hasLogoSetting } from '../../lib/publicSettings';
-import { isProduction } from '../../lib/executionEnvironment';
+import { hasProminentLogoSetting } from '../../lib/publicSettings';
+
+import { useLocation } from '../../lib/routeUtil';
+import { useIsGivingSeason } from '../ea-forum/giving-portal/hooks';
+import { isAdmin } from '../../lib/vulcan-users';
 
 export const forumHeaderTitleSetting = new PublicInstanceSetting<string>('forumSettings.headerTitle', "LESSWRONG", "warning")
 export const forumShortTitleSetting = new PublicInstanceSetting<string>('forumSettings.shortForumTitle', "LW", "warning")
-
 /** Height of top header. On Book UI sites, this is for desktop only */
 export const HEADER_HEIGHT = isBookUI ? 64 : 66;
 /** Height of top header on mobile. On Friendly UI sites, this is the same as the HEADER_HEIGHT */
 export const MOBILE_HEADER_HEIGHT = isBookUI ? 56 : HEADER_HEIGHT;
 
-const styles = (theme: ThemeType): JssStyles => ({
+export const styles = (theme: ThemeType): JssStyles => ({
   appBar: {
     boxShadow: theme.palette.boxShadow.appBar,
     color: theme.palette.header.text,
@@ -97,27 +99,27 @@ const styles = (theme: ThemeType): JssStyles => ({
   },
   hideLgUp: {
     [theme.breakpoints.up('lg')]: {
-      display:"none"
+      display:"none !important"
     }
   },
   hideMdDown: {
     [theme.breakpoints.down('md')]: {
-      display:"none"
+      display:"none !important"
     }
   },
   hideSmDown: {
     [theme.breakpoints.down('sm')]: {
-      display: "none",
+      display: "none !important",
     },
   },
   hideXsDown: {
     [theme.breakpoints.down('xs')]: {
-      display: "none",
+      display: "none !important",
     },
   },
   hideMdUp: {
     [theme.breakpoints.up('md')]: {
-      display: "none",
+      display: "none !important",
     },
   },
   rightHeaderItems: {
@@ -188,6 +190,16 @@ const Header = ({
   const {toc} = useContext(SidebarsContext)!;
   const { captureEvent } = useTracking()
   const { unreadNotifications, unreadPrivateMessages, notificationsOpened } = useUnreadNotifications();
+  const { pathname, hash } = useLocation()
+
+  useEffect(() => {
+    // When we move to a different page we will be positioned at the top of
+    // the page (unless the hash is set) but Headroom doesn't run this callback
+    // on navigation so we have to do it manually
+    if (!hash) {
+      setUnFixed(true);
+    }
+  }, [pathname, hash]);
 
   const setNavigationOpen = (open: boolean) => {
     setNavigationOpenState(open);
@@ -223,7 +235,7 @@ const Header = ({
     setSearchOpenState(isOpen);
   }, [captureEvent]);
 
-  const renderNavigationMenuButton = () => {
+  const NavigationMenuButton = () => {
     // The navigation menu button either toggles a free floating sidebar, opens
     // a drawer with site navigation, or a drawer with table of contents. (This
     // is structured a little oddly because the hideSmDown/hideMdUp filters
@@ -286,7 +298,8 @@ const Header = ({
 
   const {
     SearchBar, UsersMenu, UsersAccountMenu, NotificationsMenuButton, NavigationDrawer,
-    NotificationsMenu, HeaderSubtitle, Typography, ForumIcon
+    NotificationsMenu, HeaderSubtitle, Typography, ForumIcon,
+    GivingSeasonHeader,
   } = Components;
   
   const usersMenuClass = isFriendlyUI ? classes.hideXsDown : classes.hideMdDown
@@ -295,6 +308,58 @@ const Header = ({
       <UsersMenu />
     </AnalyticsContext>
   </div>
+
+  // the items on the right-hand side (search, notifications, user menu, login/sign up buttons)
+  const RightHeaderItems = () => <div className={classes.rightHeaderItems}>
+    {currentUser && <NoSSR onSSR={<div className={classes.searchSSRStandin} />} >
+      <SearchBar onSetIsActive={setSearchOpen} searchResultsArea={searchResultsArea} />
+    </NoSSR>}
+    {!isFriendlyUI && usersMenuNode}
+    {/* TODO: restrict this in production */}
+    {/* {!currentUser && !isProduction && <UsersAccountMenu />} */}
+    {!currentUser && <UsersAccountMenu />}
+    {currentUser && !currentUser.usernameUnset && <NotificationsMenuButton
+      unreadNotifications={unreadNotifications}
+      toggle={handleNotificationToggle}
+      open={notificationOpen}
+      className={(isFriendlyUI && searchOpen) ? classes.hideXsDown : undefined}
+    />}
+    {isFriendlyUI && usersMenuNode}
+  </div>
+
+  // the left side nav menu
+  const HeaderNavigationDrawer = () => <NavigationDrawer
+    open={navigationOpen}
+    handleOpen={() => setNavigationOpen(true)}
+    handleClose={() => setNavigationOpen(false)}
+    toc={toc?.sectionData ?? null}
+  />
+
+  // the right side notifications menu
+  const HeaderNotificationsMenu = () => currentUser && <NotificationsMenu
+    unreadPrivateMessages={unreadPrivateMessages}
+    open={notificationOpen}
+    hasOpened={notificationHasOpened}
+    setIsOpen={handleSetNotificationDrawerOpen}
+  />
+
+  // special case for the homepage header of EA Forum Giving Season 2023
+  // TODO: delete after 2023
+  const isGivingSeason = useIsGivingSeason();
+  if ((isGivingSeason && pathname === "/") || (pathname.startsWith("/voting-portal") && isAdmin(currentUser))) {
+    return (
+      <GivingSeasonHeader
+        searchOpen={searchOpen}
+        hasLogo={hasProminentLogoSetting.get()}
+        unFixed={unFixed}
+        setUnFixed={setUnFixed}
+        NavigationMenuButton={NavigationMenuButton}
+        RightHeaderItems={RightHeaderItems}
+        HeaderNavigationDrawer={HeaderNavigationDrawer}
+        HeaderNotificationsMenu={HeaderNotificationsMenu}
+      />
+    );
+  }
 
   return (
     <AnalyticsContext pageSectionContext="header">
@@ -312,12 +377,12 @@ const Header = ({
         >
           <header className={classes.appBar}>
             <Toolbar disableGutters={isFriendlyUI}>
-              {currentUser && renderNavigationMenuButton()}
+              {currentUser && <NavigationMenuButton />}
               <Typography className={classes.title} variant="title">
                 <div className={classes.hideSmDown}>
                   <div className={classes.titleSubtitleContainer}>
                     <Link to="/" className={classes.titleLink}>
-                      {hasLogoSetting.get() && <div className={classes.siteLogo}><Components.SiteLogo/></div>}
+                      {hasProminentLogoSetting.get() && <div className={classes.siteLogo}><Components.SiteLogo/></div>}
                       {forumHeaderTitleSetting.get()}
                     </Link>
                     <HeaderSubtitle />
@@ -325,42 +390,17 @@ const Header = ({
                 </div>
                 <div className={classes.hideMdUp}>
                   <Link to="/" className={classes.titleLink}>
-                    {hasLogoSetting.get() && <div className={classNames(classes.siteLogo, {[classes.extraMargin]: !currentUser})}><Components.SiteLogo/></div>}
+                    {hasProminentLogoSetting.get() && <div className={classNames(classes.siteLogo, {[classes.extraMargin]: !currentUser})}><Components.SiteLogo/></div>}
                     {forumShortTitleSetting.get()}
                   </Link>
                 </div>
               </Typography>
-              <div className={classes.rightHeaderItems}>
-                {currentUser && <NoSSR onSSR={<div className={classes.searchSSRStandin} />} >
-                  <SearchBar onSetIsActive={setSearchOpen} searchResultsArea={searchResultsArea} />
-                </NoSSR>}
-                {!isFriendlyUI && usersMenuNode}
-                {/* TODO: restrict this in production */}
-                {/* {!currentUser && !isProduction && <UsersAccountMenu />} */}
-                {!currentUser && <UsersAccountMenu />}
-                {currentUser && !currentUser.usernameUnset && <NotificationsMenuButton
-                  unreadNotifications={unreadNotifications}
-                  toggle={handleNotificationToggle}
-                  open={notificationOpen}
-                  className={(isFriendlyUI && searchOpen) ? classes.hideXsDown : undefined}
-                />}
-                {isFriendlyUI && usersMenuNode}
-              </div>
+              <RightHeaderItems />
             </Toolbar>
           </header>
-          <NavigationDrawer
-            open={navigationOpen}
-            handleOpen={() => setNavigationOpen(true)}
-            handleClose={() => setNavigationOpen(false)}
-            toc={toc?.sectionData ?? null}
-          />
+          <HeaderNavigationDrawer />
         </Headroom>
-        {currentUser && <NotificationsMenu
-          unreadPrivateMessages={unreadPrivateMessages}
-          open={notificationOpen}
-          hasOpened={notificationHasOpened}
-          setIsOpen={handleSetNotificationDrawerOpen}
-        />}
+        <HeaderNotificationsMenu />
       </div>
     </AnalyticsContext>
   )

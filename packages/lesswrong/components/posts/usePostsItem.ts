@@ -76,6 +76,7 @@ export type PostsItemConfig = {
   showMostValuableCheckbox?: boolean,
   /** Whether or not to show interactive voting arrows */
   isVoteable?: boolean,
+  className?: string,
 }
 
 export type UsePostsItem = ReturnType<typeof usePostsItem>;
@@ -113,6 +114,7 @@ export const usePostsItem = ({
   showMostValuableCheckbox = false,
   showKarma = true,
   isVoteable = false,
+  className,
 }: PostsItemConfig) => {
   const [showComments, setShowComments] = useState(defaultToShowComments);
   const [readComments, setReadComments] = useState(false);
@@ -149,7 +151,8 @@ export const usePostsItem = ({
     : postGetPageUrl(post, false, sequenceId || chapter?.sequenceId);
 
   const showDismissButton = Boolean(currentUser && resumeReading);
-  const showArchiveButton = Boolean(currentUser && post.draft && postCanDelete(currentUser, post));
+  const onArchive = toggleDeleteDraft && (() => toggleDeleteDraft(post));
+  const showArchiveButton = Boolean(currentUser && post.draft && postCanDelete(currentUser, post) && onArchive);
 
   const commentTerms: CommentsViewTerms = {
     view: "postsItemComments",
@@ -197,7 +200,7 @@ export const usePostsItem = ({
     showDismissButton,
     showArchiveButton,
     onDismiss: dismissRecommendation,
-    onArchive: toggleDeleteDraft?.bind(null, post),
+    onArchive,
     hasUnreadComments,
     hasNewPromotedComments,
     commentTerms,
@@ -211,5 +214,6 @@ export const usePostsItem = ({
     strikethroughTitle,
     bookmark,
     isVoteable,
+    className,
   };
 }

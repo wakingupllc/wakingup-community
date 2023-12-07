@@ -1,9 +1,9 @@
 import React, { MouseEvent, useContext } from 'react';
 import { Components, registerComponent } from '../../lib/vulcan-lib';
 import { Link } from '../../lib/reactRouterWrapper';
-import { userCanComment, userCanCreateField, userCanDo, userIsAdminOrMod, userIsMemberOf } from '../../lib/vulcan-users/permissions';
+import { userCanComment, userCanCreateField, userCanDo, userIsAdminOrMod, userIsMemberOf, userOverNKarmaOrApproved } from '../../lib/vulcan-users/permissions';
 import { userGetDisplayName } from '../../lib/collections/users/helpers';
-import { userHasThemePicker } from '../../lib/betas';
+import { dialoguesEnabled, userHasThemePicker } from '../../lib/betas';
 
 import Paper from '@material-ui/core/Paper';
 import Button from '@material-ui/core/Button';
@@ -16,11 +16,10 @@ import { useDialog } from '../common/withDialog'
 import { useHover } from '../common/withHover'
 import {afNonMemberDisplayInitialPopup} from "../../lib/alignment-forum/displayAFNonMemberPopups";
 import { userCanPost } from '../../lib/collections/posts';
-import postSchema from '../../lib/collections/posts/schema';
+import { MINIMUM_COAUTHOR_KARMA } from '../../lib/collections/posts/schema';
 import { DisableNoKibitzContext } from './UsersNameDisplay';
-import { preferredHeadingCase } from '../../lib/forumTypeUtils';
 import { useAdminToggle } from '../admin/useAdminToggle';
-import { isFriendlyUI } from '../../themes/forumTheme';
+import { isFriendlyUI, preferredHeadingCase } from '../../themes/forumTheme';
 import { isMobile } from '../../lib/utils/isMobile'
 import { SHOW_NEW_SEQUENCE_KARMA_THRESHOLD } from '../../lib/collections/sequences/permissions';
 import { isAF, isEAForum, isLWorAF } from '../../lib/instanceSettings';
@@ -146,6 +145,73 @@ const UsersMenu = ({classes}: {
     icon="Email"
     iconClassName={classes.icon}
   />
+  
+  const canCreateDialogue = userCanPost(currentUser)
+    && dialoguesEnabled
+    && userOverNKarmaOrApproved(MINIMUM_COAUTHOR_KARMA)(currentUser)
+
+  const items = {
+    divider: DropdownDivider,
+    newPost: () => userCanPost(currentUser)
+      ? (
+        <DropdownItem
+          title={preferredHeadingCase("New Post")}
+          to="/newPost"
+        />
+      )
+      : null,
+    newQuestion: () => userCanPost(currentUser)
+      ? (
+        <DropdownItem
+          title={preferredHeadingCase("New Question")}
+          to="/newPost?question=true"
+        />
+      )
+      : null,
+    newDialogue: () => canCreateDialogue
+      ? (
+        <DropdownItem
+          title={preferredHeadingCase("New Dialogue")}
+          onClick={() => openDialog({componentName:"NewDialogueDialog"})}
+        />
+      )
+    : null,
+    /*
+      * This is currently disabled for unreviewed users on the EA forum
+      * as there's issues with the new quick takes entry for such users.
+      * Long-term, we should fix these issues and reenable this option.
+      */
+    newShortform: () =>
+      showNewButtons && (!isFriendlyUI || userCanComment(currentUser))
+        ? (
+          <DropdownItem
+            title={isFriendlyUI ? "New quick take" : "New Shortform"}
+            onClick={() => openDialog({componentName:"NewShortformDialog"})}
+          />
+        )
+      : null,
+    newEvent: () => userCanPost(currentUser)
+      ? (
+        <DropdownItem
+          title={preferredHeadingCase("New Event")}
+          to="/newPost?eventForm=true"
+        />
+      )
+      : null,
+    newSequence: () =>
+      showNewButtons && currentUser.karma >= SHOW_NEW_SEQUENCE_KARMA_THRESHOLD
+        ? (
+          <DropdownItem
+            title={preferredHeadingCase("New Sequence")}
+            to="/sequencesnew"
+          />
+        )
+        : null,
+  } as const;
+
+  const order: (keyof typeof items)[] = isFriendlyUI
+    ? ["newPost", "newShortform", "newQuestion", "newDialogue", "divider", "newEvent", "newSequence"]
+    : ["newQuestion", "newPost", "newDialogue", "newShortform", "divider", "newEvent", "newSequence"];
 
   return (
     <div className={classes.root} {...eventHandlers}>
@@ -166,33 +232,19 @@ const UsersMenu = ({classes}: {
                 forceUnHover();
               }}
             >
-              {/*
-                * This is currently disabled for unreviewed users on the EA forum
-                * as there's issues with the new quick takes entry for such users.
-                * Long-term, we should fix these issues and reenable this option.
-                */}
-              {/* Quick takes are removed for launch, but may be added back later, so I'm leaving this commented out. */}
-              {/* {showNewButtons && (!isFriendlyUI || userCanComment(currentUser)) &&
-                <DropdownItem
-                  title={isFriendlyUI ? "New quick take" : "New Shortform"}
-                  onClick={() => openDialog({componentName:"NewShortformDialog"})}
-                />
-              } */}
-              {/* Events are removed for launch, but will be added back later, so I'm leaving this commented out. */}
-              {/* {showNewButtons && <DropdownDivider />}
-              {showNewButtons && userCanPost(currentUser) &&
-                <DropdownItem
-                  title={preferredHeadingCase("New Event")}
-                  to="/newPost?eventForm=true"
-                />
-              } */}
-              {showNewButtons && currentUser.karma >= SHOW_NEW_SEQUENCE_KARMA_THRESHOLD &&
-                <DropdownItem
-                  title={preferredHeadingCase("New Sequence")}
-                  to="/sequencesnew"
-                />
-              }
-  
+              <div onClick={(ev) => {
+                if (afNonMemberDisplayInitialPopup(currentUser, openDialog)) {
+                  ev.preventDefault()
+                }
+              }}>
+                {order.map((itemName, i) => {
+                  const Component = items[itemName];
+                  return <Component key={i} />
+                })}
+              </div>
+
+              <DropdownDivider />
+
               {isAF && !isAfMember &&
                 <DropdownItem
                   title={preferredHeadingCase("Apply for Membership")}

@@ -24,6 +24,9 @@ const styles = (theme: ThemeType): JssStyles => ({
       fontWeight: 600,
     },
   },
+  menuItem: {
+    width: 190,
+  },
   navButton: {
     '&:hover': {
       opacity: isFriendlyUI ? 1 : 0.6,
@@ -98,13 +101,14 @@ const styles = (theme: ThemeType): JssStyles => ({
   },
 })
 
-type TabNavigationItemProps = {
+export type TabNavigationItemProps = {
   tab: MenuTabRegular,
   onClick?: (event: React.MouseEvent<HTMLAnchorElement>) => void,
+  className?: string,
   classes: ClassesType,
 }
 
-const TabNavigationItem = ({tab, onClick, classes}: TabNavigationItemProps) => {
+const TabNavigationItem = ({tab, onClick, className, classes}: TabNavigationItemProps) => {
   const { TabNavigationSubItem, LWTooltip, MenuItemLink } = Components
   const { pathname } = useLocation()
   
@@ -138,7 +142,7 @@ const TabNavigationItem = ({tab, onClick, classes}: TabNavigationItemProps) => {
       // entire sidebar fail on iOS. True story.
       to={tab.link}
       disableGutters
-      rootClass={classNames({
+      rootClass={classNames(classes.menuItem, className, {
         [classes.navButton]: !tab.subItem,
         [classes.subItemOverride]: tab.subItem,
         [classes.selected]: isSelected,

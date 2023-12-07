@@ -41,7 +41,7 @@ export const emailDoctype = '<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transi
 // handling the top-level table layout; some of it looks like workarounds for
 // specific dysfunctional email clients (like the ".ExternalClass" and
 // ".yshortcuts" entries.)
-const emailGlobalCss = `
+const emailGlobalCss = () => `
   .ReadMsgBody { width: 100%; background-color: #ebebeb;}
   .ExternalClass {width: 100%; background-color: #ebebeb;}
   .ExternalClass, .ExternalClass p, .ExternalClass span, .ExternalClass font, .ExternalClass td, .ExternalClass div {line-height:100%;}
@@ -71,7 +71,7 @@ const emailGlobalCss = `
   
   /* Global styles that apply eg inside of posts */
   a {
-    color: ${isEAForum ? '#0C869B' : '#5f9b65' // TODO: make this an instance setting?}
+    color: ${getForumTheme({name: "default"}).palette.primary.main};
   }
   blockquote {
     border-left: solid 3px #e0e0e0;
@@ -98,7 +98,7 @@ function addEmailBoilerplate({ css, title, body }: {
    
       <title>${title}</title>
       <style>
-        ${emailGlobalCss}
+        ${emailGlobalCss()}
         ${css}
       </style>
     </head>

@@ -3,7 +3,7 @@ import SimpleSchema from "simpl-schema";
 import { schemaDefaultValue } from "../../collectionUtils";
 import { resolverOnlyField, accessFilterSingle, accessFilterMultiple } from "../../utils/schemaUtils";
 import { getCollectionName } from "../../vulcan-lib";
-import { isEAForum } from "../../instanceSettings";
+import { isLWorAF } from "../../instanceSettings";
 
 const DOCUMENT_TYPES = ['Sequence', 'Post'];
 
@@ -159,6 +159,33 @@ const schema: SchemaType<DbSpotlight> = {
     optional: true,
     nullable: true
   },
+  headerTitle: {
+    type: String,
+    canRead: ["guests"],
+    canUpdate: ["admins", "sunshineRegiment"],
+    canCreate: ["admins", "sunshineRegiment"],
+    order: 65,
+    optional: true,
+    nullable: true,
+  },
+  headerTitleLeftColor: {
+    type: String,
+    canRead: ["guests"],
+    canUpdate: ["admins", "sunshineRegiment"],
+    canCreate: ["admins", "sunshineRegiment"],
+    order: 66,
+    optional: true,
+    nullable: true,
+  },
+  headerTitleRightColor: {
+    type: String,
+    canRead: ["guests"],
+    canUpdate: ["admins", "sunshineRegiment"],
+    canCreate: ["admins", "sunshineRegiment"],
+    order: 67,
+    optional: true,
+    nullable: true,
+  },
   lastPromotedAt: {
     type: Date,
     control: "datetime",
@@ -198,7 +225,7 @@ const schema: SchemaType<DbSpotlight> = {
     // we're not using schemaDefaultValue because we can't use forumType
     // conditionals without breaking schema hash logic
     defaultValue: true,
-    onCreate: ({document}) => document.imageFade ?? (isEAForum ? true : false),
+    onCreate: ({document}) => document.imageFade ?? (isLWorAF ? false : true),
     canAutofillDefault: true,
   },
   spotlightImageId: {

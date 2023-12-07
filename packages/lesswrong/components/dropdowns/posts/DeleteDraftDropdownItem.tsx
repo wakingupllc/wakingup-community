@@ -3,16 +3,16 @@ import { useUpdate } from '../../../lib/crud/withUpdate';
 import React, { useCallback } from 'react';
 import { postCanDelete } from '../../../lib/collections/posts/helpers';
 import { useCurrentUser } from '../../common/withUser';
-import { preferredHeadingCase } from '../../../lib/forumTypeUtils';
+import { preferredHeadingCase } from '../../../themes/forumTheme';
 import { useMessages } from '../../common/withMessages';
-import { useNavigation } from '../../../lib/routeUtil';
+import { useNavigate } from '../../../lib/routeUtil';
 import { userGetProfileUrl } from '../../../lib/collections/users/helpers';
 
 const DeleteDraftDropdownItem = ({ post }: {
   post: PostsBase
 }) => {
   const { flash } = useMessages();
-  const { history } = useNavigation();
+  const navigate = useNavigate();
   const currentUser = useCurrentUser();
   const {mutate: updatePost} = useUpdate({
     collectionName: "Posts",
@@ -28,10 +28,10 @@ const DeleteDraftDropdownItem = ({ post }: {
       })
       flash({messageString: "Post deleted", type: "success"});
       if (!currentUser?.isAdmin) {
-        history.push(userGetProfileUrl(currentUser))
+        navigate(userGetProfileUrl(currentUser))
       }
     }
-  }, [post, updatePost, flash, history, currentUser])
+  }, [post, updatePost, flash, navigate, currentUser])
 
   if (currentUser && postCanDelete(currentUser, post)) {
     return (

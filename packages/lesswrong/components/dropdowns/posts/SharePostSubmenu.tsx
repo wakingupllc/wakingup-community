@@ -3,7 +3,7 @@ import { Components, registerComponent } from '../../../lib/vulcan-lib';
 import { useHover } from '../../common/withHover';
 import { postGetPageUrl } from '../../../lib/collections/posts/helpers';
 import { isServer } from '../../../lib/executionEnvironment';
-import { shareButtonSetting } from '../../../lib/instanceSettings';
+import { hasShareButtonsSetting } from '../../../lib/instanceSettings';
 
 const styles = (theme: ThemeType): JssStyles => ({
 })
@@ -17,7 +17,7 @@ const SharePostSubmenu = ({post, closeMenu, classes}: {
   const { hover, eventHandlers } = useHover();
   
   function shareClicked() {
-    if (!shareButtonSetting.get()) return; // non-share button sites (e.g. WU) never want the share intent modal
+    if (!hasShareButtonsSetting.get()) return; // non-share button sites (e.g. WU) never want the share intent modal
 
     // navigator.canShare will be present on mobile devices with sharing-intents,
     // absent on desktop.
@@ -35,7 +35,7 @@ const SharePostSubmenu = ({post, closeMenu, classes}: {
     }
   }
   
-  const hasSubmenu = !shareButtonSetting.get() || isServer || !navigator.canShare;
+  const hasSubmenu = !hasShareButtonsSetting.get() || isServer || !navigator.canShare;
   const MaybeWrapWithSubmenu = hasSubmenu
     ? ({children}: {children: React.ReactNode}) => <LWTooltip
         title={<SharePostActions post={post} onClick={closeMenu} />}

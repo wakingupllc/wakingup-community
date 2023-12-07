@@ -1,15 +1,14 @@
-import React, { FC, useRef } from "react";
+import React, { FC } from "react";
 import { registerComponent, Components } from "../../lib/vulcan-lib";
 import { AnalyticsContext } from "../../lib/analyticsEvents";
 import { usePostsItem, PostsItemConfig } from "./usePostsItem";
-import { SoftUpArrowIcon } from "../icons/softUpArrowIcon";
 import { Link } from "../../lib/reactRouterWrapper";
 import { SECTION_WIDTH } from "../common/SingleColumnSection";
 import withErrorBoundary from "../common/withErrorBoundary";
 import classNames from "classnames";
 import { InteractionWrapper, useClickableCell } from "../common/useClickableCell";
 
-export const styles = (theme: ThemeType): JssStyles => ({
+export const styles = (theme: ThemeType) => ({
   root: {
     display: "flex",
     alignItems: "center",
@@ -56,13 +55,6 @@ export const styles = (theme: ThemeType): JssStyles => ({
     color: theme.palette.text.dim65,
     cursor: "pointer",
   },
-  karma: {
-    width: 50,
-    minWidth: 50,
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-  },
   postsVote: {
     position: "relative",
     fontSize: 30,
@@ -76,10 +68,6 @@ export const styles = (theme: ThemeType): JssStyles => ({
     transform: "translateY(1px)",
     marginLeft: 44,
     marginRight: 14,
-  },
-  voteArrow: {
-    color: theme.palette.grey[400],
-    margin: "-12px 0 2px 0",
   },
   details: {
     flexGrow: 1,
@@ -109,20 +97,6 @@ export const styles = (theme: ThemeType): JssStyles => ({
     alignItems: "center",
     whiteSpace: "nowrap",
     paddingBottom: "10px",
-  },
-  metaLeft: {
-    flexGrow: 1,
-    display: "flex",
-    alignItems: "center",
-    overflow: "hidden",
-    "& > :first-child": {
-      marginRight: 5,
-    },
-  },
-  readTime: {
-    "@media screen and (max-width: 350px)": {
-      display: "none",
-    },
   },
   secondaryContainer: {
     display: "flex",
@@ -189,6 +163,10 @@ export const styles = (theme: ThemeType): JssStyles => ({
       opacity: 1,
     },
   },
+  karmaDisplay: {
+    width: 50,
+    minWidth: 50,
+  },
   contentPreviewContainer: {
     padding: "20px 50px",
     flexBasis: "100%",
@@ -197,12 +175,16 @@ export const styles = (theme: ThemeType): JssStyles => ({
   },
 });
 
-
 export type EAPostsItemProps = PostsItemConfig & {
-  classes: ClassesType,
+  hideSecondaryInfo?: boolean,
+  classes: ClassesType<typeof styles>,
 };
 
-const EAPostsItem = ({classes, ...props}: EAPostsItemProps) => {
+const EAPostsItem = ({
+  hideSecondaryInfo,
+  classes,
+  ...props
+}: EAPostsItemProps) => {
   const {
     post,
     postLink,
@@ -216,12 +198,12 @@ const EAPostsItem = ({classes, ...props}: EAPostsItemProps) => {
     showTrailingButtons,
     showMostValuableCheckbox,
     showDismissButton,
-    showArchiveButton,
     onDismiss,
     onArchive,
     resumeReading,
     strikethroughTitle,
     curatedIconLeft,
+    showIcons,
     isRead,
     showReadCheckbox,
     tooltipPlacement,
@@ -232,22 +214,21 @@ const EAPostsItem = ({classes, ...props}: EAPostsItemProps) => {
     isRepeated,
     analyticsProps,
     isVoteable,
+    className,
   } = usePostsItem(props);
   const {onClick} = useClickableCell({href: postLink});
-  const authorExpandContainer = useRef(null);
 
   if (isRepeated) {
     return null;
   }
 
   const {
-    PostsTitle, PostsItemDate, ForumIcon, PostActionsButton, KarmaDisplay,
-    TruncatedAuthorsList, PostsItemTagRelevance, PostsItemTooltipWrapper,
-    PostsItemTrailingButtons, PostReadCheckbox, PostsItemNewCommentsWrapper,
-    PostsVote, PostsHighlight
+    PostsTitle, ForumIcon, PostActionsButton, EAKarmaDisplay, EAPostMeta,
+    PostsItemTagRelevance, PostsItemTooltipWrapper, PostsVote,
+    PostsItemTrailingButtons, PostReadCheckbox, PostsItemNewCommentsWrapper, PostsHighlight
   } = Components;
 
-  const SecondaryInfo = () => (
+  const SecondaryInfo = () => hideSecondaryInfo ? null : (
     <>
       <InteractionWrapper className={classes.interactionWrapper}>
         <a onClick={toggleComments} className={classNames(
@@ -277,7 +258,7 @@ const EAPostsItem = ({classes, ...props}: EAPostsItemProps) => {
 
   return (
     <AnalyticsContext {...analyticsProps}>
-      <div className={classes.root}>
+      <div className={classNames(classes.root, className)}>
         {showReadCheckbox &&
           <div className={classes.readCheckbox}>
             <PostReadCheckbox post={post} width={14} />
@@ -295,12 +276,7 @@ const EAPostsItem = ({classes, ...props}: EAPostsItemProps) => {
                 </InteractionWrapper>
               )
               : (
-                <div className={classes.karma}>
-                  <div className={classes.voteArrow}>
-                    <SoftUpArrowIcon />
-                  </div>
-                  <KarmaDisplay document={post} />
-                </div>
+                <EAKarmaDisplay post={post} className={classes.karmaDisplay} />
               )
             }
             <div className={classes.details}>
@@ -312,25 +288,14 @@ const EAPostsItem = ({classes, ...props}: EAPostsItemProps) => {
                   showPersonalIcon,
                   strikethroughTitle,
                   curatedIconLeft,
+                  showIcons,
                 }}
                 read={isRead && !showReadCheckbox}
                 isLink={false}
                 className={classes.title}
               />
               <div className={classes.meta}>
-                <div className={classes.metaLeft} ref={authorExpandContainer}>
-                  <InteractionWrapper className={classes.interactionWrapper}>
-                    <TruncatedAuthorsList
-                      post={post}
-                      showAuthorTooltip={showAuthorTooltip}
-                      expandContainer={authorExpandContainer}
-                    />
-                  </InteractionWrapper>
-                  <div>
-                    {' · '}
-                    <PostsItemDate post={post} noStyles includeAgo />
-                  </div>
-                </div>
+                <EAPostMeta post={post} />
                 <div className={classNames(
                   classes.secondaryContainer,
                   classes.onlyMobile,
