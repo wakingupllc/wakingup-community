@@ -9,8 +9,7 @@ describe('Messages', function() {
     cy.fixture('users/testOtherUser').as('testOtherUser');
   });
   
-  // disabled because it fails when it can't get cloudinary.uploadPresetEditor setting
-  it.skip('can receive and send messages', function() {
+  it('can receive and send messages', function() {
     const testReply = 'Test reply';
     cy.visit(`/users/${this.testOtherUser.slug}`);
     cy.get('[data-cy=message]').click();
