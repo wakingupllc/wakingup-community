@@ -21,7 +21,7 @@ const INACTIVITY_THRESHOLD_DAYS = 30;
 
 const getSingleVotePower = () =>
   // score increase amount of a single vote after n days (for n=100, x=0.000040295)
-  1 / Math.pow((INACTIVITY_THRESHOLD_DAYS * 24) + SCORE_BIAS, TIME_DECAY_FACTOR.get());
+  1 / Math.pow((INACTIVITY_THRESHOLD_DAYS * 24) + SCORE_BIAS.get(), TIME_DECAY_FACTOR.get());
 
 interface BatchUpdateParams {
   inactive?: boolean;
@@ -186,7 +186,7 @@ const getBatchItemsPg = async <T extends DbObject>(collection: CollectionBase<T>
       1.0 / POW(${ageHours} + $2, $3) AS "singleVotePower"
     ) ns
     ${forceUpdate ? "" : 'WHERE ABS("score" - ns."newScore") > ns."singleVotePower" OR NOT q."inactive"'}
-  `, [INACTIVITY_THRESHOLD_DAYS, SCORE_BIAS, TIME_DECAY_FACTOR.get()], "read");
+  `, [INACTIVITY_THRESHOLD_DAYS, SCORE_BIAS.get(), TIME_DECAY_FACTOR.get()], "read");
 }
 
 const getBatchItems = async <T extends DbObject>(collection: CollectionBase<T>, inactive: boolean, forceUpdate: boolean) =>
