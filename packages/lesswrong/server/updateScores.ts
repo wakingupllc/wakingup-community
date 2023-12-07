@@ -6,6 +6,8 @@ import {
   TIME_DECAY_FACTOR,
   getSubforumScoreBoost,
   SCORE_BIAS,
+  frontpageBonusSetting,
+  curatedBonusSetting,
 } from '../lib/scoring';
 import * as _ from 'underscore';
 import { Posts } from "../lib/collections/posts";
@@ -140,8 +142,8 @@ const getPgCollectionProjections = (collectionName: CollectionNameString) => {
         THEN "postedAt"
         ELSE "frontpageDate" END) AS "scoreDate"`;
       proj.baseScore = `("baseScore" +
-        (CASE WHEN "frontpageDate" IS NULL THEN 0 ELSE 10 END) +
-        (CASE WHEN "curatedDate" IS NULL THEN 0 ELSE 10 END)) AS "baseScore"`;
+        (CASE WHEN "frontpageDate" IS NULL THEN 0 ELSE ${frontpageBonusSetting.get()} END) +
+        (CASE WHEN "curatedDate" IS NULL THEN 0 ELSE ${curatedBonusSetting.get()} END)) AS "baseScore"`;
       break;
     case "Comments":
       const {base, magnitude, duration, exponent} = getSubforumScoreBoost();

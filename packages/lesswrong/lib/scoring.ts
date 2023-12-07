@@ -21,8 +21,8 @@ type SubforumCommentBonus = typeof defaultSubforumCommentBonus;
 
 // LW (and legacy) time decay algorithm settings
 const timeDecayFactorSetting = new DatabasePublicSetting<number>('timeDecayFactor', 1.15)
-const frontpageBonusSetting = new DatabasePublicSetting<number>('frontpageScoreBonus', 10)
-const curatedBonusSetting = new DatabasePublicSetting<number>('curatedScoreBonus', 10)
+export const frontpageBonusSetting = new DatabasePublicSetting<number>('frontpageScoreBonus', 10)
+export const curatedBonusSetting = new DatabasePublicSetting<number>('curatedScoreBonus', 10)
 const subforumCommentBonusSetting = new DatabasePublicSetting<SubforumCommentBonus>(
   'subforumCommentBonus',
   defaultSubforumCommentBonus,
