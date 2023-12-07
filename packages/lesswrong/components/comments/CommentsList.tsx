@@ -7,6 +7,7 @@ import { useCurrentUser } from '../common/withUser';
 import withErrorBoundary from '../common/withErrorBoundary';
 import type { CommentTreeNode } from '../../lib/utils/unflatten';
 import type { CommentTreeOptions } from './commentTree';
+import { showCommentRenderExpandOptionsSetting } from '../../lib/publicSettings';
 
 const styles = (theme: ThemeType): JssStyles => ({
   button: {
@@ -71,7 +72,7 @@ const CommentsListFn = ({treeOptions, comments, totalComments=0, startThreadTrun
     </div>
   }
   return <Components.ErrorBoundary>
-    {renderExpandOptions()}
+    {showCommentRenderExpandOptionsSetting.get() && renderExpandOptions()}
     {comments.length > 0 && <div className={classes.commentsList}>
       {comments.map(comment =>
         <CommentsNode

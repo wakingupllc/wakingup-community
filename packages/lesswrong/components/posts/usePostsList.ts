@@ -56,6 +56,7 @@ export type PostsListConfig = {
   showFinalBottomBorder?: boolean,
   hideHiddenFrontPagePosts?: boolean
   hideShortform?: boolean,
+  hideContentPreviewIfSticky?: boolean,
   loadMoreMessage?: string,
 }
 
@@ -91,7 +92,8 @@ export const usePostsList = ({
   curatedIconLeft = false,
   showFinalBottomBorder = false,
   hideHiddenFrontPagePosts = false,
-  hideShortform = false,
+  hideShortform = false, 
+  hideContentPreviewIfSticky = false,
   loadMoreMessage,
 }: PostsListConfig) => {
   const [haveLoadedMore, setHaveLoadedMore] = useState(false);
@@ -237,5 +239,6 @@ export const usePostsList = ({
     maybeMorePosts,
     orderedResults,
     itemProps,
+    hideContentPreviewIfSticky,
   };
 }

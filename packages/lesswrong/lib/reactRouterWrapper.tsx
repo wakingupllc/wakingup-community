@@ -42,7 +42,7 @@ export const Link = ({eventProps, ...props}: LinkProps) => {
   }
 
   const {to, ...otherProps} = props;
-  if (to && typeof to === 'string' && isOffsiteLink(to)) {
+  if (to && typeof to === 'string' && isAbsoluteLink(to)) {
     return <a href={to} {...otherProps} onMouseDown={handleClick}/>
   } else {
     return <HashLink {...props} onMouseDown={handleClick}/>
@@ -79,6 +79,10 @@ function isOffsiteLink(url: string): boolean {
   } else {
     return false;
   }
+}
+
+function isAbsoluteLink(url: string): boolean {
+  return url.startsWith("http:") || url.startsWith("https:");
 }
 
 export const Redirect = reactRouter.Redirect;

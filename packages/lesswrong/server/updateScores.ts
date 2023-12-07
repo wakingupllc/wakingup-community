@@ -6,6 +6,8 @@ import {
   TIME_DECAY_FACTOR,
   getSubforumScoreBoost,
   SCORE_BIAS,
+  frontpageBonusSetting,
+  curatedBonusSetting,
 } from '../lib/scoring';
 import * as _ from 'underscore';
 import { Posts } from "../lib/collections/posts";
@@ -19,7 +21,7 @@ const INACTIVITY_THRESHOLD_DAYS = 30;
 
 const getSingleVotePower = () =>
   // score increase amount of a single vote after n days (for n=100, x=0.000040295)
-  1 / Math.pow((INACTIVITY_THRESHOLD_DAYS * 24) + SCORE_BIAS, TIME_DECAY_FACTOR.get());
+  1 / Math.pow((INACTIVITY_THRESHOLD_DAYS * 24) + SCORE_BIAS.get(), TIME_DECAY_FACTOR.get());
 
 interface BatchUpdateParams {
   inactive?: boolean;
@@ -140,8 +142,8 @@ const getPgCollectionProjections = (collectionName: CollectionNameString) => {
         THEN "postedAt"
         ELSE "frontpageDate" END) AS "scoreDate"`;
       proj.baseScore = `("baseScore" +
-        (CASE WHEN "frontpageDate" IS NULL THEN 0 ELSE 10 END) +
-        (CASE WHEN "curatedDate" IS NULL THEN 0 ELSE 10 END)) AS "baseScore"`;
+        (CASE WHEN "frontpageDate" IS NULL THEN 0 ELSE ${frontpageBonusSetting.get()} END) +
+        (CASE WHEN "curatedDate" IS NULL THEN 0 ELSE ${curatedBonusSetting.get()} END)) AS "baseScore"`;
       break;
     case "Comments":
       const {base, magnitude, duration, exponent} = getSubforumScoreBoost();
@@ -184,7 +186,7 @@ const getBatchItemsPg = async <T extends DbObject>(collection: CollectionBase<T>
       1.0 / POW(${ageHours} + $2, $3) AS "singleVotePower"
     ) ns
     ${forceUpdate ? "" : 'WHERE ABS("score" - ns."newScore") > ns."singleVotePower" OR NOT q."inactive"'}
-  `, [INACTIVITY_THRESHOLD_DAYS, SCORE_BIAS, TIME_DECAY_FACTOR.get()], "read");
+  `, [INACTIVITY_THRESHOLD_DAYS, SCORE_BIAS.get(), TIME_DECAY_FACTOR.get()], "read");
 }
 
 const getBatchItems = async <T extends DbObject>(collection: CollectionBase<T>, inactive: boolean, forceUpdate: boolean) =>
