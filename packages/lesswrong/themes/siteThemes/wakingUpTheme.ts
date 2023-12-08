@@ -353,6 +353,8 @@ export const wakingUpTheme: SiteThemeSpecification = {
           postHighlight: {
             fontFamily: palette.fonts.sansSerifStack,
             fontWeight: 400,
+            fontSize: "1.09rem",
+            lineHeight: '1.4em',
             "& li": {
               fontFamily: palette.fonts.sansSerifStack,
             }
@@ -419,6 +421,11 @@ export const wakingUpTheme: SiteThemeSpecification = {
         MuiIconButton: {
           root: {
             borderRadius: defaultBorderRadius
+          }
+        },
+        EAPostsItem: {
+          contentPreviewContainer: {
+            padding: "15px 50px",
           }
         }
       }
