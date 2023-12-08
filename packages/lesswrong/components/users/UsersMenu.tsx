@@ -22,7 +22,7 @@ import { useAdminToggle } from '../admin/useAdminToggle';
 import { isFriendlyUI, preferredHeadingCase } from '../../themes/forumTheme';
 import { isMobile } from '../../lib/utils/isMobile'
 import { SHOW_NEW_SEQUENCE_KARMA_THRESHOLD } from '../../lib/collections/sequences/permissions';
-import { isAF, isEAForum, isLWorAF } from '../../lib/instanceSettings';
+import {isAF, isEAForum, isLWorAF, isWakingUp} from '../../lib/instanceSettings'
 
 const styles = (theme: ThemeType): JssStyles => ({
   root: {
@@ -95,7 +95,7 @@ const UsersMenu = ({classes}: {
     </div>
   }
 
-  const showNewButtons = (!isAF || userCanDo(currentUser, 'posts.alignment.new')) && !currentUser.deleted
+  const showNewButtons = !isWakingUp && (!isAF || userCanDo(currentUser, 'posts.alignment.new')) && !currentUser.deleted
   const isAfMember = currentUser.groups && currentUser.groups.includes('alignmentForum')
   
   const {
@@ -210,8 +210,8 @@ const UsersMenu = ({classes}: {
   } as const;
 
   const order: (keyof typeof items)[] = isFriendlyUI
-    ? ["newPost", "newShortform", "newQuestion", "newDialogue", "divider", "newEvent", "newSequence"]
-    : ["newQuestion", "newPost", "newDialogue", "newShortform", "divider", "newEvent", "newSequence"];
+    ? ["newPost", "newShortform", "newQuestion", "newDialogue", "divider", "newEvent", "newSequence", "divider"]
+    : ["newQuestion", "newPost", "newDialogue", "newShortform", "divider", "newEvent", "newSequence", "divider"];
 
   return (
     <div className={classes.root} {...eventHandlers}>
@@ -232,7 +232,7 @@ const UsersMenu = ({classes}: {
                 forceUnHover();
               }}
             >
-              <div onClick={(ev) => {
+              {showNewButtons && <div onClick={(ev) => {
                 if (afNonMemberDisplayInitialPopup(currentUser, openDialog)) {
                   ev.preventDefault()
                 }
@@ -241,9 +241,7 @@ const UsersMenu = ({classes}: {
                   const Component = items[itemName];
                   return <Component key={i} />
                 })}
-              </div>
-
-              <DropdownDivider />
+              </div>}
 
               {isAF && !isAfMember &&
                 <DropdownItem
