@@ -6,7 +6,9 @@ describe('Basic Login and Signup', function() {
     cy.fixture('users/testUserUnsetUsername').as('testUserUnsetUsername');
   });
 
-  it('Prompts users to set their display name after signup.', function() {
+  // Waking Up has its own signup system so we're skipping this test
+  // TODO: writing a test for the Waking Up signup system.
+  it.skip('Prompts users to set their display name after signup.', function() {
     const newDisplayname = 'New User 123123';
     cy.loginAs(this.testUserUnsetUsername);
     cy.visit('/');
