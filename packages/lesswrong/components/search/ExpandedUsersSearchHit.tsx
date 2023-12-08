@@ -87,7 +87,7 @@ const ExpandedUsersSearchHit = ({hit, showKarma = showKarmaSetting.get, classes}
             {user.username}
           </span>
           {showKarma() && <span className={classes.metaInfo}>
-            <ForumIcon icon="Star" className={classes.metaInfoIcon}/> {user.karma ?? 0}
+            <ForumIcon icon="Star" className={classes.metaInfoIcon}/> {user.karma}
           </span>}
           {(user.firstName || user.lastName) &&
             <span className={classes.metaInfo}> {user.firstName} {user.lastName}</span>

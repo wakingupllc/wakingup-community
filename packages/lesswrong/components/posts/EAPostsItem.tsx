@@ -257,7 +257,7 @@ const EAPostsItem = ({
   );
 
 
-  const showContents = !(sticky && hideContentPreviewIfSticky) && post.contents && post.contents.wordCount > 1
+  const showContents = !(sticky && hideContentPreviewIfSticky) && (post?.contents?.wordCount ?? 0)  > 1
   
   return (
     <AnalyticsContext {...analyticsProps}>

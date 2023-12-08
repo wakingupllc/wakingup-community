@@ -184,7 +184,7 @@ interface HasIdType {
 
 // Common base type for everything with a userId field
 interface HasUserIdType {
-  userId: string
+  userId: string | null
 }
 
 interface VoteableType extends HasIdType {
@@ -193,9 +193,9 @@ interface VoteableType extends HasIdType {
   extendedScore: any,
   voteCount: number
   af?: boolean
-  afBaseScore?: number
+  afBaseScore?: number | null
   afExtendedScore?: any,
-  afVoteCount?: number
+  afVoteCount?: number | null
 }
 
 interface VoteableTypeClient extends VoteableType {
@@ -213,7 +213,7 @@ interface DbObject extends HasIdType {
 }
 
 interface HasSlugType extends DbObject {
-  slug: string
+  slug: string | null
 }
 
 interface HasCreatedAtType extends DbObject {
@@ -224,6 +224,22 @@ export type AlgoliaDocument = {
   _id: string,
   [key: string]: any,
 }
+
+interface PerfMetric {
+  trace_id: string;
+  op_type: string;
+  op_name: string;
+  started_at: Date;
+  ended_at: Date;
+  parent_trace_id?: string;
+  client_path?: string;
+  extra_data?: Json;
+  gql_string?: string;
+  ip?: string;
+  user_agent?: string;
+}
+
+type IncompletePerfMetric = Omit<PerfMetric, 'ended_at'>;
 
 interface ResolverContext extends CollectionsByName {
   headers: any,
@@ -246,6 +262,7 @@ interface ResolverContext extends CollectionsByName {
   req?: Request & {logIn: any, logOut: any, cookies: any, headers: any},
   res?: Response,
   repos: Repos,
+  perfMetric?: IncompletePerfMetric,
 }
 
 type FragmentName = keyof FragmentTypes;
@@ -254,7 +271,7 @@ type VoteableCollectionName = "Posts"|"Comments"|"TagRels"|"ElectionCandidates";
 
 interface EditableFieldContents {
   html: string
-  wordCount: number
+  wordCount: number | null
   originalContents: DbRevision["originalContents"]
   editedAt: Date
   userId: string

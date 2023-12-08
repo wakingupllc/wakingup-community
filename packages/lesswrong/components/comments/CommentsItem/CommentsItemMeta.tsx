@@ -17,7 +17,6 @@ import { commentGetPageUrlFromIds } from "../../../lib/collections/comments/help
 export const metaNoticeStyles = (theme: ThemeType) => ({
     color: theme.palette.lwTertiary.main,
     fontSize: "1rem",
-    marginBottom: theme.spacing.unit,
     marginLeft: theme.spacing.unit / 2,
     ...theme.typography.italic,
 });
@@ -255,7 +254,10 @@ export const CommentsItemMeta = ({
           !(hideParentCommentToggleForTopLevel &&
             comment.parentCommentId === comment.topLevelCommentId
           ) &&
+          /* We're often comparing null to undefined, so we need to explicitly use a double-eq-negation */
+          /* eslint-disable-next-line eqeqeq */
           parentCommentId != comment.parentCommentId &&
+          /* eslint-disable-next-line eqeqeq */
           parentAnswerId != comment.parentCommentId &&
         <ShowParentComment
           comment={comment}

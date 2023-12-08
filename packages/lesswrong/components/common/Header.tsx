@@ -18,7 +18,6 @@ import { hasProminentLogoSetting } from '../../lib/publicSettings';
 
 import { useLocation } from '../../lib/routeUtil';
 import { useIsGivingSeason } from '../ea-forum/giving-portal/hooks';
-import { isAdmin } from '../../lib/vulcan-users';
 
 export const forumHeaderTitleSetting = new PublicInstanceSetting<string>('forumSettings.headerTitle', "LESSWRONG", "warning")
 export const forumShortTitleSetting = new PublicInstanceSetting<string>('forumSettings.shortForumTitle', "LW", "warning")
@@ -310,7 +309,7 @@ const Header = ({
   </div>
 
   // the items on the right-hand side (search, notifications, user menu, login/sign up buttons)
-  const RightHeaderItems = () => <div className={classes.rightHeaderItems}>
+  const rightHeaderItemsNode = <div className={classes.rightHeaderItems}>
     {currentUser && <NoSSR onSSR={<div className={classes.searchSSRStandin} />} >
       <SearchBar onSetIsActive={setSearchOpen} searchResultsArea={searchResultsArea} />
     </NoSSR>}
@@ -346,7 +345,7 @@ const Header = ({
   // special case for the homepage header of EA Forum Giving Season 2023
   // TODO: delete after 2023
   const isGivingSeason = useIsGivingSeason();
-  if ((isGivingSeason && pathname === "/") || (pathname.startsWith("/voting-portal") && isAdmin(currentUser))) {
+  if ((isGivingSeason && pathname === "/") || (pathname.startsWith("/voting-portal")) || (pathname.startsWith("/giving-portal"))) {
     return (
       <GivingSeasonHeader
         searchOpen={searchOpen}
@@ -354,7 +353,7 @@ const Header = ({
         unFixed={unFixed}
         setUnFixed={setUnFixed}
         NavigationMenuButton={NavigationMenuButton}
-        RightHeaderItems={RightHeaderItems}
+        RightHeaderItems={() => rightHeaderItemsNode}
         HeaderNavigationDrawer={HeaderNavigationDrawer}
         HeaderNotificationsMenu={HeaderNotificationsMenu}
       />
@@ -395,7 +394,7 @@ const Header = ({
                   </Link>
                 </div>
               </Typography>
-              <RightHeaderItems />
+              {rightHeaderItemsNode}
             </Toolbar>
           </header>
           <HeaderNavigationDrawer />

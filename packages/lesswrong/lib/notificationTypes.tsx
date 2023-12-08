@@ -90,13 +90,13 @@ export const getDocument = async (documentType: NotificationDocument | null, doc
   (await getDocumentSummary(documentType, documentId))?.document
 
 type DocumentSummary =
-  | { type: 'post'; associatedUserName: string; associatedUserSlug?: string; displayName: string; document: DbPost }
-  | { type: 'comment'; associatedUserName: string; associatedUserSlug?: string; displayName: string | undefined; document: DbComment }
-  | { type: 'user'; associatedUserName: string; associatedUserSlug?: string; displayName: string; document: DbUser }
-  | { type: 'message'; associatedUserName: string; associatedUserSlug?: string; displayName: string | undefined; document: DbMessage }
+  | { type: 'post'; associatedUserName: string; associatedUserSlug?: string | null; displayName: string; document: DbPost }
+  | { type: 'comment'; associatedUserName: string; associatedUserSlug?: string | null; displayName: string | undefined; document: DbComment }
+  | { type: 'user'; associatedUserName: string; associatedUserSlug?: string | null; displayName: string; document: DbUser }
+  | { type: 'message'; associatedUserName: string; associatedUserSlug?: string | null; displayName: string | undefined; document: DbMessage }
   | { type: 'localgroup'; displayName: string; document: DbLocalgroup; associatedUserName: null; associatedUserSlug: null; }
   | { type: 'tagRel'; document: DbTagRel; associatedUserName: null; associatedUserSlug: null; displayName: null }
-  | { type: 'dialogueCheck'; document: DbDialogueCheck; associatedUserName: string; displayName: null; associatedUserSlug?: string }
+  | { type: 'dialogueCheck'; document: DbDialogueCheck; associatedUserName: string; displayName: null; associatedUserSlug?: string | null }
 
 export const getDocumentSummary = async (documentType: NotificationDocument | null, documentId: string | null): Promise<DocumentSummary | null> => {
   if (!documentId) return null
@@ -140,7 +140,7 @@ export const getDocumentSummary = async (documentType: NotificationDocument | nu
       return {
         type: documentType,
         document: message,
-        displayName: conversation?.title,
+        displayName: conversation?.title ?? undefined,
         associatedUserName: userGetDisplayName(author),
         associatedUserSlug: author?.slug
       }
@@ -149,7 +149,7 @@ export const getDocumentSummary = async (documentType: NotificationDocument | nu
       return localgroup && {
         type: documentType,
         document: localgroup,
-        displayName: localgroup.name,
+        displayName: localgroup.name ?? "[missing local group name]",
         associatedUserName: null,
         associatedUserSlug: null,
       }
@@ -232,7 +232,7 @@ export const NewEventNotification = registerNotificationType({
   async getMessage({documentType, documentId}: GetMessageProps) {
     let document = await getDocument(documentType, documentId);
     let group: DbLocalgroup|null = null
-    if (documentType == "post") {
+    if (documentType === "post") {
       const post = document as DbPost
       if (post.groupId) {
         group = await Localgroups.findOne(post.groupId);
@@ -254,7 +254,7 @@ export const NewGroupPostNotification = registerNotificationType({
   async getMessage({documentType, documentId}: GetMessageProps) {
     let document = await getDocument(documentType, documentId);
     let group: DbLocalgroup|null = null
-    if (documentType == "post") {
+    if (documentType === "post") {
       const post = document as DbPost
       if (post.groupId) {
         group = await Localgroups.findOne(post.groupId);
@@ -368,6 +368,22 @@ export const NewDialogueMatchNotification = registerNotificationType({
       return `You matched with ${summary.associatedUserName} for Dialogue Matching!`
     }
     return "You have a new Dialogue Match!"
+  },
+  getIcon() {
+    return <DebateIcon style={iconStyles}/>
+  },
+  getLink() {
+    return "/dialogueMatching"
+  }
+});
+
+// Notification that you have new interested parties for dialogues
+export const NewDialogueCheckNotification = registerNotificationType({
+  name: "newDialogueChecks",
+  userSettingField: "notificationNewDialogueChecks",
+  allowedChannels: ["onsite", "none"],
+  async getMessage(props: GetMessageProps) {
+    return `New users interested in dialoguing with you (not a match yet)`
   },
   getIcon() {
     return <DebateIcon style={iconStyles}/>

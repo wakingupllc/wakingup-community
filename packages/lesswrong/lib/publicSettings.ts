@@ -104,8 +104,7 @@ export const sendgridWelcomeListIdSetting = new DatabasePublicSetting<string | n
 
 export const isProductionDBSetting = new DatabasePublicSetting<boolean>('isProductionDB', false)
 
-// You will need to restart your server after changing these at present;
-// FrontpageReviewWidget reads them at startup.
+export const showReviewOnFrontPageIfActive = new DatabasePublicSetting<boolean>('annualReview.showReviewOnFrontPageIfActive', true)
 export const annualReviewStart = new DatabasePublicSetting('annualReview.start', "2021-11-30")
 // The following dates cut off their phase at the end of the day
 export const annualReviewNominationPhaseEnd = new DatabasePublicSetting('annualReview.nominationPhaseEnd', "2021-12-14")
@@ -160,3 +159,6 @@ export const showCommentRenderExpandOptionsSetting = new DatabasePublicSetting<b
 export const showPinnedPostPreviewOnHomepageSetting = new DatabasePublicSetting<boolean>('showPinnedPostPreviewOnHomepage', false);
 
 export const dialogueMatchmakingEnabled = new DatabasePublicSetting<boolean>('dialogueMatchmakingEnabled', false)
+
+export const performanceMetricLoggingEnabled = new DatabasePublicSetting<boolean>('performanceMetricLoggingEnabled', false)
+export const performanceMetricLoggingBatchSize = new DatabasePublicSetting<number>('performanceMetricLoggingBatchSize', 100)

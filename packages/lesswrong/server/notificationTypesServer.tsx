@@ -87,6 +87,7 @@ export const NewPostNotification = serverRegisterNotificationType({
   },
   emailBody: async ({ user, notifications }: {user: DbUser, notifications: DbNotification[]}) => {
     const postId = notifications[0].documentId;
+    if (!postId) throw Error(`Can't find post to generate body for: ${postId}`)
     return <Components.NewPostEmail documentId={postId}/>
   },
 });
@@ -110,6 +111,7 @@ export const NewEventNotification = serverRegisterNotificationType({
   },
   emailBody: async ({ user, notifications }: {user: DbUser, notifications: DbNotification[]}) => {
     const postId = notifications[0].documentId;
+    if (!postId) throw Error(`Can't find event post to generate body for: ${postId}`)
     return <Components.NewPostEmail documentId={postId} hideRecommendations={true} reason="you are subscribed to this group"/>
   },
 });
@@ -124,6 +126,7 @@ export const NewGroupPostNotification = serverRegisterNotificationType({
   },
   emailBody: async ({ user, notifications }: {user: DbUser, notifications: DbNotification[]}) => {
     const postId = notifications[0].documentId;
+    if (!postId) throw Error(`Can't find group post to generate body for: ${postId}`)
     return <Components.NewPostEmail documentId={postId} hideRecommendations={true} reason="you are subscribed to this group"/>
   },
 });
@@ -136,6 +139,7 @@ export const NominatedPostNotification = serverRegisterNotificationType({
   },
   emailBody: async ({user, notifications}: {user: DbUser, notifications: DbNotification[]}) => {
     const postId = notifications[0].documentId;
+    if (!postId) throw Error(`Can't find nominated post to generate body for: ${postId}`)
     return <Components.PostNominatedEmail documentId={postId} />
   }
 })
@@ -293,10 +297,13 @@ export const NewDialogueMessageNotification = serverRegisterNotificationType({
     return `New reply in your dialogue, ${post.title}`;
   },
   emailBody: async ({ user, notifications }: {user: DbUser, notifications: DbNotification[]}) => {
-    const postId = notifications[0].documentId;
+    const postId = notifications[0].documentId!; // We skip notifications without a documentId in the skip function
     const dialogueMessageEmailInfo = getDialogueMessageEmailInfo(notifications[0].extraData)
     return <Components.NewDialogueMessagesEmail documentId={postId} userId={user._id} dialogueMessageEmailInfo={dialogueMessageEmailInfo}/>;
   },
+  skip: async ({ notifications }: {notifications: DbNotification[]}) => {
+    return !notifications[0].documentId
+  }
 });
 
 function getDialogueMessageEmailInfo(extraData?: AnyBecauseHard): DialogueMessageEmailInfo|undefined {
@@ -317,6 +324,7 @@ export const NewDialogueMessageBatchNotification = serverRegisterNotificationTyp
   },
   emailBody: async ({ user, notifications }: {user: DbUser, notifications: DbNotification[]}) => {
     const postId = notifications[0].documentId;
+    if (!postId) throw Error(`Can't find dialogue to generate body for: ${postId}`)
     return <Components.NewDialogueMessagesEmail documentId={postId} userId={user._id}/>;
   },
 });
@@ -332,6 +340,7 @@ export const NewPublishedDialogueMessageNotification = serverRegisterNotificatio
   },
   emailBody: async ({ user, notifications }: {user: DbUser, notifications: DbNotification[]}) => {
     const postId = notifications[0].documentId;
+    if (!postId) throw Error(`Can't find dialogue to generate body for: ${postId}`)
     return <Components.NewDialogueMessagesEmail documentId={postId} userId={user._id}/>;
   },
 });
@@ -347,11 +356,14 @@ export const NewDialogueMatchNotification = serverRegisterNotificationType({
     return `You matched with ${userGetDisplayName(targetUser)} for dialogues!`;
   },
   emailBody: async ({ user, notifications }: {user: DbUser, notifications: DbNotification[]}) => {
-    const documentId = notifications[0].documentId;
+    const documentId = notifications[0].documentId!; // We skip notifications without a documentId in the skip function
     const dialogueCheck = await DialogueChecks.findOne(documentId);
     const targetUser = await Users.findOne(dialogueCheck?.targetUserId);
     return <Components.NewDialogueMatchEmail documentId={documentId} targetUser={targetUser}/>;
   },
+  skip: async ({ notifications }: {notifications: DbNotification[]}) => {
+    return !notifications[0].documentId
+  }
 });
 
 export const NewDebateCommentNotification = serverRegisterNotificationType({
@@ -529,7 +541,7 @@ export const NewMessageNotification = serverRegisterNotificationType({
     const participantsRaw = await Users.find({ _id: {$in: participantIds} }).fetch();
     const participants = await accessFilterMultiple(user, Users, participantsRaw, null);
     const participantsById = keyBy(participants, u=>u._id);
-    const otherParticipants = _.filter(participants, participant=>participant._id!=user._id);
+    const otherParticipants = _.filter(participants, participant=>participant._id!==user._id);
     
     return { conversations, messages, participantsById, otherParticipants };
   },
@@ -683,7 +695,7 @@ export const AlignmentSubmissionApprovalNotification = serverRegisterNotificatio
     if (!document) throw Error(`Can't find document for notification: ${notifications[0]}`)
 
     if (isComment(document)) {
-      const link = commentGetPageUrlFromIds({postId: document.postId, commentId: document._id, isAbsolute: true})
+      const link = commentGetPageUrlFromIds({postId: document.postId!, commentId: document._id, isAbsolute: true})
       return <p>
         Your <a href={link}>comment submission</a> to the Alignment Forum has been approved.
       </p>
@@ -707,6 +719,7 @@ export const NewEventInRadiusNotification = serverRegisterNotificationType({
   },
   emailBody: async ({ user, notifications }: {user: DbUser, notifications: DbNotification[]}) => {
     const postId = notifications[0].documentId;
+    if (!postId) throw Error(`Can't find event to generate body for: ${postId}`)
     return <Components.NewPostEmail documentId={postId} hideRecommendations={true} reason="you are subscribed to nearby events notifications"/>
   },
 });
@@ -720,9 +733,9 @@ export const EditedEventInRadiusNotification = serverRegisterNotificationType({
     return `Event in your area updated: ${post.title}`;
   },
   emailBody: async ({ user, notifications }: {user: DbUser, notifications: DbNotification[]}) => {
-    return <Components.EventUpdatedEmail
-      postId={notifications[0].documentId}
-    />
+    const postId= notifications[0].documentId
+    if (!postId) throw Error(`Can't find event to generate body for: ${postId}`)
+    return <Components.EventUpdatedEmail postId={postId} />
   },
 });
 
@@ -921,7 +934,7 @@ export const NewMentionNotification = serverRegisterNotificationType({
       if (!summary || !('contents' in summary.document)) continue
               
       templateData.push({
-        link: makeAbsolute(notification.link),
+        link: notification.link && makeAbsolute(notification.link),
         taggerProfileLink: summary.associatedUserSlug ? userGetProfileUrlFromSlug(summary.associatedUserSlug, true) : undefined,
         taggerUsername: summary.associatedUserName,
         postTitle: summary.displayName,
@@ -948,6 +961,10 @@ export const NewMentionNotification = serverRegisterNotificationType({
     const summary = await getDocumentSummary(notifications[0].documentType as NotificationDocument, notifications[0].documentId);
     if (!summary) {
       throw Error(`Can't find document for notification: ${notifications[0]}`);
+    }
+
+    if (!notifications[0].link) {
+      throw Error(`Can't link for notification: ${notifications[0]}`);
     }
 
     return (
