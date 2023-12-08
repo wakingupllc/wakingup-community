@@ -145,8 +145,8 @@ const codeLoginMutation = gql`
 
 const chooseMutation = function(currentAction: possibleActions, oneOffCodeRequest: boolean) {
   if (oneOffCodeRequest) return requestLoginCodeMutation
-  if (currentAction == "requestCode") return requestLoginCodeMutation
-  if (currentAction == "enterCode") return codeLoginMutation
+  if (currentAction === "requestCode") return requestLoginCodeMutation
+  if (currentAction === "enterCode") return codeLoginMutation
 
   throw "Invalid currentAction"
 }
