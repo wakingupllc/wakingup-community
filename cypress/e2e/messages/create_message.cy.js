@@ -14,6 +14,7 @@ describe('Messages', function() {
     cy.visit(`/users/${this.testOtherUser.slug}`);
     cy.get('[data-cy=message]').click();
     cy.contains('Test seeded message').should('exist');
+    cy.contains('.banner-actions-container', 'Close').click() // close OneTrust banner
     cy.get('.ck-editor__editable').type(testReply);
     cy.contains("Submit").click();
     cy.contains('.MessageItem-messageBody', testReply).should('exist');
