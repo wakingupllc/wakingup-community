@@ -6,7 +6,7 @@ const pgPromiseLib = pgp();
 
 type Database = IDatabase<{}>;
 
-const modes = ["dev", "prod", "staging", "testing", "xpost"] as const;
+const modes = ["beta", "dev", "prod", "staging", "testing", "xpost"] as const;
 
 type Mode = typeof modes[number];
 
