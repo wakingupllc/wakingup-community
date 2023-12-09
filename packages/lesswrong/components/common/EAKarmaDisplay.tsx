@@ -12,7 +12,7 @@ const styles = (theme: ThemeType) => ({
   },
   voteArrow: {
     color: theme.palette.grey[400],
-    margin: "-6px 0 2px 0",
+    margin: "-12px 0 2px 0",
   },
 });
 
