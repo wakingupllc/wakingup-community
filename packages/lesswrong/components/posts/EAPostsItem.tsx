@@ -298,7 +298,7 @@ const EAPostsItem = ({
                 className={classes.title}
               />
               <div className={classes.meta}>
-                <EAPostMeta post={post} />
+                <EAPostMeta post={post} showAuthorTooltip={showAuthorTooltip} />
                 <div className={classNames(
                   classes.secondaryContainer,
                   classes.onlyMobile,

@@ -24,6 +24,7 @@ const EAHoverOver = ({
   analyticsProps,
   className,
   popperClassName,
+  disabled = false,
   classes,
 }: {
   /**
@@ -40,6 +41,7 @@ const EAHoverOver = ({
   analyticsProps?: AnalyticsProps,
   className?: string,
   popperClassName?: string,
+  disabled?: boolean,
   classes: ClassesType,
 }) => {
   const {LWTooltip} = Components;
@@ -55,6 +57,7 @@ const EAHoverOver = ({
       clickable={clickable}
       flip={flip}
       analyticsProps={analyticsProps}
+      disabled={disabled}
       className={className}
     >
       {children}

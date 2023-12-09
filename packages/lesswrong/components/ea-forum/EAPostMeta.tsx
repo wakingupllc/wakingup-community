@@ -45,9 +45,10 @@ const styles = (theme: ThemeType) => ({
   }
 });
 
-const EAPostMeta = ({post, useEventStyles, className, classes}: {
+const EAPostMeta = ({post, useEventStyles, showAuthorTooltip = true, className, classes}: {
   post: PostsList | SunshinePostsList,
   useEventStyles?: boolean,
+  showAuthorTooltip?: boolean,
   className?: string,
   classes: ClassesType,
 }) => {
@@ -73,7 +74,7 @@ const EAPostMeta = ({post, useEventStyles, className, classes}: {
         <span className={classes.eventOrganizer}>
           <span className={classes.dot}>·</span>
           <InteractionWrapper className={classes.interactionWrapper}>
-            <TruncatedAuthorsList post={post} expandContainer={authorExpandContainer} className={classes.authorsList} />
+            <TruncatedAuthorsList post={post} expandContainer={authorExpandContainer} className={classes.authorsList} showAuthorTooltip={showAuthorTooltip} />
           </InteractionWrapper>
         </span>
       </div>
@@ -89,6 +90,7 @@ const EAPostMeta = ({post, useEventStyles, className, classes}: {
         <TruncatedAuthorsList
           post={post}
           expandContainer={authorExpandContainer}
+          showAuthorTooltip={showAuthorTooltip}
         />
       </InteractionWrapper>
       <div>
