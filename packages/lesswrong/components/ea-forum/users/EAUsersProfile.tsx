@@ -436,7 +436,7 @@ const EAUsersProfile = ({terms, slug, subscriptionsEnabled = true, postSortingEn
     })
   }
 
-  const showMessageButton = currentUser?._id != user._id && (user.allowUnsolicitedMessages || currentUser?.isAdmin);
+  const showMessageButton = currentUser?._id != user._id && (!user.disableUnsolicitedMessages || currentUser?.isAdmin);
 
   return <div>
     <HeadTags
@@ -463,7 +463,7 @@ const EAUsersProfile = ({terms, slug, subscriptionsEnabled = true, postSortingEn
               currentUser={currentUser}
             >
               <a tabIndex={0} className={classes.messageBtn} data-cy="message">
-                Message {!user.allowUnsolicitedMessages && <span className={classes.smallText}> (user disabled messages from non-admins)</span>}
+                Message {user.disableUnsolicitedMessages && <span className={classes.smallText}> (user disabled messages from non-admins)</span>}
               </a>
             </NewConversationButton>
             {subscriptionsEnabled && <NotifyMeButton

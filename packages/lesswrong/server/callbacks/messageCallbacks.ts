@@ -16,8 +16,8 @@ getCollectionHooks("Messages").newValidate.add(function NewMessageEmptyCheck (me
 });
 
 /**
- * Check the user is allowed to send a message to the participants (i.e. the participants have checked
- * allowUnsolicitedMessages, or they've messaged together in the past, or the sender is an admin).
+ * Check the user is allowed to send a message to the participants (i.e. the participants haven't checked
+ * disableUnsolicitedMessages, or they've messaged together in the past, or the sender is an admin).
  */
 getCollectionHooks("Messages").createBefore.add(async function checkMessagePermission(message: DbMessage, { currentUser, context }) {
   if (currentUser?.isAdmin) return message;
@@ -28,13 +28,13 @@ getCollectionHooks("Messages").createBefore.add(async function checkMessagePermi
 
   const recipients = conversation!.participantIds.filter(id => id !== currentUser?._id);
 
-  const mktest = await recipients.forEach(async participantId => {
+  for (const participantId of recipients) {
     const participant = await Users.findOne(participantId);
     if (!participant) throw new Error("Recipient doesn't exist");
-    if (!participant.allowUnsolicitedMessages && !previousParticipants.includes(participantId)) {
+    if (participant.disableUnsolicitedMessages && !previousParticipants.includes(participantId)) {
       throw new Error("You cannot send a message to this user.");
     }
-  })
+  }
 
   return message;
 });

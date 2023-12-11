@@ -330,8 +330,8 @@
     "timestamp": "2023-11-17T19:44:20.000Z"
   },
   {
-    "acceptsSchemaHash": "f07cca38120c1028d2afafd499ea170f",
-    "acceptedByMigration": "20231211T084534.add_allowUnsolicitedMessages.ts",
-    "timestamp": "2023-12-11T08:45:34.000Z"
+    "acceptsSchemaHash": "7733bbbe246229732fd60ecbb0654020",
+    "acceptedByMigration": "20231211T153530.add_disableUnsolicitedMessages.ts",
+    "timestamp": "2023-12-11T15:35:30.000Z"
   }
 ]

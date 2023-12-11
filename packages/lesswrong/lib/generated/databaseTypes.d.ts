@@ -1429,7 +1429,7 @@ interface DbUser extends DbObject {
   wu_has_ever_been_paid_subscriber: boolean | null
   wu_subscription_expires_at: Date | null
   wu_subscription_active: boolean | null
-  allowUnsolicitedMessages: boolean
+  disableUnsolicitedMessages: boolean
   createdAt: Date
   legacyData: any /*{"definitions":[{"blackbox":true}]}*/
   moderationGuidelines: EditableFieldContents
