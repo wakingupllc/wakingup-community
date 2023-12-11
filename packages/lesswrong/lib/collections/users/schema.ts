@@ -1458,6 +1458,7 @@ const schema: SchemaType<DbUser> = {
   notificationAddedAsCoauthor: {
     label: "Someone has added me as a coauthor to a post",
     ...notificationTypeSettingsField({ channel: "both" }),
+    hidden: true,
   },
   //TODO: clean up old dialogue implementation notifications
   notificationDebateCommentsOnSubscribedPost: {
