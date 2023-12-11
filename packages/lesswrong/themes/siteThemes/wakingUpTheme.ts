@@ -111,8 +111,8 @@ export const wakingUpTheme: SiteThemeSpecification = {
     const basicText = {
       color: palette.grey[900],
       // use ems (not rems) to preserve relative height even if font-size is changed
-      lineHeight: '1.75em',
-      fontWeight: 450,
+      lineHeight: '1.4em',
+      fontWeight: 400,
       fontFamily: sansSerifStack,
     }
     return {
@@ -137,7 +137,8 @@ export const wakingUpTheme: SiteThemeSpecification = {
         fontFamily: sansSerifStack,
         body1: {
           ...basicText,
-          fontSize: "1.2rem",
+          fontSize: "1.08rem",
+          lineHeight: "1.4rem",
           fontFamily: serifStack,
         },
         body2: {
@@ -353,6 +354,8 @@ export const wakingUpTheme: SiteThemeSpecification = {
           postHighlight: {
             fontFamily: palette.fonts.sansSerifStack,
             fontWeight: 400,
+            fontSize: "1.08rem",
+            lineHeight: '1.4em',
             "& li": {
               fontFamily: palette.fonts.sansSerifStack,
             }
@@ -419,6 +422,11 @@ export const wakingUpTheme: SiteThemeSpecification = {
         MuiIconButton: {
           root: {
             borderRadius: defaultBorderRadius
+          }
+        },
+        EAPostsItem: {
+          contentPreviewContainer: {
+            padding: "15px 50px",
           }
         }
       }
