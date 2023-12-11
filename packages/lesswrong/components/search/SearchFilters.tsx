@@ -79,6 +79,9 @@ const styles = (theme: ThemeType): JssStyles => ({
   sort: {
     borderRadius: theme.borderRadius.small,
     width: "100%",
+    marginTop: 18,
+    backgroundColor: theme.palette.text.alwaysWhite,
+    padding: "0.5em",
   }
 });
 
@@ -104,16 +107,32 @@ const TagsRefinementList = ({ tagsFilter, setTagsFilter }:
 }
 const CustomTagsRefinementList = connectRefinementList(TagsRefinementList) as React.ComponentClass<RefinementListExposed & TagsRefinementProps>
 
-const SearchFilters = ({classes, tab, tagsFilter, handleUpdateTagsFilter, onSortingChange, sorting, dateRangeValues, setModalOpen}:{
-  classes: ClassesType
-  tab: AlgoliaIndexCollectionName
-  tagsFilter: Array<string>
-  handleUpdateTagsFilter: (tags: Array<string>) => void
-  onSortingChange: (sorting: string) => void
-  sorting: ElasticSorting
-  dateRangeValues: Array<MutableRefObject<number>>
-  setModalOpen: (open: boolean) => void
-}) => {
+const SearchFilters = (
+  {
+    classes,
+    tab, 
+    tagsFilter, 
+    handleUpdateTagsFilter, 
+    onSortingChange, 
+    sorting, 
+    dateRangeValues, 
+    setModalOpen,
+    enableRefineByTags = false,
+    enableRefineByIsEvent = false,
+    enableRefineByCurated = false,
+  }: {
+    classes: ClassesType
+    tab: AlgoliaIndexCollectionName
+    tagsFilter: Array<string>
+    handleUpdateTagsFilter: (tags: Array<string>) => void
+    onSortingChange: (sorting: string) => void
+    sorting: ElasticSorting
+    dateRangeValues: Array<MutableRefObject<number>>
+    setModalOpen: (open: boolean) => void
+    enableRefineByTags?: boolean,
+    enableRefineByCurated?: boolean,
+    enableRefineByIsEvent?: boolean,
+  }) => {
 
   const [pastDay, pastWeek, pastMonth, pastYear] = dateRangeValues;
   const { Typography, MenuItem, ForumIcon } = Components;
@@ -140,19 +159,19 @@ const SearchFilters = ({classes, tab, tagsFilter, handleUpdateTagsFilter, onSort
         ]}
       />
     </>}
-    {['Posts', 'Comments', 'Users'].includes(tab) && <CustomTagsRefinementList
+    {enableRefineByTags && ['Posts', 'Comments', 'Users'].includes(tab) && <CustomTagsRefinementList
       attribute="tags"
       defaultRefinement={tagsFilter}
       tagsFilter={tagsFilter}
       setTagsFilter={handleUpdateTagsFilter}
     />
     }
-    {tab === 'Posts' && <ToggleRefinement
+    {enableRefineByCurated && tab === 'Posts' && <ToggleRefinement
       attribute="curated"
       label="Curated"
       value={true}
     />}
-    {tab === 'Posts' && <ToggleRefinement
+    {enableRefineByIsEvent && tab === 'Posts' && <ToggleRefinement
       attribute="isEvent"
       label="Exclude events"
       value={false}
@@ -178,6 +197,7 @@ const SearchFilters = ({classes, tab, tagsFilter, handleUpdateTagsFilter, onSort
           value={sorting}
           onChange={(e) => onSortingChange(e.target.value)}
           className={classes.sort}
+          disableUnderline={true}
         >
           {getElasticSortingsForCollection(tab).map((name, i) =>
             <MenuItem key={i} value={name}>
