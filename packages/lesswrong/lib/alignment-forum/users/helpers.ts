@@ -1,5 +1,6 @@
 import { userCanDo, userOwns } from '../../vulcan-users/permissions';
 import { isAF } from "../../instanceSettings";
+import Conversations from '../../collections/conversations/collection';
 
 export const userCanSuggestPostForAlignment = ({currentUser, post}: {
   currentUser: UsersCurrent|DbUser|null,
@@ -35,4 +36,15 @@ export const userNeedsAFNonMemberWarning = (user: DbUser|UsersCurrent|null, init
     && isAF
     && (!user.hideAFNonMemberInitialWarning || !initial) 
     && !(userCanDo(user, 'comments.alignment.new')||userCanDo(user, 'posts.alignment.new')))
+}
+
+export const previousConversationParticipants = async (user: DbUser|UsersCurrent|null) => {
+  if (!user) return []
+
+  const conversations = await Conversations.find({
+    participantIds: user._id,
+    messageCount: { $gt: 0 }
+  }).fetch();
+
+  return conversations.flatMap(conversation => conversation.participantIds).filter(id => id !== user._id)
 }

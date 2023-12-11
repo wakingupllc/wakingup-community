@@ -1,15 +1,41 @@
 import Conversations from '../../lib/collections/conversations/collection'
+import Users from '../../lib/collections/users/collection';
 import { SENT_MODERATOR_MESSAGE } from '../../lib/collections/moderatorActions/schema';
 import { userIsAdmin } from '../../lib/vulcan-users';
 import { loadByIds } from '../../lib/loaders';
 import { getCollectionHooks } from '../mutationCallbacks';
-import { createMutator } from '../vulcan-lib';
+import { SimpleValidationError, createMutator } from '../vulcan-lib';
+import { previousConversationParticipants } from '../../lib/alignment-forum/users/helpers';
 
 getCollectionHooks("Messages").newValidate.add(function NewMessageEmptyCheck (message: DbMessage) {
   const { data } = (message.contents && message.contents.originalContents) || {}
   if (!data) {
     throw new Error("You cannot send an empty message");
   }
+  return message;
+});
+
+/**
+ * Check the user is allowed to send a message to the participants (i.e. the participants have checked
+ * allowUnsolicitedMessages, or they've messaged together in the past, or the sender is an admin).
+ */
+getCollectionHooks("Messages").createBefore.add(async function checkMessagePermission(message: DbMessage, { currentUser, context }) {
+  if (currentUser?.isAdmin) return message;
+
+  const { conversationId } = message;
+  const conversation = await Conversations.findOne(conversationId);
+  const previousParticipants = await previousConversationParticipants(currentUser)
+
+  const recipients = conversation!.participantIds.filter(id => id !== currentUser?._id);
+
+  const mktest = await recipients.forEach(async participantId => {
+    const participant = await Users.findOne(participantId);
+    if (!participant) throw new Error("Recipient doesn't exist");
+    if (!participant.allowUnsolicitedMessages && !previousParticipants.includes(participantId)) {
+      throw new Error("You cannot send a message to this user.");
+    }
+  })
+
   return message;
 });
 
