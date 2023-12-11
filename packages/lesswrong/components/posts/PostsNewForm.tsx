@@ -16,6 +16,7 @@ import type { PostSubmitProps } from './PostSubmit';
 import { SHARE_POPUP_QUERY_PARAM } from './PostsPage/PostsPage';
 import { Link, useNavigate } from '../../lib/reactRouterWrapper';
 import { QuestionIcon } from '../icons/questionIcon';
+import {showPostSharePopupSetting} from '../../lib/publicSettings.ts'
 
 // Also used by PostsEditForm
 export const styles = (theme: ThemeType): JssStyles => ({
@@ -355,7 +356,7 @@ const PostsNewForm = ({classes}: {
                     navigate(postGetEditUrl(post._id));
                   } else {
                     // If they are publishing a non-draft post, show the share popup
-                    const showSharePopup = !isLWorAF && !post.draft
+                    const showSharePopup = showPostSharePopupSetting.get() && !post.draft
                     const sharePostQuery = `?${SHARE_POPUP_QUERY_PARAM}=true`
                     const url  = postGetPageUrl(post);
                     navigate({pathname: url, search: showSharePopup ? sharePostQuery: ''})
