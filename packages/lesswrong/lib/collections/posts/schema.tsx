@@ -12,7 +12,14 @@ import SimpleSchema from 'simpl-schema'
 import { DEFAULT_QUALITATIVE_VOTE } from '../reviewVotes/schema';
 import { getCollaborativeEditorAccess } from './collabEditingPermissions';
 import { getVotingSystems } from '../../voting/votingSystems';
-import { fmCrosspostBaseUrlSetting, fmCrosspostSiteNameSetting, forumTypeSetting, isEAForum, isLWorAF } from '../../instanceSettings';
+import {
+  fmCrosspostBaseUrlSetting,
+  fmCrosspostSiteNameSetting,
+  forumTypeSetting,
+  isEAForum,
+  isLWorAF,
+  isWakingUp,
+} from '../../instanceSettings'
 import { forumSelect } from '../../forumTypeUtils';
 import * as _ from 'underscore';
 import { localGroupTypeFormOptions } from '../localgroups/groupTypes';
@@ -222,7 +229,7 @@ const schema: SchemaType<DbPost> = {
     order: 9,
     group: formGroups.category,
     control: 'EditPostCategory',
-    hidden: (props) => props.eventForm || props.debateForm || props.collabEditorDialogue,
+    hidden: (props) => isWakingUp || props.eventForm || props.debateForm || props.collabEditorDialogue,
     ...schemaDefaultValue(postDefaultCategory),
   },
   // Title
