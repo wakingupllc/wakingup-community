@@ -395,7 +395,7 @@ const EAUsersProfile = ({terms, slug, subscriptionsEnabled = true, postSortingEn
       collapsable: true
     })
   }
-  if (user.organizerOfGroupIds || user.programParticipation) {
+  if (user.organizerOfGroupIds?.length || user.programParticipation?.length) {
     bioSectionTabs.push({
       id: 'participation',
       label: 'Participation',
