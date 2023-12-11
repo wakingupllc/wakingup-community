@@ -10,9 +10,9 @@ describe('Posts', function() {
   
   it('can create new post and view it', function() {
     cy.visit('/newPost');
+    cy.contains('.banner-actions-container', 'Close').click() // close OneTrust banner
     cy.get('.EditTitle-root').type('Test post 123');
     cy.get('.ck-editor__editable').type('Test body 123');
-    cy.contains('.banner-actions-container', 'Close').click() // close OneTrust banner
     cy.contains("Submit").click();
     cy.url().should('include', 'test-post-123');
     cy.contains("Test post 123");
