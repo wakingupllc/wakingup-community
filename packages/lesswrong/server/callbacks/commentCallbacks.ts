@@ -19,7 +19,6 @@ import { isAnyTest } from '../../lib/executionEnvironment';
 import { REJECTED_COMMENT } from '../../lib/collections/moderatorActions/schema';
 import { captureEvent } from '../../lib/analyticsEvents';
 import { adminAccountSetting, sendAutoMessageOnCommentRemovalSetting } from '../../lib/publicSettings';
-import { linkifyFinalURL } from '../../lib/helpers';
 
 
 const MINIMUM_APPROVAL_KARMA = 5
@@ -565,23 +564,4 @@ getCollectionHooks("Comments").updateAsync.add(async function updateUserNotesOnC
       }
     });
   }
-});
-
-getCollectionHooks("Comments").newSync.add(function linkifyFinalCommentUrlOnNew(data) {
-  const contents = data.contents?.html;
-  if (!contents) return data;
-
-  data.contents!.originalContents.data = linkifyFinalURL(contents)
-  data.contents!.html = linkifyFinalURL(contents)
-
-  return data;
-});
-
-getCollectionHooks("Comments").updateBefore.add(function linkifyFinalCommentUrlOnUpdate(data) {
-  const contents = data.contents?.originalContents?.data;
-  if (!contents) return data;
-
-  data.contents!.originalContents.data = linkifyFinalURL(contents)
-
-  return data;
 });
