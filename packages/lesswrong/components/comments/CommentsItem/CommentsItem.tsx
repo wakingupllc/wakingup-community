@@ -353,8 +353,7 @@ export const CommentsItem = ({
           </div>}
           {moderatedCommentId === comment._id && <FlagIcon className={classes.flagIcon} />}
           {showPostTitle && !isChild && hasPostField(comment) && comment.post && 
-            // todo:merge: this disables hiding of live preview 
-            <PostsTooltip inlineBlock postId={comment.postId}>
+            <PostsTooltip inlineBlock postId={comment.postId} disabled={!showPostLivePreview()}>
               <Link className={classes.postTitle} to={commentGetPageUrlFromIds({postId: comment.postId, commentId: comment._id, postSlug: ""})}>
                 {comment.post.draft && (comment.post.deletedDraft ? "[Deleted] " : "[Draft] ")}
                 {comment.post.title}

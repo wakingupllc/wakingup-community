@@ -27,6 +27,7 @@ const PostsTooltip = ({
   children,
   pageElementContext,
   pageElementSubContext,
+  disabled = false,
   className,
 }: {
   post?: PostsList | SunshinePostsList | null,
@@ -45,6 +46,7 @@ const PostsTooltip = ({
   children?: ReactNode,
   pageElementContext?: string,
   pageElementSubContext?: string,
+  disabled?: boolean,
   className?: string,
 }) => {
   const renderTitle = useCallback(() => {
@@ -104,6 +106,7 @@ const PostsTooltip = ({
         pageElementSubContext,
         postId: postId ?? post?._id,
       }}
+      disabled={disabled}
       className={className}
     >
       {children}
