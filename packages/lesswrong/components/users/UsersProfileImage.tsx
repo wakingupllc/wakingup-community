@@ -7,7 +7,7 @@ export type ProfileImageFallback = "initials";
 
 const styles = (theme: ThemeType): JssStyles => ({
   root: {
-    borderRadius: "50%",
+    borderRadius: 6,
   },
   wrapper: {
     display: "flex",

@@ -21,7 +21,7 @@ const styles = (theme: ThemeType): JssStyles => ({
     height: "100%",
     color: theme.palette.text.alwaysWhite, // These colors are dark-mode independent
     background: theme.palette.panelBackground.userProfileImageHover,
-    borderRadius: "50%",
+    borderRadius: 6,
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
