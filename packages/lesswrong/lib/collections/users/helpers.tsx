@@ -14,6 +14,7 @@ import { MODERATOR_ACTION_TYPES } from '../moderatorActions/schema';
 import { isFriendlyUI } from '../../../themes/forumTheme';
 import {isMobile} from '../../utils/isMobile.ts'
 import { CODE_ENTRY_LIMIT, CODE_ENTRY_LIMIT_EXCEEDED_MSG, CODE_REQUEST_LIMIT, CODE_REQUEST_LIMIT_EXCEEDED_MSG, LOGIN_LIMIT_HOURS } from './constants.ts'
+import Conversations from '../conversations/collection.ts';
 
 const newUserIconKarmaThresholdSetting = new DatabasePublicSetting<number|null>('newUserIconKarmaThreshold', null)
 
@@ -638,4 +639,22 @@ export function codeEntryLockExpiresAt(user: DbUser|UsersAdmin) {
 
 export function loginLockedUntil(user: DbUser|UsersAdmin) {
   return codeEntryLockExpiresAt(user) || codeRequestLimitExpiresAt(user)
+}
+export const previousCorrespondents = async (user: DbUser|UsersCurrent|null) => {
+  if (!user) return []
+
+  const conversations = await Conversations.find({
+    participantIds: user._id,
+    messageCount: { $gt: 0 }
+  }).fetch();
+
+  const participantIds = new Set();
+
+  conversations.forEach(conversation => {
+    conversation.participantIds.forEach(id => {
+      if (id !== user._id) participantIds.add(id);
+    });
+  });
+
+  return Array.from(participantIds);
 }

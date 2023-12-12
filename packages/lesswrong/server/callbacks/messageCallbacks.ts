@@ -5,7 +5,7 @@ import { userIsAdmin } from '../../lib/vulcan-users';
 import { loadByIds } from '../../lib/loaders';
 import { getCollectionHooks } from '../mutationCallbacks';
 import { SimpleValidationError, createMutator } from '../vulcan-lib';
-import { previousConversationParticipants } from '../../lib/alignment-forum/users/helpers';
+import { previousCorrespondents } from '../../lib/collections/users/helpers';
 
 getCollectionHooks("Messages").newValidate.add(function NewMessageEmptyCheck (message: DbMessage) {
   const { data } = (message.contents && message.contents.originalContents) || {}
@@ -24,7 +24,7 @@ getCollectionHooks("Messages").createBefore.add(async function checkMessagePermi
 
   const { conversationId } = message;
   const conversation = await Conversations.findOne(conversationId);
-  const previousParticipants = await previousConversationParticipants(currentUser)
+  const previousParticipants = await previousCorrespondents(currentUser)
 
   const recipients = conversation!.participantIds.filter(id => id !== currentUser?._id);
 
