@@ -640,6 +640,7 @@ export function codeEntryLockExpiresAt(user: DbUser|UsersAdmin) {
 export function loginLockedUntil(user: DbUser|UsersAdmin) {
   return codeEntryLockExpiresAt(user) || codeRequestLimitExpiresAt(user)
 }
+
 export const previousCorrespondents = async (user: DbUser|UsersCurrent|null) => {
   if (!user) return []
 
@@ -648,13 +649,7 @@ export const previousCorrespondents = async (user: DbUser|UsersCurrent|null) => 
     messageCount: { $gt: 0 }
   }).fetch();
 
-  const participantIds = new Set();
+  const participantIds = conversations.flatMap(conversation => conversation.participantIds).filter(id => id !== user._id)
 
-  conversations.forEach(conversation => {
-    conversation.participantIds.forEach(id => {
-      if (id !== user._id) participantIds.add(id);
-    });
-  });
-
-  return Array.from(participantIds);
+  return [...new Set(participantIds)];
 }
