@@ -354,9 +354,7 @@ function addEditableCallbacks<T extends DbObject>({collection, options = {}}: {
   // the post to check whether it's a link, and if so, we convert it to a link.
   // Autolink has a feature request for this but it doesn't look like they're going to implement it any time soon:
   // https://github.com/ckeditor/ckeditor5/issues/7988
-  // TODO: It'd be better to handle this with a custom CKEditor plugin (unless we'll ever have non-CKEditor text
-  // entry so we'd want to handle all such cases on the server, which Keenan believed was possible at some point
-  // but probably won't happen).
+  // TODO: It'd be better to handle this with a custom CKEditor plugin.
   function linkifyFinalURL(contents: string) {
     // Example strings that we handle:
     //   <p>Some text with a space before the final non-linkified URL https://google.com</p>
@@ -375,21 +373,21 @@ function addEditableCallbacks<T extends DbObject>({collection, options = {}}: {
   }
 
   getCollectionHooks(collectionName).newSync.add(function linkifyFinalPostUrlOnNew(doc: AnyBecauseTodo) {
-    const contents = doc[fieldName]?.originalContents?.data // data.contents?.originalContents?.data;
+    const contents = doc[fieldName]?.originalContents?.data
     if (!contents) return doc;
 
-    doc.contents!.originalContents.data = linkifyFinalURL(contents)
-    doc.contents!.html = linkifyFinalURL(contents)
+    doc[fieldName].originalContents.data = linkifyFinalURL(contents)
+    doc[fieldName].html = linkifyFinalURL(contents)
 
     return doc;
   });
 
   getCollectionHooks(collectionName).updateBefore.add(function linkifyFinalPostUrlOnUpdate(doc: AnyBecauseTodo) {
-    const contents = doc[fieldName]?.originalContents?.data // data.contents?.originalContents?.data;
+    const contents = doc[fieldName]?.originalContents?.data
     if (!contents) return doc;
 
-    doc.contents!.originalContents.data = linkifyFinalURL(contents)
-    doc.contents!.html = linkifyFinalURL(contents)
+    doc[fieldName].originalContents.data = linkifyFinalURL(contents)
+    doc[fieldName].html = linkifyFinalURL(contents)
 
     return doc;
   });
