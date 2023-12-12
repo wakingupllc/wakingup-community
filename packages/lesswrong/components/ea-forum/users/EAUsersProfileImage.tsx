@@ -21,7 +21,7 @@ const styles = (_theme: ThemeType): JssStyles => ({
     height: "100%",
     color: "#fff", // These colors are dark-mode independent
     background: "rgba(0, 0, 0, 0.5)",
-    borderRadius: "50%",
+    borderRadius: 6,
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
