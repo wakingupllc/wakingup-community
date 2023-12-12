@@ -93,6 +93,7 @@ const WUUserOnboarding: React.FC<WUUserOnboardingProps> = ({currentUser, classes
   const [firstName, setFirstName] = useState(currentUser.first_name)
   const [lastName, setLastName] = useState(currentUser.last_name)
   const [subscribeToDigest, setSubscribeToDigest] = useState(true)
+  const [allowUnsolicitedMessages, setAllowUnsolicitedMessages] = useState(true)
   const [acceptedTos, setAcceptedTos] = useState(false)
   const [mapLocation, setMapLocation] = useState(currentUser.mapLocation)
   const [validationError, setValidationError] = useState('Username is empty by default')
@@ -107,7 +108,8 @@ const WUUserOnboarding: React.FC<WUUserOnboardingProps> = ({currentUser, classes
     $firstName: String, 
     $lastName: String, 
     $mapLocation: JSON,
-    $timezone: String
+    $timezone: String,
+    $allowUnsolicitedMessages: Boolean!
     ) {
       WUUserOnboarding(
       username: $username, 
@@ -117,6 +119,7 @@ const WUUserOnboarding: React.FC<WUUserOnboardingProps> = ({currentUser, classes
       lastName: $lastName, 
       mapLocation: $mapLocation,
       timezone: $timezone
+      allowUnsolicitedMessages: $allowUnsolicitedMessages
       ) {
         username
         slug
@@ -154,6 +157,7 @@ const WUUserOnboarding: React.FC<WUUserOnboardingProps> = ({currentUser, classes
           mapLocation,
           acceptedTos,
           timezone,
+          allowUnsolicitedMessages,
         },
       })
     } catch (err) {
@@ -285,6 +289,27 @@ const WUUserOnboarding: React.FC<WUUserOnboardingProps> = ({currentUser, classes
           label={
             <Typography variant="body2">
               Subscribe to the weekly community digest
+            </Typography>}
+        />
+      </div>
+
+      <div className={classes.section}>
+        <Typography variant="display1" className={classes.sectionHeadingText} gutterBottom>
+          Control private messages
+        </Typography>
+        <Typography variant="body2" className={classes.sectionHelperText}>
+          Decide whether you want to receive private messages from other members
+        </Typography>
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={allowUnsolicitedMessages}
+              onChange={event => setAllowUnsolicitedMessages(event.target.checked)}
+            />
+          }
+          label={
+            <Typography variant="body2">
+              Allow new private message requests
             </Typography>}
         />
       </div>
