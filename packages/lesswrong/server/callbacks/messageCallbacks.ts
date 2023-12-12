@@ -32,7 +32,7 @@ getCollectionHooks("Messages").createBefore.add(async function checkMessagePermi
     const participant = await Users.findOne(participantId);
     if (!participant) throw new Error("Recipient doesn't exist");
     if (participant.disableUnsolicitedMessages && !previousParticipants.includes(participantId)) {
-      throw new Error("You cannot send a message to this user.");
+      throw new Error(`You cannot send a message to this user: ${participant.username}.`);
     }
   }
 
