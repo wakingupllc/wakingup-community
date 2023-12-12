@@ -10,6 +10,7 @@ describe('Posts', function() {
   
   it('can create new post and view it', function() {
     cy.visit('/newPost');
+    cy.contains('.banner-actions-container', 'Close').click() // close OneTrust banner
     cy.get('.EditTitle-root').type('Test post 123');
     cy.get('.ck-editor__editable').type('Test body 123');
     cy.contains("Submit").click();

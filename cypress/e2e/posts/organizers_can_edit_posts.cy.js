@@ -10,7 +10,9 @@ describe('Groups', function() {
     });
   });
 
-  it('can create a post in a group', function() {
+  // Disabled until WakingUp re-adds groups
+
+  it.skip('can create a post in a group', function() {
     // Go to local group page and click "New event"
     cy.visit(`/groups/test-seeded-localgroup`);
     cy.contains('New event').click();

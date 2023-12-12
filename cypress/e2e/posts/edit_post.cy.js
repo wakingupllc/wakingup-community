@@ -11,6 +11,7 @@ describe('Posts', function() {
 
   it('can edit an existing post', function() {
     cy.visit(`posts/${this.testPost._id}/${this.testPost.slug}`);
+    cy.contains('.banner-actions-container', 'Close').click() // close OneTrust banner
     const newPostTitle = 'New Post Title';
     const newPostBody = 'New post body';
     cy.get('.PostActionsButton-root').first().click();

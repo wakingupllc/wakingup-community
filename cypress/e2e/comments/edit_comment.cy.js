@@ -13,6 +13,7 @@ describe('Comments', function() {
 
   it('can edit an existing comment', function() {
     cy.visit(`posts/${this.testPost._id}/${this.testPost.slug}`);
+    cy.contains('.banner-actions-container', 'Close').click() // close OneTrust banner
     cy.contains('.CommentsItem-root', this.testComment.contents.html).find(".CommentsItemMeta-menu").click();
     cy.get('ul[role="menu"]').contains('li', 'Edit').click();
     const newCommentText = 'Edited comment';
