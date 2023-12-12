@@ -164,4 +164,3 @@ export const dialogueMatchmakingEnabled = new DatabasePublicSetting<boolean>('di
 export const performanceMetricLoggingEnabled = new DatabasePublicSetting<boolean>('performanceMetricLoggingEnabled', false)
 export const performanceMetricLoggingBatchSize = new DatabasePublicSetting<number>('performanceMetricLoggingBatchSize', 100)
 export const showSuggestionToCommentIfNoCommentsSetting = new DatabasePublicSetting<boolean>('post.showSuggestionToCommentIfNoComments', true);
-export const showPostSharePopupSetting = new DatabasePublicSetting<boolean>('post.showSharePopup', true);

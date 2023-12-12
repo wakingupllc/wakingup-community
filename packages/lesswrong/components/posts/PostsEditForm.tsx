@@ -16,7 +16,7 @@ import { SHARE_POPUP_QUERY_PARAM } from './PostsPage/PostsPage';
 import { isEAForum } from '../../lib/instanceSettings';
 import type { Editor } from '@ckeditor/ckeditor5-core';
 import { useNavigate } from '../../lib/reactRouterWrapper';
-import {showPostSharePopupSetting} from '../../lib/publicSettings.ts'
+import {showSocialMediaShareLinksSetting} from '../../lib/publicSettings.ts'
 
 const editor : Editor | null = null
 export const EditorContext = React.createContext<[Editor | null, (e: Editor) => void]>([editor, _ => {}]);
@@ -134,7 +134,7 @@ const PostsEditForm = ({ documentId, classes }: {
                 } else {
                   // If they are publishing a draft, show the share popup
                   // Note: we can't use isDraft here because it gets updated to true when they click "Publish"
-                  const showSharePopup = showPostSharePopupSetting.get() && wasEverDraft.current && !post.draft
+                  const showSharePopup = showSocialMediaShareLinksSetting.get() && wasEverDraft.current && !post.draft
                   const sharePostQuery = `?${SHARE_POPUP_QUERY_PARAM}=true`
                   navigate({pathname: postGetPageUrl(post), search: showSharePopup ? sharePostQuery : ''})
 
