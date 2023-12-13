@@ -111,11 +111,12 @@ export const wakingUpTheme: SiteThemeSpecification = {
     const basicText = {
       color: palette.grey[900],
       // use ems (not rems) to preserve relative height even if font-size is changed
-      lineHeight: '1.4em',
+      lineHeight: '20px',
       fontWeight: 400,
       fontFamily: sansSerifStack,
     }
     return {
+      baseFontSize: 14,
       spacing: {
         mainLayoutPaddingTop: 20
       },
@@ -137,8 +138,8 @@ export const wakingUpTheme: SiteThemeSpecification = {
         fontFamily: sansSerifStack,
         body1: {
           ...basicText,
-          fontSize: "1.08rem",
-          lineHeight: "1.4rem",
+          fontSize: "1rem",
+          lineHeight: '20px',
           fontFamily: serifStack,
         },
         body2: {
@@ -354,8 +355,8 @@ export const wakingUpTheme: SiteThemeSpecification = {
           postHighlight: {
             fontFamily: palette.fonts.sansSerifStack,
             fontWeight: 400,
-            fontSize: "1.08rem",
-            lineHeight: '1.4em',
+            fontSize: "1rem",
+            lineHeight: '20px',
             "& li": {
               fontFamily: palette.fonts.sansSerifStack,
             }
@@ -364,12 +365,26 @@ export const wakingUpTheme: SiteThemeSpecification = {
         PostsPageTitle: {
           root: {
             lineHeight: 1.25,
-            fontWeight: 700
+            fontWeight: 700,
+            fontSize: 24,
+            ["@media screen and (max-width: 960px)"]: {
+              fontSize: 24,
+            },
           }
+        },
+        EditTitle: {
+          root: {
+            fontSize: 24,
+          },
         },
         PostsTimeBlock: {
           divider: {
             display: 'none'
+          }
+        },
+        FormGroup: {
+          formSectionHeadingTitle: {
+            fontSize: 16,
           }
         },
         EAAllTagsPage: {
