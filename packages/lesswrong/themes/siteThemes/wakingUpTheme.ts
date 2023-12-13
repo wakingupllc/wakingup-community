@@ -145,7 +145,7 @@ export const wakingUpTheme: SiteThemeSpecification = {
         body2: {
           fontSize: "14px",
           lineHeight: "1.5em",
-          fontWeight: 450,
+          fontWeight: 400,
         },
         smallText: {
           fontFamily: palette.fonts.sansSerifStack,
@@ -166,7 +166,7 @@ export const wakingUpTheme: SiteThemeSpecification = {
         },
         commentStyle: {
           fontFamily: sansSerifStack,
-          fontWeight: 450
+          fontWeight: 400
         },
         errorStyle: {
           color: palette.error.main,
