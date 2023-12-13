@@ -642,7 +642,7 @@ export function loginLockedUntil(user: DbUser|UsersAdmin) {
 }
 
 export const previousCorrespondents = async (user: DbUser|UsersCurrent|null) => {
-  if (!user) return []
+  if (!user) return new Set()
 
   const conversations = await Conversations.find({
     participantIds: user._id,
@@ -651,5 +651,5 @@ export const previousCorrespondents = async (user: DbUser|UsersCurrent|null) => 
 
   const participantIds = conversations.flatMap(conversation => conversation.participantIds).filter(id => id !== user._id)
 
-  return [...new Set(participantIds)];
+  return new Set(participantIds);
 }
