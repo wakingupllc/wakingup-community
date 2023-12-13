@@ -1,9 +1,9 @@
 /**
- * Generated on 2023-12-11T15:35:30.568Z by `yarn makemigrations`
+ * Generated on 2023-12-13T01:02:05.128Z by `yarn makemigrations`
  * The following schema changes were detected:
  * -------------------------------------------
  * diff --git a/Users/michaelkeenan/Programming/projects/ForumMagnum2/schema/accepted_schema.sql b/Users/michaelkeenan/Programming/projects/ForumMagnum2/schema/schema_to_accept.sql
- * index 0c4a6bb006..6cd1582cf1 100644
+ * index 0c4a6bb006..73da519b1e 100644
  * --- a/Users/michaelkeenan/Programming/projects/ForumMagnum2/schema/accepted_schema.sql
  * +++ b/Users/michaelkeenan/Programming/projects/ForumMagnum2/schema/schema_to_accept.sql
  * @@ -4,5 +4,3 @@
@@ -11,18 +11,13 @@
  * --- Overall schema hash: 661ad6cacfc4b24f6f6adc2135212254
  * -
  * --- Accepted on 2023-11-17T19:44:20.000Z by 20231117T194420.update_notification_defaults.ts
- * +-- Overall schema hash: 7733bbbe246229732fd60ecbb0654020
+ * +-- Overall schema hash: 6af2520bb336826eb25cb47f89c11745
  *  
  * @@ -1031,3 +1029,3 @@ CREATE TABLE "UserTagRels" (
  *  
  * --- Schema for "Users", hash: 62a2c6ad3605bbbd01f6bac610ab2548
- * +-- Schema for "Users", hash: 827f2361dd81a234f8ebdd8895b0d70e
+ * +-- Schema for "Users", hash: 99cd32e6f8f1b9bedae86a6ae0212345
  *  CREATE TABLE "Users" (
- * @@ -1046,3 +1044,3 @@ CREATE TABLE "Users" (
- *      "lwWikiImport" bool,
- * -    "theme" jsonb DEFAULT '{"name":"default"}' ::jsonb,
- * +    "theme" jsonb DEFAULT '{"name":"auto"}' ::jsonb,
- *      "lastUsedTimezone" text,
  * @@ -1237,2 +1235,3 @@ CREATE TABLE "Users" (
  *      "wu_subscription_active" bool,
  * +    "disableUnsolicitedMessages" bool DEFAULT false,
@@ -39,7 +34,7 @@
  * - [ ] Uncomment `acceptsSchemaHash` below
  * - [ ] Run `yarn acceptmigrations` to update the accepted schema hash (running makemigrations again will also do this)
  */
-export const acceptsSchemaHash = "7733bbbe246229732fd60ecbb0654020";
+export const acceptsSchemaHash = "6af2520bb336826eb25cb47f89c11745";
 
 import Users from "../../lib/collections/users/collection";
 import { addField, dropField } from "./meta/utils";
