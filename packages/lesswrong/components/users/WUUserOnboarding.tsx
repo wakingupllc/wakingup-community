@@ -93,7 +93,7 @@ const WUUserOnboarding: React.FC<WUUserOnboardingProps> = ({currentUser, classes
   const [firstName, setFirstName] = useState(currentUser.first_name)
   const [lastName, setLastName] = useState(currentUser.last_name)
   const [subscribeToDigest, setSubscribeToDigest] = useState(true)
-  const [allowUnsolicitedMessages, setAllowUnsolicitedMessages] = useState(true)
+  const [disableUnsolicitedMessages, setDisableUnsolicitedMessages] = useState(false)
   const [acceptedTos, setAcceptedTos] = useState(false)
   const [mapLocation, setMapLocation] = useState(currentUser.mapLocation)
   const [validationError, setValidationError] = useState('Username is empty by default')
@@ -109,7 +109,7 @@ const WUUserOnboarding: React.FC<WUUserOnboardingProps> = ({currentUser, classes
     $lastName: String, 
     $mapLocation: JSON,
     $timezone: String,
-    $allowUnsolicitedMessages: Boolean!
+    $disableUnsolicitedMessages: Boolean!
     ) {
       WUUserOnboarding(
       username: $username, 
@@ -119,7 +119,7 @@ const WUUserOnboarding: React.FC<WUUserOnboardingProps> = ({currentUser, classes
       lastName: $lastName, 
       mapLocation: $mapLocation,
       timezone: $timezone
-      allowUnsolicitedMessages: $allowUnsolicitedMessages
+      disableUnsolicitedMessages: $disableUnsolicitedMessages
       ) {
         username
         slug
@@ -157,7 +157,7 @@ const WUUserOnboarding: React.FC<WUUserOnboardingProps> = ({currentUser, classes
           mapLocation,
           acceptedTos,
           timezone,
-          allowUnsolicitedMessages,
+          disableUnsolicitedMessages,
         },
       })
     } catch (err) {
@@ -303,13 +303,13 @@ const WUUserOnboarding: React.FC<WUUserOnboardingProps> = ({currentUser, classes
         <FormControlLabel
           control={
             <Checkbox
-              checked={allowUnsolicitedMessages}
-              onChange={event => setAllowUnsolicitedMessages(event.target.checked)}
+              checked={disableUnsolicitedMessages}
+              onChange={event => setDisableUnsolicitedMessages(event.target.checked)}
             />
           }
           label={
             <Typography variant="body2">
-              Allow new private message requests
+              Disable new private message requests
             </Typography>}
         />
       </div>

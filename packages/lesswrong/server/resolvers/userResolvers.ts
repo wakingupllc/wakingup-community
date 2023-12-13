@@ -128,7 +128,7 @@ type WUUserOnboarding = {
   lastName?: string
   mapLocation: any 
   timezone: string
-  allowUnsolicitedMessages: boolean
+  disableUnsolicitedMessages: boolean
 }
 
 addGraphQLSchema(`
@@ -212,7 +212,7 @@ addGraphQLResolvers({
     },
     async WUUserOnboarding(
       root: void,
-      {username, subscribeToDigest, firstName, lastName, acceptedTos, mapLocation, timezone, allowUnsolicitedMessages}: WUUserOnboarding,
+      {username, subscribeToDigest, firstName, lastName, acceptedTos, mapLocation, timezone, disableUnsolicitedMessages}: WUUserOnboarding,
       context: ResolverContext,
     ) {
       const {currentUser} = context
@@ -246,7 +246,7 @@ addGraphQLResolvers({
           mapLocation,
           slug: await Utils.getUnusedSlugByCollectionName('Users', slugify(username)),
           subscribedToDigest: subscribeToDigest,
-          disableUnsolicitedMessages: !allowUnsolicitedMessages,
+          disableUnsolicitedMessages,
           acceptedTos,
           ...updatedNotificationSettings(currentUser, timezone),
         },
@@ -545,7 +545,7 @@ addGraphQLMutation(
   lastName: String, 
   mapLocation: JSON,
   timezone: String,
-  allowUnsolicitedMessages: Boolean!,
+  disableUnsolicitedMessages: Boolean!,
   ): NewUserCompletedProfile`
 )
 
