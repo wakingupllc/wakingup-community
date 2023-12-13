@@ -142,7 +142,7 @@ const HoverPreviewLink = ({ href, contentSourceDescription, id, rel, noPrefetch,
           {children}
         </Components.ViewpointsPreview>
       }
-      return <Components.DefaultPreview href={href} id={id} rel={rel}>
+      return <Components.DefaultPreview href={href} id={id} rel={rel} newTab>
         {children}
       </Components.DefaultPreview>
     }

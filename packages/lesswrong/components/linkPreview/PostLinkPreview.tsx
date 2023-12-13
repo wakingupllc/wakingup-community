@@ -379,12 +379,13 @@ const defaultPreviewStyles = (theme: ThemeType): JssStyles => ({
   },
 })
 
-const DefaultPreview = ({classes, href, onsite=false, id, rel, children}: {
+const DefaultPreview = ({classes, href, onsite=false, id, rel, newTab = false, children}: {
   classes: ClassesType,
   href: string,
   onsite?: boolean,
   id?: string,
   rel?: string
+  newTab?: boolean,
   children: ReactNode,
 }) => {
   const { LWPopper } = Components
@@ -394,6 +395,8 @@ const DefaultPreview = ({classes, href, onsite=false, id, rel, children}: {
     href,
     onsite
   });
+  
+  const newTabProps = newTab ? {target: '_blank', rel: rel ?? '' + ' noreferrer'} : {}
   return (
     <span {...eventHandlers}>
       <LWPopper open={hover} anchorEl={anchorEl} placement="bottom-start" clickable={false}>
@@ -407,7 +410,7 @@ const DefaultPreview = ({classes, href, onsite=false, id, rel, children}: {
       {onsite
         ? <Link to={href} id={id} rel={rel}>{children}</Link>
         : <Components.AnalyticsTracker eventType="link" eventProps={{to: href}}>
-            <a href={href} id={id} rel={rel}>
+            <a href={href} id={id} rel={rel} {...newTabProps}>
               {children}
             </a>
           </Components.AnalyticsTracker>}
