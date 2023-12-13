@@ -372,6 +372,11 @@ export const wakingUpTheme: SiteThemeSpecification = {
             },
           }
         },
+        EditTitle: {
+          root: {
+            fontSize: 24,
+          },
+        },
         PostsTimeBlock: {
           divider: {
             display: 'none'
