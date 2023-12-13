@@ -14,6 +14,7 @@ import { MODERATOR_ACTION_TYPES } from '../moderatorActions/schema';
 import { isFriendlyUI } from '../../../themes/forumTheme';
 import {isMobile} from '../../utils/isMobile.ts'
 import { CODE_ENTRY_LIMIT, CODE_ENTRY_LIMIT_EXCEEDED_MSG, CODE_REQUEST_LIMIT, CODE_REQUEST_LIMIT_EXCEEDED_MSG, LOGIN_LIMIT_HOURS } from './constants.ts'
+import Conversations from '../conversations/collection.ts';
 
 const newUserIconKarmaThresholdSetting = new DatabasePublicSetting<number|null>('newUserIconKarmaThreshold', null)
 
@@ -626,4 +627,17 @@ export function loginLockedUntil(user: DbUser|UsersAdmin) {
 export const showVotedFlair = (user: UsersMinimumInfo|DbUser|null): boolean => {
   // Fundraiser closes on 2023-12-20
   return isEAForum && !!user?.givingSeason2023VotedFlair && new Date() < new Date('2023-12-21');
+}
+
+export const previousCorrespondents = async (user: DbUser|UsersCurrent|null) => {
+  if (!user) return new Set()
+
+  const conversations = await Conversations.find({
+    participantIds: user._id,
+    messageCount: { $gt: 0 }
+  }).fetch();
+
+  const participantIds = conversations.flatMap(conversation => conversation.participantIds).filter(id => id !== user._id)
+
+  return new Set(participantIds);
 }

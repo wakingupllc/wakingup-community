@@ -32,7 +32,7 @@ const styles = (theme: ThemeType): JssStyles => ({
       borderTopRightRadius: 0,
     },
     "& .EAUsersProfileLinks-links": {
-      marginTop: "0",
+      marginTop: 6,
     },
   },
   sunshineSection: {
@@ -161,6 +161,9 @@ const styles = (theme: ThemeType): JssStyles => ({
     columnGap: 26,
     alignItems: 'baseline',
     marginBottom: 20
+  },
+  smallText: {
+    fontSize: "70%",
   },
   donatedIcon: {
     position: "relative",
@@ -448,6 +451,8 @@ const EAUsersProfile = ({terms, slug, subscriptionsEnabled = true, postSortingEn
     })
   }
 
+  const showMessageButton = currentUser?._id !== user._id && (!user.disableUnsolicitedMessages || currentUser?.isAdmin);
+
   return <div>
     <HeadTags
       description={metaDescription}
@@ -485,13 +490,13 @@ const EAUsersProfile = ({terms, slug, subscriptionsEnabled = true, postSortingEn
             {user.jobTitle} {user.organization ? `@ ${user.organization}` : ''}
           </ContentStyles>}
           <WUUsersMetaInfo user={user} />
-          {currentUser?._id !== user._id && <div className={classes.btns}>
+          {showMessageButton && <div className={classes.btns}>
             <NewConversationButton
               user={user}
               currentUser={currentUser}
             >
               <a tabIndex={0} className={classes.messageBtn} data-cy="message">
-                Message
+                Message {user.disableUnsolicitedMessages && <span className={classes.smallText}> (user disabled messages from non-admins)</span>}
               </a>
             </NewConversationButton>
             {subscriptionsEnabled && <NotifyMeButton

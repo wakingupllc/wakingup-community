@@ -493,5 +493,15 @@
     "acceptsSchemaHash": "6284e79326a901d84a6a557b046429bd",
     "acceptedByMigration": "20231208T002007.merge_noop_migration_2.ts",
     "timestamp": "2023-12-08T00:20:07.000Z"
+  },
+  {
+    "acceptsSchemaHash": "6af2520bb336826eb25cb47f89c11745",
+    "acceptedByMigration": "20231213T010205.add_disableUnsolicitedMessages.ts",
+    "timestamp": "2023-12-13T01:02:05.000Z"
+  },
+  {
+    "acceptsSchemaHash": "30e601658df4d3f215cacd0e36bd5234",
+    "acceptedByMigration": "20231213T224022.merge_noop_migration_3.ts",
+    "timestamp": "2023-12-13T22:40:22.000Z"
   }
 ]

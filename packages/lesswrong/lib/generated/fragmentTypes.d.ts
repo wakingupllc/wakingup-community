@@ -409,6 +409,7 @@ interface UsersDefaultFragment { // fragment on Users
   readonly wu_has_ever_been_paid_subscriber: boolean | null,
   readonly wu_subscription_expires_at: Date | null,
   readonly wu_subscription_active: boolean | null,
+  readonly disableUnsolicitedMessages: boolean,
 }
 
 interface CommentsDefaultFragment { // fragment on Comments
@@ -2705,6 +2706,7 @@ interface UsersProfile extends UsersMinimumInfo, SunshineUsersList, SharedUserBo
   readonly first_name: string | null,
   readonly last_name: string | null,
   readonly wu_created_at: Date | null,
+  readonly disableUnsolicitedMessages: boolean,
 }
 
 interface UsersCurrent extends UsersProfile, SharedUserBooleans { // fragment on Users
@@ -3137,6 +3139,7 @@ interface UsersEdit extends UsersProfile { // fragment on Users
   readonly hideFrontpageBookAd: boolean,
   readonly hideFrontpageBook2020Ad: boolean,
   readonly deleted: boolean,
+  readonly disableUnsolicitedMessages: boolean,
 }
 
 interface UsersAdmin { // fragment on Users
