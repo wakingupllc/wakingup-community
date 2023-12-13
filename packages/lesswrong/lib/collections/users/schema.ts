@@ -2909,6 +2909,17 @@ const schema: SchemaType<DbUser> = {
     hidden: true,
     optional: true
   },
+
+  disableUnsolicitedMessages: {
+    type: Boolean,
+    optional: true,
+    order: 1,
+    defaultValue: false,
+    canRead: ['guests'],
+    canUpdate: [userOwns, 'admins'],
+    label: 'Disable new private message requests ',
+    group: formGroups.privateMessaging,
+  },
 };
 
 export default schema;

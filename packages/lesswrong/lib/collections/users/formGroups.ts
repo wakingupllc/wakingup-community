@@ -82,4 +82,10 @@ export const formGroups: Partial<Record<string, FormGroupType>> = {
     label: preferredHeadingCase("Deactivate Community Account"),
     startCollapsed: true,
   },
+  privateMessaging: {
+    order: 140,
+    name: "privateMessaging",
+    label: preferredHeadingCase("Private Messaging"),
+    startCollapsed: true,
+  },
 };

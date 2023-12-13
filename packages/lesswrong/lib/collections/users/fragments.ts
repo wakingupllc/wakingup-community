@@ -96,6 +96,7 @@ registerFragment(`
     first_name
     last_name
     wu_created_at
+    disableUnsolicitedMessages
   }
 `);
 
@@ -483,6 +484,8 @@ registerFragment(`
     hideFrontpageBook2020Ad
 
     deleted
+
+    disableUnsolicitedMessages
   }
 `)
 
