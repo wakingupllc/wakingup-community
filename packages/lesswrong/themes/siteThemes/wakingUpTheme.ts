@@ -56,7 +56,7 @@ export const wakingUpTheme: SiteThemeSpecification = {
       primaryAlert: "#0D5EC9"
     },
     link: {
-      unmarked: "#0075FF",
+      unmarked: "#0D5EC9",
       visited: "#212121",
     },
     background: {
