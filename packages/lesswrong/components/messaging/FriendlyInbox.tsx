@@ -9,6 +9,7 @@ import type { InboxComponentProps } from "./InboxWrapper";
 import { useSingle } from "../../lib/crud/withSingle";
 import { userCanDo } from "../../lib/vulcan-users";
 import { Link, useNavigate } from "../../lib/reactRouterWrapper";
+import {showConversationOptionsSetting} from '../../lib/publicSettings.ts'
 
 const MAX_WIDTH = 1100;
 
@@ -172,9 +173,11 @@ const FriendlyInbox = ({
   terms,
   conversationId,
   isModInbox = false,
+  showOptions = showConversationOptionsSetting.get,
   classes,
 }: Omit<InboxComponentProps, "classes"> & {
   conversationId?: string;
+  showOptions?: () => boolean;
   classes: ClassesType<typeof styles>;
 }) => {
   const { openDialog } = useDialog();
@@ -274,7 +277,7 @@ const FriendlyInbox = ({
             <>
               <div className={classes.columnHeader}>
                 <div className={classes.headerText}>{title}</div>
-                <ForumIcon onClick={openConversationOptions} icon="EllipsisVertical" className={classes.actionIcon} />
+                {showOptions() && <ForumIcon onClick={openConversationOptions} icon="EllipsisVertical" className={classes.actionIcon} />}
               </div>
               <div className={classes.conversation} ref={selectedConversationRef}>
                 <Link to="/inbox" className={classes.backButton}>
