@@ -443,6 +443,11 @@ export const wakingUpTheme: SiteThemeSpecification = {
           contentPreviewContainer: {
             padding: "15px 50px",
           }
+        },
+        CommentsItem: {
+          replyLink: {
+            fontSize: 13,
+          }
         }
       }
     }
