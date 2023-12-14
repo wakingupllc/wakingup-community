@@ -88,7 +88,7 @@ export const wakingUpTheme: SiteThemeSpecification = {
       addedBlockquoteHighlightStyles: `padding-top: 4px; padding-bottom: 6px;`
     },
     buttons: {
-      alwaysPrimary: '#0075ff',
+      alwaysPrimary: '#0D5EC9',
     },
     tag: {
       text: shadePalette.grey[1000],
