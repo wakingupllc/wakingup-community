@@ -7,6 +7,8 @@ import { isEAForum } from '../../lib/instanceSettings';
 import classNames from 'classnames';
 import { useInitiateConversation } from '../hooks/useInitiateConversation';
 import { useNavigate } from '../../lib/reactRouterWrapper';
+import {isFriendlyUI} from '../../themes/forumTheme.ts'
+import {showKarmaSetting} from '../../lib/publicSettings.ts'
 
 const styles = (theme: ThemeType): JssStyles => ({
   root: {
@@ -74,6 +76,7 @@ const ExpandedUsersConversationSearchHit = ({
   onClose,
   isModInbox = false,
   className,
+  showKarma = showKarmaSetting.get,
   classes,
 }: {
   hit: Hit<any>;
@@ -81,6 +84,7 @@ const ExpandedUsersConversationSearchHit = ({
   onClose: () => void;
   isModInbox?: boolean;
   className?: string;
+  showKarma?: () => boolean,
   classes: ClassesType;
 }) => {
   const { FormatDate, UsersProfileImage, ForumIcon } = Components;
@@ -99,7 +103,7 @@ const ExpandedUsersConversationSearchHit = ({
   return (
     <div className={classNames(className, classes.root)}>
       <div onClick={() => initiateConversation(user._id)} className={classes.link}>
-        {isEAForum && (
+        {isFriendlyUI && (
           <div className={classes.profilePhotoCol}>
             <UsersProfileImage user={user} size={36} />
           </div>
@@ -108,9 +112,9 @@ const ExpandedUsersConversationSearchHit = ({
           <div className={classes.displayNameRow}>
             <span className={classes.displayName}>{user.displayName}</span>
             <FormatDate date={user.createdAt} />
-            <span className={classes.metaInfo}>
+            {showKarma() && <span className={classes.metaInfo}>
               <ForumIcon icon="Star" className={classes.metaInfoIcon} /> {user.karma}
-            </span>
+            </span>}
             {user.mapLocationAddress && (
               <span className={classes.metaInfo}>
                 <LocationIcon className={classes.metaInfoIcon} /> {user.mapLocationAddress}
