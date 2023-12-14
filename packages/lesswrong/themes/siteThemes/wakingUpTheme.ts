@@ -116,7 +116,7 @@ export const wakingUpTheme: SiteThemeSpecification = {
       fontFamily: sansSerifStack,
     }
     return {
-      baseFontSize: 16,
+      baseFontSize: 14,
       spacing: {
         mainLayoutPaddingTop: 20
       },
