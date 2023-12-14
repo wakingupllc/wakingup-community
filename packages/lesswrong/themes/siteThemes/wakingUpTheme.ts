@@ -500,7 +500,7 @@ export const wakingUpTheme: SiteThemeSpecification = {
           root: {
             fontFamily: sansSerifStack,
             fontWeight: 500,
-            fontSize: "1.1rem",
+            fontSize: "1rem",
             color: palette.grey[900],
           }
         },
