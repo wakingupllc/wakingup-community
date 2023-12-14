@@ -111,7 +111,7 @@ export const wakingUpTheme: SiteThemeSpecification = {
     const basicText = {
       color: palette.grey[900],
       // use ems (not rems) to preserve relative height even if font-size is changed
-      lineHeight: '20px',
+      lineHeight: '1.42857em', // 20px when font size is 14px
       fontWeight: 400,
       fontFamily: sansSerifStack,
     }
@@ -368,7 +368,7 @@ export const wakingUpTheme: SiteThemeSpecification = {
             fontWeight: 700,
             fontSize: 24,
             ["@media screen and (max-width: 960px)"]: {
-              fontSize: 24,
+              fontSize: 24, // same as above because we're just overriding the component's media query
             },
           }
         },
