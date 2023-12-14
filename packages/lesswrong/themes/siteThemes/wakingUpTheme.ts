@@ -33,7 +33,7 @@ export const wakingUpTheme: SiteThemeSpecification = {
   componentPalette: (shadePalette: ThemeShadePalette) => ({
     // Waking Up just has one highlight color, so primary/secondary/tertiary are pretty similar.
     primary: {
-      main: '#215adb',
+      main: '#0075ff',
       light: '#5a85e6',
       dark: '#3e64bb'
     },
@@ -43,7 +43,7 @@ export const wakingUpTheme: SiteThemeSpecification = {
       dark: '#1842a0'
     },
     lwTertiary: {
-      main: "#3e64bb",
+      main: "#0075ff",
       dark: "#3e64bb",
     },
     error: {
@@ -53,10 +53,10 @@ export const wakingUpTheme: SiteThemeSpecification = {
       main: "#ffad08"
     },
     text: {
-      primaryAlert: "#3e64bb"
+      primaryAlert: "#0075ff"
     },
     link: {
-      unmarked: "#0D5EC9",
+      unmarked: "#0075FF",
       visited: "#212121",
     },
     background: {
@@ -88,7 +88,7 @@ export const wakingUpTheme: SiteThemeSpecification = {
       addedBlockquoteHighlightStyles: `padding-top: 4px; padding-bottom: 6px;`
     },
     buttons: {
-      alwaysPrimary: '#215adb',
+      alwaysPrimary: '#0075ff',
     },
     tag: {
       text: shadePalette.grey[1000],
@@ -111,12 +111,12 @@ export const wakingUpTheme: SiteThemeSpecification = {
     const basicText = {
       color: palette.grey[900],
       // use ems (not rems) to preserve relative height even if font-size is changed
-      lineHeight: '1.42857em', // 20px when font size is 14px
+      lineHeight: '1.25em', // 20px when font size is 16px
       fontWeight: 400,
       fontFamily: sansSerifStack,
     }
     return {
-      baseFontSize: 14,
+      baseFontSize: 16,
       spacing: {
         mainLayoutPaddingTop: 20
       },
@@ -143,8 +143,8 @@ export const wakingUpTheme: SiteThemeSpecification = {
           fontFamily: serifStack,
         },
         body2: {
-          fontSize: "14px",
-          lineHeight: "1.5em",
+          fontSize: "1rem",
+          lineHeight: "1.25em",
           fontWeight: 400,
         },
         smallText: {
@@ -264,6 +264,11 @@ export const wakingUpTheme: SiteThemeSpecification = {
             ["@media screen and (max-width: 380px)"]: {
               width: 40,
             },
+          },
+          badge: {
+            ["@media screen and (max-width: 380px)"]: {
+              right: -5,
+            },
           }
         },
         SiteLogo: {
@@ -362,19 +367,90 @@ export const wakingUpTheme: SiteThemeSpecification = {
             }
           }
         },
+        PostsTitle: {
+          eaTitleDesktopEllipsis: {
+            ["@media screen and (max-width: 600px)"]: {
+              lineHeight: "1.5rem",
+            }
+          }
+        },
+        PostsPagePostHeader: {
+          header: {
+            paddingTop: 24,
+            paddingLeft: 0,
+            paddingRight: 0,
+          }
+        },
         PostsPageTitle: {
           root: {
             lineHeight: 1.25,
             fontWeight: 700,
             fontSize: 24,
+            marginTop: 0,
             ["@media screen and (max-width: 960px)"]: {
               fontSize: 24, // same as above because we're just overriding the component's media query
             },
           }
         },
+        PostsPage: {
+          centralColumn: {
+            margin: "0 24px",
+            marginLeft: 24,
+            marginRight: 24,
+            ["@media screen and (max-width: 960px)"]: {
+              margin: 0
+            },
+          },
+          commentsSection: {
+            marginTop: 32,
+          },
+        },
+        CommentsList: {
+          commentsList: {
+            padding: 24,
+          },
+        },
+        CommentsItem: {
+          root: {
+            paddingLeft: 24,
+            paddingRight: 24,
+            paddingTop: 20,
+            paddingBottom: 12,
+            ["@media screen and (max-width: 960px)"]: {
+              paddingLeft: 12,
+              paddingRight: 12,
+              paddingTop: 6,
+              paddingBottom: 0,
+            },
+          },
+          replyLink: {
+            fontSize: 13,
+            color: palette.primary.main,
+          },
+        },
+        CommentsItemMeta: {
+          root: {
+            paddingTop: 0,
+          },
+          rightSection: {
+            right: -40,
+            gap: 8,
+          },
+          menu: {
+            position: "relative",
+            top: -3,
+            rotate: "90deg",
+          }
+        },
+        EditorFormComponent: {
+          postBodyStyles: {
+            marginBottom: 12,
+          }
+        },
         EditTitle: {
           root: {
             fontSize: 24,
+            paddingTop: 18,
           },
         },
         PostsTimeBlock: {
@@ -444,11 +520,6 @@ export const wakingUpTheme: SiteThemeSpecification = {
             padding: "15px 50px",
           }
         },
-        CommentsItem: {
-          replyLink: {
-            fontSize: 13,
-          }
-        }
       }
     }
   }
