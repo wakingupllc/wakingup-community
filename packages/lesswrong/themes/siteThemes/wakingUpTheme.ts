@@ -33,7 +33,7 @@ export const wakingUpTheme: SiteThemeSpecification = {
   componentPalette: (shadePalette: ThemeShadePalette) => ({
     // Waking Up just has one highlight color, so primary/secondary/tertiary are pretty similar.
     primary: {
-      main: '#0075ff',
+      main: '#0D5EC9',
       light: '#5a85e6',
       dark: '#3e64bb'
     },
@@ -43,7 +43,7 @@ export const wakingUpTheme: SiteThemeSpecification = {
       dark: '#1842a0'
     },
     lwTertiary: {
-      main: "#0075ff",
+      main: "#0D5EC9",
       dark: "#3e64bb",
     },
     error: {
@@ -53,7 +53,7 @@ export const wakingUpTheme: SiteThemeSpecification = {
       main: "#ffad08"
     },
     text: {
-      primaryAlert: "#0075ff"
+      primaryAlert: "#0D5EC9"
     },
     link: {
       unmarked: "#0075FF",
