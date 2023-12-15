@@ -7,7 +7,10 @@ import { useCurrentUser } from '../common/withUser';
 import withErrorBoundary from '../common/withErrorBoundary';
 import type { CommentTreeNode } from '../../lib/utils/unflatten';
 import type { CommentTreeOptions } from './commentTree';
-import { showCommentRenderExpandOptionsSetting } from '../../lib/publicSettings';
+import {
+  postCommentCountTruncateThresholdSetting,
+  showCommentRenderExpandOptionsSetting,
+} from '../../lib/publicSettings'
 
 const styles = (theme: ThemeType): JssStyles => ({
   button: {
@@ -23,7 +26,7 @@ const styles = (theme: ThemeType): JssStyles => ({
   }
 })
 
-export const POST_COMMENT_COUNT_TRUNCATE_THRESHOLD = 70
+export const POST_COMMENT_COUNT_TRUNCATE_THRESHOLD = postCommentCountTruncateThresholdSetting.get()
 
 const CommentsListFn = ({treeOptions, comments, totalComments=0, startThreadTruncated, parentAnswerId, defaultNestingLevel=1, parentCommentId, classes}: {
   treeOptions: CommentTreeOptions,

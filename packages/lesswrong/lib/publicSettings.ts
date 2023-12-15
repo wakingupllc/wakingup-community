@@ -164,4 +164,5 @@ export const dialogueMatchmakingEnabled = new DatabasePublicSetting<boolean>('di
 export const performanceMetricLoggingEnabled = new DatabasePublicSetting<boolean>('performanceMetricLoggingEnabled', false)
 export const performanceMetricLoggingBatchSize = new DatabasePublicSetting<number>('performanceMetricLoggingBatchSize', 100)
 export const showSuggestionToCommentIfNoCommentsSetting = new DatabasePublicSetting<boolean>('post.showSuggestionToCommentIfNoComments', true);
+export const postCommentCountTruncateThresholdSetting = new DatabasePublicSetting<number>('post.commentCountTruncateThreshold', 70);
 export const showConversationOptionsSetting = new DatabasePublicSetting<boolean>('conversation.showOptions', true);
