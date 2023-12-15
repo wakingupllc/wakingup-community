@@ -310,7 +310,6 @@ const schema: SchemaType<DbUser> = {
     canRead: ['guests'],
     canUpdate: ['admins'],
     canCreate: ['members'],
-    hidden: true,
     onInsert: user => {
       validateName(user.username, 'username');
 
