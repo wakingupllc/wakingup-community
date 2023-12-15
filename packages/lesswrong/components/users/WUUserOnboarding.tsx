@@ -298,7 +298,7 @@ const WUUserOnboarding: React.FC<WUUserOnboardingProps> = ({currentUser, classes
           Control private messages
         </Typography>
         <Typography variant="body2" className={classes.sectionHelperText}>
-          Decide whether you want to receive private messages from other members
+          Decide whether you want to receive private messages from other members.
         </Typography>
         <FormControlLabel
           control={

@@ -34,6 +34,7 @@ export const styles = (theme: ThemeType): JssStyles => ({
     "& .ck.ck-content" : {
       marginLeft: 0,
       paddingLeft: "1.5rem",
+      paddingRight: "1.5rem",
       paddingTop: "1rem",
       borderWidth: "0",
     },

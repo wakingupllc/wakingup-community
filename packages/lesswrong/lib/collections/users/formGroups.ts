@@ -75,16 +75,16 @@ export const formGroups: Partial<Record<string, FormGroupType>> = {
     order: 120,
     label: isFriendlyUI ? "Your activity" : "My Activity",
   },
-  deactivate: {
-    order: 130,
-    name: "deactivate",
-    label: preferredHeadingCase("Deactivate Community Account"),
-    startCollapsed: true,
-  },
   privateMessaging: {
-    order: 140,
+    order: 130,
     name: "privateMessaging",
     label: preferredHeadingCase("Private Messaging"),
+    startCollapsed: true,
+  },
+  deactivate: {
+    order: 140,
+    name: "deactivate",
+    label: preferredHeadingCase("Deactivate Community Account"),
     startCollapsed: true,
   },
 };
