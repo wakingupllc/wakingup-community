@@ -112,7 +112,7 @@ export const wakingUpTheme: SiteThemeSpecification = {
       color: palette.grey[900],
       // use ems (not rems) to preserve relative height even if font-size is changed
       lineHeight: '1.75em',
-      fontWeight: 450,
+      fontWeight: 400,
       fontFamily: sansSerifStack,
     }
     return {
@@ -357,7 +357,7 @@ export const wakingUpTheme: SiteThemeSpecification = {
         ContentStyles: {
           postHighlight: {
             fontFamily: palette.fonts.sansSerifStack,
-            fontWeight: 450,
+            fontWeight: 400,
             fontSize: "1.2rem",
             "& li": {
               fontFamily: palette.fonts.sansSerifStack,
