@@ -420,7 +420,7 @@ const SearchPageTabbed = (
           <Tab label="Comments" value="Comments" />
           {enableTagSearch && <Tab label={taggingNameIsSet.get() ? taggingNamePluralCapitalSetting.get() : 'Tags and Wiki'} value="Tags" />}
           {enableSequenceSearch && <Tab label="Sequences" value="Sequences" />}
-          <Tab label="Users" value="Users" />
+          <Tab label="Members" value="Users" />
         </Tabs>
         
         <ErrorBoundary>
