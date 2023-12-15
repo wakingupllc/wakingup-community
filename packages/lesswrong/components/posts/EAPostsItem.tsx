@@ -369,7 +369,7 @@ const EAPostsItem = ({classes, ...props}: EAPostsItemProps) => {
               />
             </InteractionWrapper>
             {showContents && <div className={classes.contentPreviewContainer}>
-                <PostsHighlight post={post} maxLengthWords={120} smallerFonts={false} />
+                <PostsHighlight post={post} maxLengthWords={50} smallerFonts={false} />
               </div>
             }
           </div>
