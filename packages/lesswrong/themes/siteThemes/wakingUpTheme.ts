@@ -357,8 +357,8 @@ export const wakingUpTheme: SiteThemeSpecification = {
         ContentStyles: {
           postHighlight: {
             fontFamily: palette.fonts.sansSerifStack,
-            fontWeight: 400,
-            fontSize: "1.28rem",
+            fontWeight: 450,
+            fontSize: "1.2rem",
             "& li": {
               fontFamily: palette.fonts.sansSerifStack,
             }
