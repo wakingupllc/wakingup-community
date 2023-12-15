@@ -1,8 +1,8 @@
 name: Deploy WU Beta
 concurrency: deploy-wu-beta
 on:
-  push:
-    branches: [ master ]
+  workflow_dispatch:
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
