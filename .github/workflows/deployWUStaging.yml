@@ -1,8 +1,7 @@
 name: Deploy WU Staging
 concurrency: deploy-wu-dev
 on:
-  push:
-    branches: [ waking-up ]
+  workflow_dispatch:
 jobs:
   deploy:
     runs-on: ubuntu-latest
