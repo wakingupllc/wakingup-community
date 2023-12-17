@@ -166,3 +166,4 @@ export const performanceMetricLoggingBatchSize = new DatabasePublicSetting<numbe
 export const showSuggestionToCommentIfNoCommentsSetting = new DatabasePublicSetting<boolean>('post.showSuggestionToCommentIfNoComments', true);
 export const postCommentCountTruncateThresholdSetting = new DatabasePublicSetting<number>('post.commentCountTruncateThreshold', 70);
 export const showConversationOptionsSetting = new DatabasePublicSetting<boolean>('conversation.showOptions', true);
+export const defaultCommentOrderSetting = new DatabasePublicSetting<string>('post.defaultCommentOrder', 'postCommentsTop');
