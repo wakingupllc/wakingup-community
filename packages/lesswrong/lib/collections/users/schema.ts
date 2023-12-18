@@ -301,8 +301,8 @@ const schema: SchemaType<DbUser> = {
         return user.services.twitter.screenName;
       }
     },
-    onUpdate: async ({ document: user }) => {
-      await assertUsernameIsNotTaken(user, user.username!)
+    onUpdate: async ({ document: user, context }) => {
+      await assertUsernameIsNotTaken(context.Users, user, user.username!)
       validateName(user.username, 'username');
     },
   },

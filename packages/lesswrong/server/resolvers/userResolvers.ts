@@ -260,7 +260,7 @@ addGraphQLResolvers({
       if (!currentUser.usernameUnset) {
         throw new Error('Only new users can set their username this way')
       }
-      await assertUsernameIsNotTaken(currentUser, username)
+      await assertUsernameIsNotTaken(Users, currentUser, username)
 
       const updatedUser = (await updateMutator({
         collection: Users,
