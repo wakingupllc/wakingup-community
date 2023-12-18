@@ -6,7 +6,6 @@ import {
   addGraphQLQuery,
   addGraphQLResolvers,
   addGraphQLSchema,
-  SimpleValidationError,
   slugify,
   updateMutator,
   Utils,
@@ -36,6 +35,7 @@ import {defaultNotificationTypeSettings} from '../../lib/collections/users/schem
 import {notificationBatchHourInUserTzSetting} from '../../lib/publicSettings.ts'
 import { defineQuery } from '../utils/serverGraphqlUtil';
 import { UserDialogueUsefulData } from "../../components/users/DialogueMatchingPage";
+import {assertUsernameIsNotTaken} from '../../lib/collections/users/username'
 
 addGraphQLSchema(`
   type CommentCountTag {
@@ -260,11 +260,7 @@ addGraphQLResolvers({
       if (!currentUser.usernameUnset) {
         throw new Error('Only new users can set their username this way')
       }
-      // Check for uniqueness
-      const existingUser = await Users.findOne({username})
-      if (existingUser && existingUser._id !== currentUser._id) {
-        throw new SimpleValidationError({message: "Sorry, that username is already taken."})
-      }
+      await assertUsernameIsNotTaken(currentUser, username)
 
       const updatedUser = (await updateMutator({
         collection: Users,
