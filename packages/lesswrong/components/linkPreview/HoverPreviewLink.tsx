@@ -8,6 +8,7 @@ import { isServer } from '../../lib/executionEnvironment';
 import withErrorBoundary from '../common/withErrorBoundary';
 import { isMobile } from '../../lib/utils/isMobile'
 import { locationHashIsFootnote } from '../posts/PostsPage/CollapsedFootnotes';
+import {isWakingUp} from '../../lib/instanceSettings.ts'
 
 export const parseRouteWithErrors = (onsiteUrl: string, contentSourceDescription?: string) => {
   return parseRoute({
@@ -74,6 +75,12 @@ const HoverPreviewLink = ({ href, contentSourceDescription, id, rel, noPrefetch,
     return <a href={href} id={id} rel={rel}>
       {children}
     </a>
+  }
+  
+  if  (isWakingUp) {
+    return <Components.DefaultPreview href={href} id={id} rel={rel} newTab>
+      {children}
+    </Components.DefaultPreview>
   }
 
   try {
@@ -142,7 +149,7 @@ const HoverPreviewLink = ({ href, contentSourceDescription, id, rel, noPrefetch,
           {children}
         </Components.ViewpointsPreview>
       }
-      return <Components.DefaultPreview href={href} id={id} rel={rel} newTab>
+      return <Components.DefaultPreview href={href} id={id} rel={rel}>
         {children}
       </Components.DefaultPreview>
     }
