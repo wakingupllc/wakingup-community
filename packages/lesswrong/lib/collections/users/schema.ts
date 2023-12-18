@@ -7,7 +7,6 @@ import {
   userOwns,
   userIsAdmin,
   userIsAdminOrMod,
-  userHasntChangedName,
   isAdmin,
 } from '../../vulcan-users/permissions'
 import { formGroups } from './formGroups';
@@ -24,9 +23,9 @@ import type { ForumIconName } from '../../../components/common/ForumIcon';
 import { getCommentViewOptions } from '../../commentViewOptions';
 import {dialoguesEnabled, hasDigests, hasPostRecommendations} from '../../betas'
 import { isFriendlyUI } from '../../../themes/forumTheme';
-import badWords from '../../badWords.json';
 import { randomId } from '../../random';
 import { getUserABTestKey } from '../../abTestImpl';
+import {assertUsernameIsNotTaken, validateName} from './username'
 
 ///////////////////////////////////////
 // Order for the Schema is as follows. Change as you see fit:
@@ -43,10 +42,6 @@ import { getUserABTestKey } from '../../abTestImpl';
 // 100.
 // Anything else..
 ///////////////////////////////////////
-
-export const usernameIsBadWord = (username: string) => {
-  return badWords.includes(username.toLowerCase().trim()) || badWords.includes(username.toLowerCase().replace(/[0-9]/g, "").trim())
-}
 
 const createDisplayName = (user: DbInsertion<DbUser>): string => {
   const profileName = getNestedProperty(user, 'profile.name');
@@ -288,17 +283,6 @@ export type SocialMediaProfileField = keyof typeof SOCIAL_MEDIA_PROFILE_FIELDS;
 
 export type RateLimitReason = "moderator"|"lowKarma"|"downvoteRatio"|"universal"
 
-const validateName = (name: string | null, field: string) => {
-  if (!name) return;
-
-  if (usernameIsBadWord(name)) {
-    throw new SimpleValidationError({
-      message: "Sorry, that username isn't allowed. Please try another.",
-      data: { path: field }
-    })
-  }
-}
-
 /**
  * @summary Users schema
  * @type {Object}
@@ -317,7 +301,8 @@ const schema: SchemaType<DbUser> = {
         return user.services.twitter.screenName;
       }
     },
-    onUpdate: ({ document: user }) => {
+    onUpdate: async ({ document: user, context }) => {
+      await assertUsernameIsNotTaken(context.Users, user, user.username!)
       validateName(user.username, 'username');
     },
   },
