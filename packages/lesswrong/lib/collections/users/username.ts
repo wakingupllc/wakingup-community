@@ -1,6 +1,8 @@
 import {SimpleValidationError} from '../../vulcan-lib'
 import badWords from '../../badWords.json'
 
+export const usernameTakenError = 'Sorry, that username is already taken.'
+
 export const usernameIsBadWord = (username: string) => {
   return badWords.includes(username.toLowerCase().trim()) || badWords.includes(username.toLowerCase().replace(/[0-9]/g, '').trim())
 }
@@ -13,7 +15,7 @@ export const usernameIsTaken = async (userCollection: UsersCollection, currentUs
 export const assertUsernameIsNotTaken = async (userCollection: UsersCollection, currentUser: DbUser, username: string) => {
   if (await usernameIsTaken(userCollection, currentUser, username)) {
     throw new SimpleValidationError({
-      message: 'Sorry, that username is already taken.',
+      message: usernameTakenError,
       data: {path: 'username'},
     })
   }
