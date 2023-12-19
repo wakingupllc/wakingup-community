@@ -33,9 +33,10 @@ import {userFindOneByEmail} from "../commonQueries";
 import { hasDigests } from '../../lib/betas';
 import { addToSendgridList, removeFromSendgridList } from '../emails/sendgridListManagement';
 import { sendEmailSendgridTemplate } from '../emails/sendEmail';
-import { throwValidationError } from '../vulcan-lib';
+import {SimpleValidationError, throwValidationError} from '../vulcan-lib'
 import ElectionVotes from '../../lib/collections/electionVotes/collection';
 import { eaGivingSeason23ElectionName } from '../../lib/eaGivingSeason';
+import {usernameTakenError} from '../../lib/collections/users/username.ts'
 
 const MODERATE_OWN_PERSONAL_THRESHOLD = 50
 const TRUSTLEVEL1_THRESHOLD = 2000
@@ -559,7 +560,10 @@ getCollectionHooks("Users").updateBefore.add(async function UpdateDisplayName(da
       });
     }
     if (await Users.findOne({displayName: data.displayName})) {
-      throw new Error("This display name is already taken");
+      throw new SimpleValidationError({
+        message: usernameTakenError,
+        data: {path: 'displayName'},
+      })
     }
   }
   return data;
