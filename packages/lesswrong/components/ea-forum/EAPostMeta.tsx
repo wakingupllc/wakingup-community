@@ -3,6 +3,7 @@ import { Components, registerComponent } from "../../lib/vulcan-lib";
 import { InteractionWrapper } from "../common/useClickableCell";
 import { DateWithoutTime } from "../posts/PostsItemMeta";
 import classNames from "classnames";
+import {showReadingTimeSetting} from '../../lib/publicSettings.ts'
 
 const styles = (theme: ThemeType) => ({
   root: {
@@ -98,7 +99,7 @@ const EAPostMeta = ({post, useEventStyles, showAuthorTooltip = true, className, 
           {" · "}
           <PostsItemDate post={post} noStyles includeAgo />
         </span>
-        {(!post.fmCrosspost?.isCrosspost || post.fmCrosspost.hostedHere) &&
+        {showReadingTimeSetting.get() && (!post.fmCrosspost?.isCrosspost || post.fmCrosspost.hostedHere) &&
           <span className={classes.readTime}>
           {" · "}{post.readTimeMinutes || 1}m read
         </span>}
