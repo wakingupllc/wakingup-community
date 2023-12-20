@@ -4,9 +4,10 @@ import { decodeIntlError } from '../../lib/vulcan-lib/utils';
 import classNames from 'classnames';
 import { PostsListConfig, usePostsList } from './usePostsList';
 import FormattedMessage from '../../lib/vulcan-i18n/message';
+import { isGenericError } from '../../lib/vulcan-lib';
 
 const Error = ({error}: any) => <div>
-  <FormattedMessage id={error.id} values={{value: error.value}}/>{error.message}
+  <FormattedMessage id={error.id} values={{value: error.value}} html={isGenericError(error.message)}/>{error.message}
 </div>;
 
 const styles = (theme: ThemeType): JssStyles => ({
