@@ -25,7 +25,7 @@ const styles = (theme: ThemeType): JssStyles => ({
     marginLeft: 'auto',
   },
   message: {
-    backgroundColor: theme.palette.text.alwaysWhite,
+    backgroundColor: theme.palette.grey[200],
     paddingTop: theme.spacing.unit,
     paddingBottom: theme.spacing.unit,
     paddingLeft: theme.spacing.unit*1.5,
