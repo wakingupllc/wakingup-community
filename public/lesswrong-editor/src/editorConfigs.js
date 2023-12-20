@@ -132,7 +132,6 @@ const toolbarItems = [
 export const postEditorConfig = {
 	toolbar: {
 		items: toolbarItems,
-		shouldNotGroupWhenFull: true,
 	},
 	image: {
 		toolbar: [
