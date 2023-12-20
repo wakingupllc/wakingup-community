@@ -4,6 +4,8 @@ import { UserInputError } from 'apollo-server-errors';
 import { createError } from 'apollo-errors'
 import { GraphQLError } from 'graphql';
 
+export const GENERIC_ERROR_MESSAGE = 'Something went wrong. Please try again or email us at <a href="mailto:community@wakingup.com">community@wakingup.com</a>.';
+
 /*
 
 Get whatever word is contained between the first two double quotes
