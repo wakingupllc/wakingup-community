@@ -294,7 +294,7 @@ const EAPostsItem = ({
                   showIcons,
                 }}
                 read={isRead && !showReadCheckbox}
-                isLink={false}
+                isLink={true}
                 className={classes.title}
               />
               <div className={classes.meta}>
