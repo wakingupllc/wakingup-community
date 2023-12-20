@@ -272,7 +272,7 @@ addGraphQLResolvers({
           first_name: firstName,
           last_name: lastName,
           mapLocation,
-          slug: await Utils.getUnusedSlugByCollectionName('Users', slugify(username)),
+          slug: await Utils.getUnusedSlugByCollectionName('Users', slugify(username), true),
           subscribedToDigest: subscribeToDigest,
           disableUnsolicitedMessages,
           acceptedTos,
