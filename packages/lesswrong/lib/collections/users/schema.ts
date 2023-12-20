@@ -1110,6 +1110,7 @@ const schema: SchemaType<DbUser> = {
     canUpdate: [userOwnsAndInGroup('trustLevel1'), 'sunshineRegiment', 'admins'],
     canCreate: ['sunshineRegiment', 'admins'],
     optional: true,
+    hidden: true,
     label: "Banned Users (All)",
     control: 'FormUsersListEditor'
   },
@@ -1127,6 +1128,7 @@ const schema: SchemaType<DbUser> = {
     canUpdate: [userOwnsAndInGroup('canModeratePersonal'), 'sunshineRegiment', 'admins'],
     canCreate: ['sunshineRegiment', 'admins'],
     optional: true,
+    hidden: true,
     label: "Banned Users (Personal)",
     control: 'FormUsersListEditor',
     tooltip: "Users who are banned from commenting on your personal blogposts (will not affect posts promoted to frontpage)"
