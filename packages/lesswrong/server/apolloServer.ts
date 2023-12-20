@@ -49,7 +49,7 @@ import { hstsMiddleware } from './hsts';
 import { getClientBundle } from './utils/bundleUtils';
 import { isElasticEnabled } from './search/elastic/elasticSettings';
 import ElasticController from './search/elastic/ElasticController';
-import { shouldHideErrorDetailsFromUser } from './vulcan-lib';
+import { GENERIC_ERROR_MESSAGE, shouldHideErrorDetailsFromUser } from './vulcan-lib';
 import type { ApolloServerPlugin, GraphQLRequestContext, GraphQLRequestListener } from 'apollo-server-plugin-base';
 import { closePerfMetric, openPerfMetric, perfMetricMiddleware } from './perfMetrics';
 import { performanceMetricLoggingEnabled } from '../lib/publicSettings';
@@ -154,7 +154,7 @@ export function startWebserver() {
     let message;
 
     if (shouldHideErrorDetailsFromUser(e)) {
-      message = `Something went wrong. Please try again later or contact us for assistance.`;
+      message = GENERIC_ERROR_MESSAGE;
     } else {
       message = formattedError.message;
     }

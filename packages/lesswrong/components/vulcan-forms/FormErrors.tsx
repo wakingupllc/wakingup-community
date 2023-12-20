@@ -4,7 +4,10 @@ import classNames from 'classnames';
 
 const styles = (theme: ThemeType): JssStyles => ({
   root: {
-    ...theme.typography.errorStyle
+    ...theme.typography.errorStyle,
+    '& a': {
+      textDecoration: "underline",
+    }
   }
 })
 
