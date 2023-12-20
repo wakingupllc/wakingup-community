@@ -112,24 +112,26 @@ const embedConfig = {
 	]
 }
 
+const toolbarItems = [
+	'|',
+	'heading',
+	'|',
+	'bold',
+	'italic',
+	'strikethrough',
+	'|',
+	'link',
+	'|',
+	'blockQuote',
+	'bulletedList',
+	'numberedList',
+	'|',
+	'imageUpload',
+]
+
 export const postEditorConfig = {
 	toolbar: {
-		items: [
-			'|',
-			'heading',
-			'|',
-			'bold',
-			'italic',
-			'strikethrough',
-			'|',
-			'link',
-			'|',
-			'blockQuote',
-			'bulletedList',
-			'numberedList',
-			'|',
-			'imageUpload',
-		],
+		items: toolbarItems,
 		shouldNotGroupWhenFull: true,
 	},
 	image: {
@@ -152,22 +154,7 @@ export const postEditorConfig = {
 };
 
 export const commentEditorConfig = {
-	toolbar: [
-		'heading',
-		'|',
-		'bold',
-		'italic',
-		'strikethrough',
-		'|',
-		'link',
-		'|',
-		'blockQuote',
-		'bulletedList',
-		'numberedList',
-		'|',
-		'math',
-		'footnote',
-	],
+	toolbar: toolbarItems,
 	image: {
 		toolbar: [
 			'imageTextAlternative'
