@@ -167,3 +167,5 @@ export const showSuggestionToCommentIfNoCommentsSetting = new DatabasePublicSett
 export const postCommentCountTruncateThresholdSetting = new DatabasePublicSetting<number>('post.commentCountTruncateThreshold', 70);
 export const showConversationOptionsSetting = new DatabasePublicSetting<boolean>('conversation.showOptions', true);
 export const defaultCommentOrderSetting = new DatabasePublicSetting<string>('post.defaultCommentOrder', 'postCommentsTop');
+// Null means requests are disabled
+export const requestFeedbackKarmaLevelSetting = new DatabasePublicSetting<number | null>('post.requestFeedbackKarmaLevel', 100);
