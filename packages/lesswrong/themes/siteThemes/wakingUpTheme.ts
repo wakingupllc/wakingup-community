@@ -431,6 +431,15 @@ export const wakingUpTheme: SiteThemeSpecification = {
           contentPreviewContainer: {
             padding: "15px 50px",
           }
+        },
+        MessageItem: {
+          messageBody: {
+            '& a': {
+              fontWeight: 700,
+              textDecoration: 'underline',
+              color: "unset",
+            }
+          },
         }
       }
     }
