@@ -107,11 +107,11 @@ const styles = (theme: ThemeType) => ({
     justifyContent: "space-between",
     fontFamily: theme.palette.fonts.sansSerifStack,
     color: theme.palette.grey[1000],
-    fontSize: "1.4rem",
-    fontWeight: 600,
     padding: 16,
   },
   headerText: {
+    fontSize: "1.4rem",
+    fontWeight: 600,
     overflow: "hidden",
     display: "-webkit-box",
     "-webkit-box-orient": "vertical",
@@ -166,6 +166,10 @@ const styles = (theme: ThemeType) => ({
     color: theme.palette.text.alwaysWhite,
     fontSize: 14,
   },
+  linkText: {
+    textDecoration: "underline",
+    cursor: "pointer",
+  },
 });
 
 const FriendlyInbox = ({
@@ -202,7 +206,7 @@ const FriendlyInbox = ({
     });
   }, [isModInbox, openDialog]);
 
-  const { FriendlyInboxNavigation, ConversationContents, ForumIcon, ConversationDetails, EAButton } = Components;
+  const { FriendlyInboxNavigation, ConversationContents, ForumIcon, ConversationDetails, EAButton, Typography } = Components;
 
   const conversationsResult: UseMultiResult<"ConversationsList"> = useMulti({
     terms,
@@ -257,7 +261,7 @@ const FriendlyInbox = ({
         >
           <div className={classes.columnHeader}>
             <div className={classes.headerText}>All messages</div>
-            <ForumIcon onClick={openNewConversationDialog} icon="PencilSquare" className={classes.actionIcon} />
+            <Typography variant={"body2"}  className={classes.linkText} onClick={openNewConversationDialog}>New Message</Typography>
           </div>
           <div className={classes.navigation}>
             <FriendlyInboxNavigation
