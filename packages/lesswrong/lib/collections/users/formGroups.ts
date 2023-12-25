@@ -78,7 +78,7 @@ export const formGroups: Partial<Record<string, FormGroupType>> = {
   privateMessaging: {
     order: 130,
     name: "privateMessaging",
-    label: preferredHeadingCase("Private Messaging"),
+    label: preferredHeadingCase("Message Requests"),
     startCollapsed: true,
   },
   deactivate: {
