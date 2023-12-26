@@ -1378,7 +1378,7 @@ const schema: SchemaType<DbUser> = {
     hidden: true, // re-enable when tags/topics are re-enabled after launch
   },
   notificationPrivateMessage: {
-    label: "Private messages",
+    label: "Direct messages",
     ...notificationTypeSettingsField({ channel: "both" }),
   },
   notificationSharedWithMe: {
@@ -3081,7 +3081,7 @@ const schema: SchemaType<DbUser> = {
     defaultValue: false,
     canRead: ['guests'],
     canUpdate: [userOwns, 'admins'],
-    label: 'Disable new private message requests ',
+    label: 'Disable new direct message requests',
     group: formGroups.privateMessaging,
   },
 };

@@ -295,10 +295,10 @@ const WUUserOnboarding: React.FC<WUUserOnboardingProps> = ({currentUser, classes
 
       <div className={classes.section}>
         <Typography variant="display1" className={classes.sectionHeadingText} gutterBottom>
-          Control private messages
+          Manage message requests
         </Typography>
         <Typography variant="body2" className={classes.sectionHelperText}>
-          Decide whether you want to receive private messages from other members.
+          Decide whether you want to disable new direct message requests from other members.
         </Typography>
         <FormControlLabel
           control={
@@ -309,7 +309,7 @@ const WUUserOnboarding: React.FC<WUUserOnboardingProps> = ({currentUser, classes
           }
           label={
             <Typography variant="body2">
-              Disable new private message requests
+              Disable new direct message requests
             </Typography>}
         />
       </div>
