@@ -15,7 +15,10 @@ import {
 import type {AddMiddlewareType} from '../apolloServer'
 import express from 'express'
 import {cloudinaryPublicIdFromUrl, moveToCloudinary} from '../scripts/convertImagesToCloudinary'
-import {devLoginsAllowedSetting, wuDefaultProfileImageCloudinaryIdSetting} from '../../lib/publicSettings.ts'
+import {
+  devWakingUpCodeSetting,
+  wuDefaultProfileImageCloudinaryIdSetting,
+} from '../../lib/publicSettings.ts'
 import { sendEmailSendgridTemplate } from '../emails/sendEmail.ts'
 import moment from 'moment'
 import { CODE_ENTRY_LIMIT, CODE_ENTRY_LIMIT_EXCEEDED_MSG, CODE_REQUEST_LIMIT_EXCEEDED_MSG } from '../../lib/collections/users/constants.ts'
@@ -380,7 +383,7 @@ const authenticationResolvers = {
       assertCodeEntryNotLocked(user);
 
       const validCode = user && code?.length > 0 && wuProps(user)?.oneTimeCode === code;
-      const devCodeOkay = devLoginsAllowedSetting.get() && user && code === '1234';
+      const devCodeOkay = devWakingUpCodeSetting.get() && user && code === devWakingUpCodeSetting.get()
 
       if (validCode || devCodeOkay) {
         await updateUserLoginProps(user, null, true)
