@@ -3,21 +3,13 @@
 
 import { addRoute } from "../vulcan-lib";
 
-   export const wuRoutes = () => {
-    // overrideRoute(
-    //   {
-    //     path:'/login',
-    //     name: 'Login',
-    //     componentName: "NewForumLoginPage",
-    //   }
-    // );
-    addRoute(
-      {
-        path:'/code',
-        name: 'wuCodeEntry',
-        componentName: 'WakingUpHome',
-        enableResourcePrefetch: true,
-      }
-    );
-  };
-  
+export const wuRoutes = () => {
+  addRoute(
+    {
+      path:'/code',
+      name: 'wuCodeEntry',
+      componentName: 'WakingUpHome',
+      enableResourcePrefetch: true,
+    }
+  );
+};
