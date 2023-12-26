@@ -440,6 +440,11 @@ export const wakingUpTheme: SiteThemeSpecification = {
               color: "unset",
             }
           },
+        },
+        NewConversationDialog: {
+          searchHelp: {
+            display: 'none'
+          },
         }
       }
     }
