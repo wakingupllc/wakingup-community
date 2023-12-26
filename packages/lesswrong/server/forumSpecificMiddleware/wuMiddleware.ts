@@ -32,7 +32,7 @@ const authMessageWithEmail = (email: string) => `Sorry, the email ${email} doesn
 function urlDisallowedForLoggedOutUsers(req: express.Request) {
   if (req.user) return false;
 
-  const whiteListPaths = ['/', '/graphql', '/analyticsEvent', '/browserconfig.xml', '/site.webmanifest']
+  const whiteListPaths = ['/', '/code', '/graphql', '/analyticsEvent', '/browserconfig.xml', '/site.webmanifest']
   if (whiteListPaths.includes(req.path)) return false
   if (req.path.startsWith('/js/bundle.js')) return false
   if (req.path.startsWith('/allStyles')) return false

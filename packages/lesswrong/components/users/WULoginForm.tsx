@@ -4,7 +4,7 @@ import { gql, useMutation } from '@apollo/client';
 import classNames from 'classnames';
 import OTPInput, { OTPInputMethods } from './OTPInput';
 import SimpleSchema from 'simpl-schema';
-import { cdnAssetUrl } from '../../lib/routeUtil';
+import { cdnAssetUrl, useLocation } from '../../lib/routeUtil';
 import { devLoginsAllowedSetting } from '../../lib/publicSettings';
 
 const styles = (theme: ThemeType): JssStyles => ({
@@ -164,8 +164,13 @@ type WULoginFormProps = {
   classes: ClassesType
 }
 
-export const WULoginForm = ({ startingState = "requestCode", classes }: WULoginFormProps) => {
-  const [email, setEmail] = useState<string>("")
+export const WULoginForm = ({ classes }: WULoginFormProps) => {
+  const { pathname, location: {search} } = useLocation();
+  const params = new URLSearchParams(search);
+  const emailParam = params.get('email') || '';
+  const startingState = (pathname === '/code' && emailParam !== '') ? 'enterCode' : 'requestCode';
+
+  const [email, setEmail] = useState<string>(params.get('email') || '')
   const [oneTimeCode, setOneTimeCode] = useState<string>("")
   const [currentAction, setCurrentAction] = useState<possibleActions>(startingState)
   const [requestAnotherCode, setRequestAnotherCode] = useState<boolean>(false)
