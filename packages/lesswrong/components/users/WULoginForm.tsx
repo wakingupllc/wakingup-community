@@ -5,7 +5,7 @@ import classNames from 'classnames';
 import OTPInput, { OTPInputMethods } from './OTPInput';
 import SimpleSchema from 'simpl-schema';
 import { cdnAssetUrl } from '../../lib/routeUtil';
-import { devLoginsAllowedSetting } from '../../lib/publicSettings';
+import {devWakingUpCodeSetting} from '../../lib/publicSettings'
 
 const styles = (theme: ThemeType): JssStyles => ({
   root: {
@@ -253,7 +253,7 @@ export const WULoginForm = ({ startingState = "requestCode", classes }: WULoginF
       </>}
       {currentAction === "enterCode" && <>
         <p className={classes.instructions}>We have sent a four-digit verification code to {email}. Please enter it below.</p>
-        {devLoginsAllowedSetting.get() && <p>(Dev server only: you can use the test code: 1234)</p>}
+        {devWakingUpCodeSetting.get() && <p>(Local Dev server only: you can use the test code: {devWakingUpCodeSetting.get()})</p>}
         <OTPInput
           ref={otpRef}
           inputStyle={classes.otpInput}
