@@ -452,6 +452,23 @@ getCollectionHooks('Users').editAsync.add(async function subscribeToWelcomeEmail
   }
 })
 
+if (isWakingUp) {
+  getCollectionHooks('Users').editAsync.add(async function removeDeletedUserFromEmails(newUser: DbUser, oldUser: DbUser) {
+    const sendgridWelcomeListId = sendgridWelcomeListIdSetting.get()!
+    const sendgridDigestListId = sendgridDigestListIdSetting.get()!
+    if (newUser.deleted && !oldUser.deleted) {
+      void removeFromSendgridList(newUser, sendgridWelcomeListId)
+      void removeFromSendgridList(newUser, sendgridDigestListId)
+    } else if (!newUser.deleted && oldUser.deleted) {
+      if (newUser.subscribedToWelcomeEmails) {
+        void addToSendgridList(newUser, sendgridWelcomeListId)
+      }
+      if (newUser.subscribedToDigest) {
+        void addToSendgridList(newUser, sendgridDigestListId)
+      }
+    }
+  })
+}
 
 const welcomeMessageDelayer = new EventDebouncer({
   name: "welcomeMessageDelay",
