@@ -513,7 +513,7 @@ ensureIndex(Posts,{ "tagRelevance.$**" : 1 } )
 
 
 Posts.addView("top", (terms: PostsViewTerms) => ({
-  options: {sort: setStickies(sortings.top, terms)}
+  options: {sort: sortings.top}
 }))
 
 Posts.addView("topThisWeek", (terms: PostsViewTerms) => {
@@ -521,7 +521,7 @@ Posts.addView("topThisWeek", (terms: PostsViewTerms) => {
 
   return {
     selector: { createdAt: { $gte: oneWeekAgo } },
-    options: {sort: setStickies(sortings.top, terms)}
+    options: {sort: sortings.top}
   };
 });
 // unused on LW. If EA forum is also not using we can delete.
@@ -557,7 +557,7 @@ ensureIndex(Posts,
 );
 
 Posts.addView("new", (terms: PostsViewTerms) => ({
-  options: {sort: setStickies(sortings.new, terms)}
+  options: {sort: sortings.new}
 }))
 
 Posts.addView("recentComments", (terms: PostsViewTerms) => ({
