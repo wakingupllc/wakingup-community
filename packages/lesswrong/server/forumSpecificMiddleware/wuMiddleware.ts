@@ -53,10 +53,11 @@ export const redirectLoggedOutMiddleware = (req: express.Request, res: express.R
   }
 }
 
-async function logoutDeletedUser(req: AnyBecauseTodo, res: AnyBecauseTodo, next: AnyBecauseTodo) {
+async function logoutDeletedUser(req: express.Request, res: express.Response, next: express.NextFunction) {
   const loginToken = getCookieFromReq(req, 'loginToken')
   const user = await getUser(loginToken)
   if (user?.deleted) {
+    req.logout();
     res.cookie('loginToken', '', { expires: new Date(0) });
     res.redirect('/');
     return;

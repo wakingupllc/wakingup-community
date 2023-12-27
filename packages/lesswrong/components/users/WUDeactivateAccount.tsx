@@ -4,7 +4,7 @@ import { useCurrentUser } from '../common/withUser'
 
 const WUDeactivateAccount = (props: any)  => {
   const currentUser = useCurrentUser()
-  let { label, ...otherProps } = props;
+  let { ...otherProps } = props;
 
   if (!currentUser?.isAdmin) {
     return <div>Email community@wakingup.com if you'd like to deactivate your Waking Up Community account.</div>
