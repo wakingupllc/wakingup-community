@@ -561,6 +561,7 @@ Posts.addView("new", (terms: PostsViewTerms) => ({
 }))
 
 Posts.addView("recentComments", (terms: PostsViewTerms) => ({
+  selector: { commentCount: { $gt: 0 } },
   options: {sort: sortings.recentComments}
 }))
 
