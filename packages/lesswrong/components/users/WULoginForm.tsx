@@ -1,4 +1,4 @@
-import { Components, registerComponent } from '../../lib/vulcan-lib';
+import { Components, registerComponent, isGenericError } from '../../lib/vulcan-lib';
 import React, { useState, useRef, useEffect } from 'react';
 import { gql, useMutation } from '@apollo/client';
 import classNames from 'classnames';
@@ -6,6 +6,7 @@ import OTPInput, { OTPInputMethods } from './OTPInput';
 import SimpleSchema from 'simpl-schema';
 import { cdnAssetUrl } from '../../lib/routeUtil';
 import {devWakingUpCodeSetting} from '../../lib/publicSettings'
+import FormattedMessage from '../../lib/vulcan-i18n/message';
 
 const styles = (theme: ThemeType): JssStyles => ({
   root: {
@@ -57,6 +58,9 @@ const styles = (theme: ThemeType): JssStyles => ({
     [theme.breakpoints.down('sm')]: {
       marginLeft: 0,
       marginRight: 0
+    },
+    "& a": {
+      color: theme.palette.error.main,
     }
   },
   options: {
@@ -272,7 +276,8 @@ export const WULoginForm = ({ startingState = "requestCode", classes }: WULoginF
           value={currentActionToButtonText[currentAction]}
           disabled={oneTimeCode.length !== 4} />
       </>}
-      {errorMessage() && <div className={classes.error}>{errorMessage()}
+      {errorMessage() && <div className={classes.error}>
+        <FormattedMessage id={errorMessage()} defaultMessage={errorMessage()} html={isGenericError(errorMessage())} />
         {showSendNewCodeLink() && <>&nbsp;<a href="#" onClick={() => { void requestNewCode() }}>Send a new code</a>.</>}
       </div>}
       {(error || currentAction === "enterCode") && <a href="/" className={classes.returnToLogin}>Return to login</a>}
