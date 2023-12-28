@@ -4,13 +4,15 @@ import { SENT_MODERATOR_MESSAGE } from '../../lib/collections/moderatorActions/s
 import { userIsAdmin } from '../../lib/vulcan-users';
 import { loadByIds } from '../../lib/loaders';
 import { getCollectionHooks } from '../mutationCallbacks';
-import { createMutator, updateMutator } from '../vulcan-lib';
+import { UserFacingError, createMutator, updateMutator } from '../vulcan-lib';
 import { previousCorrespondents } from '../../lib/collections/users/helpers';
 
 getCollectionHooks("Messages").newValidate.add(function NewMessageEmptyCheck (message: DbMessage) {
   const { data } = (message.contents && message.contents.originalContents) || {}
   if (!data) {
-    throw new Error("You cannot send an empty message");
+    throw new UserFacingError({
+      message: "You cannot send an empty message"
+    })
   }
   return message;
 });
@@ -32,7 +34,9 @@ getCollectionHooks("Messages").createBefore.add(async function checkMessagePermi
     const participant = await Users.findOne(participantId);
     if (!participant) throw new Error("Recipient doesn't exist");
     if (participant.disableUnsolicitedMessages && !previousParticipants.has(participantId)) {
-      throw new Error(`You cannot send a message to this user: ${participant.username}.`);
+      throw new UserFacingError({
+        message: `You cannot send a message to this user: ${participant.username}.`
+      })
     }
   }
 
