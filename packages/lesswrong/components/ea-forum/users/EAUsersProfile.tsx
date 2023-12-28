@@ -466,7 +466,7 @@ const EAUsersProfile = ({terms, slug, subscriptionsEnabled = true, postSortingEn
         <div className={classNames(classes.section, classes.mainSection)}>
           <EAUsersProfileImage user={user} />
           <Typography variant="headline" className={classNames(classes.username, {[classes.deletedUsername]: user.deleted})}>
-            {username}{user.deleted && <span className={classes.accountDeletedText}>(account deleted)</span>}
+            {username}{user.deleted && <span className={classes.accountDeletedText}>(Account Deactivated)</span>}
             {showDonatedFlair(user) &&
               <LWTooltip
                 placement="bottom-start"
