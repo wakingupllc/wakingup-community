@@ -14,10 +14,10 @@ const ExpandedPostsSearchHit = ({hit, showKarma = showKarmaSetting.get, classes}
 }) => {
 
   const {PostsItem} = Components
-  const post: AlgoliaPost = hit
+  const post: SearchPost = hit
 
   /**
-   * Very hacky way to reuse PostsItem by reshaping the AlgoliaPost into a Post (with a lot of missing fields).
+   * Very hacky way to reuse PostsItem by reshaping the SearchPost into a Post (with a lot of missing fields).
    * context: https://wakingup-vlad.slack.com/archives/C05MHUVM2SY/p1698969015310619
    */
   return <PostsItem
@@ -35,7 +35,7 @@ const ExpandedPostsSearchHit = ({hit, showKarma = showKarmaSetting.get, classes}
   />
 }
 
-const getWordCount = (post: AlgoliaPost) => 
+const getWordCount = (post: SearchPost) => 
   post.body?.trim()?.split(/\s+/g)?.length ?? 0
 
 const ExpandedPostsSearchHitComponent = registerComponent('ExpandedPostsSearchHit', ExpandedPostsSearchHit, {styles})

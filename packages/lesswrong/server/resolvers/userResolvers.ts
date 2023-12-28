@@ -304,9 +304,6 @@ addGraphQLResolvers({
       {section, expanded}: {section: string, expanded: boolean},
       {currentUser, repos}: ResolverContext,
     ) {
-      if (!Users.isPostgres()) {
-        throw new Error("Expanding frontpage sections requires Postgres");
-      }
       if (!currentUser) {
         throw new Error("You must login to do this");
       }
@@ -637,7 +634,7 @@ defineQuery({
       throw new Error('User must be logged in to get recommended users');
     }
 
-    const upvotedUsers = await context.repos.users.getUsersTopUpvotedUsers(currentUser, 35, 720)
+    const upvotedUsers = await context.repos.users.getUsersTopUpvotedUsers(currentUser, 35, 30)
     const recommendedUsers = await context.repos.users.getDialogueRecommendedUsers(currentUser._id, upvotedUsers);
 
     // Shuffle and limit the list to 2 users

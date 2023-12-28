@@ -23,7 +23,7 @@ import {
 import { forumSelect } from '../../forumTypeUtils';
 import * as _ from 'underscore';
 import { localGroupTypeFormOptions } from '../localgroups/groupTypes';
-import { documentIsNotDeleted, userOverNKarmaOrApproved, userOwns, userOwnsAndOnLW } from '../../vulcan-users/permissions';
+import { documentIsNotDeleted, userOverNKarmaOrApproved, userOwns } from '../../vulcan-users/permissions';
 import { userCanCommentLock, userCanModeratePost } from '../users/helpers';
 import { sequenceGetNextPostID, sequenceGetPrevPostID, sequenceContainsPost, getPrevPostIdFromPrevSequence, getNextPostIdFromNextSequence } from '../sequences/helpers';
 import { userOverNKarmaFunc } from "../../vulcan-users";
@@ -163,7 +163,7 @@ const schemaDefaultValueFmCrosspost = schemaDefaultValue({
   isCrosspost: false,
 })
 
-const schema: SchemaType<DbPost> = {
+const schema: SchemaType<"Posts"> = {
   // Timestamp of post first appearing on the site (i.e. being approved)
   postedAt: {
     type: Date,
@@ -635,39 +635,10 @@ const schema: SchemaType<DbPost> = {
     graphQLtype: '[PostRelation!]!',
     canRead: ['guests'],
     resolver: async (post: DbPost, args: void, context: ResolverContext) => {
-      const { Posts, currentUser, repos } = context;
-      let postRelations: DbPostRelation[] = [];
-      if (Posts.isPostgres()) {
-        postRelations = await repos.postRelations.getPostRelationsByPostId(post._id);
-      } else {
-        postRelations = await Posts.aggregate([
-          { $match: { _id: post._id }},
-          { $graphLookup: {
-            from: "postrelations",
-            as: "relatedQuestions",
-            startWith: post._id,
-            connectFromField: "targetPostId",
-            connectToField: "sourcePostId",
-            maxDepth: 3
-          }
-          },
-          {
-            $project: {
-              relatedQuestions: 1
-            }
-          },
-          {
-            $unwind: "$relatedQuestions"
-          },
-          {
-            $replaceRoot: {
-              newRoot: "$relatedQuestions"
-            }
-          }
-        ]).toArray()
-      }
-     if (!postRelations || postRelations.length < 1) return []
-     return await accessFilterMultiple(currentUser, PostRelations, postRelations, context);
+      const {currentUser, repos} = context;
+      const postRelations = await repos.postRelations.getPostRelationsByPostId(post._id);
+      if (!postRelations || postRelations.length < 1) return []
+      return await accessFilterMultiple(currentUser, PostRelations, postRelations, context);
     }
   }),
   'targetPostRelations.$': {
@@ -990,7 +961,7 @@ const schema: SchemaType<DbPost> = {
 
   // Tell search engines not to index this post. Useful for old posts that were
   // from a time with different quality standards. Posts will still be findable
-  // in algolia. See PostsPage and HeadTags for their use of this field and the
+  // in elastic. See PostsPage and HeadTags for their use of this field and the
   // noIndexLowKarma migration for the setting of it.
   noIndex: {
     type: Boolean,
@@ -1078,7 +1049,7 @@ const schema: SchemaType<DbPost> = {
     type: "ReviewVote",
     graphQLtype: "ReviewVote",
     canRead: ['members'],
-    resolver: async (post: DbPost, args: void, context: ResolverContext): Promise<DbReviewVote|null> => {
+    resolver: async (post: DbPost, args: void, context: ResolverContext): Promise<Partial<DbReviewVote>|null> => {
       const { ReviewVotes, currentUser } = context;
       if (!currentUser) return null;
       const votes = await getWithLoader(context, ReviewVotes,
@@ -1538,7 +1509,7 @@ const schema: SchemaType<DbPost> = {
       type: "Collection",
       // TODO: Make sure we run proper access checks on this. Using slugs means it doesn't
       // work out of the box with the id-resolver generators
-      resolver: async (post: DbPost, args: void, context: ResolverContext): Promise<DbCollection|null> => {
+      resolver: async (post: DbPost, args: void, context: ResolverContext): Promise<Partial<DbCollection>|null> => {
         if (!post.canonicalCollectionSlug) return null;
         const collection = await context.Collections.findOne({slug: post.canonicalCollectionSlug})
         return await accessFilterSingle(context.currentUser, context.Collections, collection, context);
@@ -2517,7 +2488,7 @@ const schema: SchemaType<DbPost> = {
       foreignCollectionName: "Comments",
       foreignTypeName: "comment",
       foreignFieldName: "postId",
-      filterFn: comment => !comment.deleted && !comment.rejected && !comment.debateResponse
+      filterFn: comment => !comment.deleted && !comment.rejected && !comment.debateResponse && !comment.authorIsUnreviewed,
     }),
     canRead: ['guests'],
   },

@@ -1,7 +1,7 @@
 import {
-  AlgoliaIndexCollectionName,
-  algoliaIndexedCollectionNames,
-} from "../../../lib/search/algoliaUtil";
+  SearchIndexCollectionName,
+  searchIndexedCollectionNames,
+} from "../../../lib/search/searchUtil";
 import { getCollectionHooks } from "../../mutationCallbacks";
 import ElasticClient from "./ElasticClient";
 import ElasticExporter from "./ElasticExporter";
@@ -9,7 +9,7 @@ import { isElasticEnabled } from "./elasticSettings";
 import {Comments} from '../../../lib/collections/comments'
 
 export const elasticSyncDocument = (
-  collectionName: AlgoliaIndexCollectionName,
+  collectionName: SearchIndexCollectionName,
   documentId: string,
 ) => {
   try {
@@ -23,7 +23,7 @@ export const elasticSyncDocument = (
 }
 
 if (isElasticEnabled) {
-  for (const collectionName of algoliaIndexedCollectionNames) {
+  for (const collectionName of searchIndexedCollectionNames) {
     const callback = ({_id}: DbObject) => elasticSyncDocument(collectionName, _id);
     getCollectionHooks(collectionName).createAfter.add(callback);
     getCollectionHooks(collectionName).updateAfter.add(callback);

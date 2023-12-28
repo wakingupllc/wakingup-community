@@ -79,6 +79,18 @@ CREATE TABLE "Chapters" (
     "legacyData" jsonb
 );
 
+-- Schema for "CkEditorUserSessions", hash: c2661309fbf1ff8da6742725ec19ffdc
+CREATE TABLE "CkEditorUserSessions" (
+    _id varchar(27) PRIMARY KEY,
+    "documentId" text NOT NULL,
+    "userId" text NOT NULL,
+    "endedAt" timestamptz,
+    "endedBy" text,
+    "schemaVersion" double precision NOT NULL DEFAULT 1,
+    "createdAt" timestamptz DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    "legacyData" jsonb
+);
+
 -- Schema for "ClientIds", hash: dfb103acdd47efe3095b6b37647334f8
 CREATE TABLE "ClientIds" (
     _id varchar(27) PRIMARY KEY,
@@ -262,7 +274,7 @@ CREATE TABLE "DialogueChecks" (
     "legacyData" jsonb
 );
 
--- Schema for "DialogueMatchPreferences", hash: 325410e7914d56531d839fc137cf22f0
+-- Schema for "DialogueMatchPreferences", hash: 76d8a80190a5d81b2ccef5cd69ebcabf
 CREATE TABLE "DialogueMatchPreferences" (
     _id varchar(27) PRIMARY KEY,
     "dialogueCheckId" varchar(27) NOT NULL,
@@ -271,7 +283,9 @@ CREATE TABLE "DialogueMatchPreferences" (
     "syncPreference" text NOT NULL,
     "asyncPreference" text NOT NULL,
     "formatNotes" text NOT NULL DEFAULT '',
+    "calendlyLink" text,
     "generatedDialogueId" text,
+    "deleted" bool NOT NULL DEFAULT false,
     "schemaVersion" double precision NOT NULL DEFAULT 1,
     "createdAt" timestamptz DEFAULT CURRENT_TIMESTAMP NOT NULL,
     "legacyData" jsonb
@@ -1229,6 +1243,7 @@ CREATE TABLE "Users" (
     "notificationDebateReplies" jsonb NOT NULL DEFAULT '{"channel":"onsite","batchingFrequency":"realtime","timeOfDayGMT":1,"dayOfWeekGMT":"Monday"}' ::jsonb,
     "notificationDialogueMatch" jsonb NOT NULL DEFAULT '{"channel":"both","batchingFrequency":"realtime","timeOfDayGMT":1,"dayOfWeekGMT":"Monday"}' ::jsonb,
     "notificationNewDialogueChecks" jsonb NOT NULL DEFAULT '{"channel":"onsite","batchingFrequency":"realtime","timeOfDayGMT":1,"dayOfWeekGMT":"Monday"}' ::jsonb,
+    "notificationYourTurnMatchForm" jsonb NOT NULL DEFAULT '{"channel":"onsite","batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"}' ::jsonb,
     "hideDialogueFacilitation" bool NOT NULL DEFAULT false,
     "revealChecksToAdmins" bool NOT NULL DEFAULT false,
     "optedInToDialogueFacilitation" bool NOT NULL DEFAULT false,
@@ -1236,6 +1251,7 @@ CREATE TABLE "Users" (
     "showMyDialogues" bool NOT NULL DEFAULT true,
     "showMatches" bool NOT NULL DEFAULT true,
     "showRecommendedPartners" bool NOT NULL DEFAULT true,
+    "hideActiveDialogueUsers" bool NOT NULL DEFAULT false,
     "karmaChangeNotifierSettings" jsonb NOT NULL DEFAULT '{"updateFrequency":"daily","timeOfDayGMT":11,"dayOfWeekGMT":"Saturday","showNegativeKarma":false}' ::jsonb,
     "karmaChangeLastOpened" timestamptz,
     "karmaChangeBatchStart" timestamptz,

@@ -74,7 +74,7 @@ const ExpandedCommentsSearchHit = ({hit, showKarma = showKarmaSetting.get, class
 }) => {
   const navigate = useNavigate();
   const { FormatDate, UserNameDeleted } = Components
-  const comment: AlgoliaComment = hit
+  const comment: SearchComment = hit
 
   const url = getCommentSearchHitUrl(comment)  
   const handleClick = () => {

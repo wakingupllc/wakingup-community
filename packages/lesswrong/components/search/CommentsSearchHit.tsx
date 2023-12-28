@@ -50,7 +50,7 @@ export const getCommentSearchHitUrl = (comment: AlgoliaComment) => {
 }
 
 const CommentsSearchHit = ({hit, clickAction, classes, showIcon=false}: SearchHitComponentProps) => {
-  const comment = (hit as AlgoliaComment);
+  const comment = (hit as SearchComment);
   const { LWTooltip } = Components
   const url = getCommentSearchHitUrl(comment)
 
