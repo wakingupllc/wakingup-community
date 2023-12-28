@@ -176,7 +176,7 @@ getCollectionHooks("Users").updateAsync.add(function updateUserMayTriggerReview(
 /**
  * Waking Up sends a confirmation email to users when they manually deactivate their own account.
  */
-getCollectionHooks("Users").updateAsync.add(function sendDeactivationConfirmationEmail({oldDocument, newDocument, currentUser}: UpdateCallbackProperties<DbUser>) {
+getCollectionHooks("Users").updateAsync.add(function sendDeactivationConfirmationEmail({oldDocument, newDocument, currentUser}: UpdateCallbackProperties<"Users">) {
   if (!isWakingUp) return
   if (!oldDocument.deleted && newDocument.deleted && currentUser?._id === newDocument._id) {
     const sendgridData = {

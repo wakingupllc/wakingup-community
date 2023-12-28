@@ -34,7 +34,7 @@ const isLeftClick = (event: React.MouseEvent): boolean => {
   return event.button === 0 && !event.ctrlKey && !event.metaKey;
 }
 
-export const getCommentSearchHitUrl = (comment: AlgoliaComment) => {
+export const getCommentSearchHitUrl = (comment: SearchComment) => {
   if (comment.postId && comment.postSlug) {
     return `${postGetPageUrl({
       _id: comment.postId ?? '',

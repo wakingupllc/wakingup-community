@@ -1,5 +1,5 @@
 /**
- * Generated on 2023-11-09T01:02:14.109Z by `yarn makemigrations`
+ * Generated on 2023-12-28T02:21:19.444Z by `yarn makemigrations`
  * The following schema changes were detected:
  * -------------------------------------------
  * ***Diff too large to display***
@@ -11,16 +11,12 @@
  * - [ ] Uncomment `acceptsSchemaHash` below
  * - [ ] Run `yarn acceptmigrations` to update the accepted schema hash (running makemigrations again will also do this)
  */
-export const acceptsSchemaHash = 'f23d5b34694ce7518a560c1b61f003d9'
-
-import Users from '../../lib/collections/users/collection'
-import {addField, dropField} from './meta/utils'
-
+export const acceptsSchemaHash = "1c14551841de1f4a7151ccf06aff5242";
 
 export const up = async ({db}: MigrationContext) => {
-  await addField(db, Users, 'subscribedToWelcomeEmails')
+  // noop
 }
 
 export const down = async ({db}: MigrationContext) => {
-  await dropField(db, Users, 'subscribedToWelcomeEmails')
+  // noop
 }

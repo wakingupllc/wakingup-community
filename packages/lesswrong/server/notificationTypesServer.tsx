@@ -2,7 +2,12 @@ import React from 'react';
 import { Components } from '../lib/vulcan-lib/components';
 import { makeAbsolute, getSiteUrl, combineUrls } from '../lib/vulcan-lib/utils';
 import { Posts } from '../lib/collections/posts/collection';
-import { postGetPageUrl, postGetAuthorName, postGetEditUrl } from '../lib/collections/posts/helpers';
+import {
+  postGetPageUrl,
+  postGetAuthorName,
+  postGetEditUrl,
+  PostsMinimumForGetPageUrl,
+} from '../lib/collections/posts/helpers'
 import { Comments } from '../lib/collections/comments/collection';
 import { Localgroups } from '../lib/collections/localgroups/collection';
 import { Messages } from '../lib/collections/messages/collection';
@@ -193,7 +198,7 @@ export const NewCommentNotification = serverRegisterNotificationType({
       {title: true}
     ).fetch();
     const posts = await accessFilterMultiple(user, Posts, postsRaw, null);
-    const postsById = keyBy(posts, post => post._id)
+    const postsById = keyBy(posts, (post: DbPost) => post._id)
     
     // Load commenters
     const commentersRaw = await Users.find(
@@ -202,11 +207,11 @@ export const NewCommentNotification = serverRegisterNotificationType({
       {username: true, fullName: true, displayName: true}
     ).fetch()
     const commenters = await accessFilterMultiple(user, Users, commentersRaw, null)
-    const commentersById = keyBy(commenters, sender => sender._id)
+    const commentersById = keyBy(commenters, (sender: DbUser) => sender._id)
     
     const templateData = comments.map(comment => {
       const commentLink = notifications.find(n => n.documentId === comment._id)?.link
-      const commenter = commentersById[comment.userId]
+      const commenter = commentersById[comment.userId!]
       const post = comment.postId ? postsById[comment.postId] : null
       const postTitle = post?.title
 
@@ -216,8 +221,8 @@ export const NewCommentNotification = serverRegisterNotificationType({
         commenterUsername: userGetDisplayName(commenter),
         commenterProfileLink: userGetProfileUrlFromSlug(commenter.slug, true),
         postTitle,
-        postLink: post ? postGetPageUrl(post, true) : undefined,
-        commentContents: highlightFromHTML(comment.contents.html, 500),
+        postLink: post ? postGetPageUrl(post as PostsMinimumForGetPageUrl, true) : undefined,
+        commentContents: highlightFromHTML(comment?.contents?.html, 500),
         year: moment().year(),
       }
     })
@@ -451,7 +456,7 @@ export const NewReplyToYouNotification = serverRegisterNotificationType({
       {title: true}
     ).fetch();
     const posts = await accessFilterMultiple(user, Posts, postsRaw, null);
-    const postsById = keyBy(posts, post => post._id)
+    const postsById = keyBy(posts, (post: DbPost) => post._id)
     
     // Load repliers
     const repliersRaw = await Users.find(
@@ -460,11 +465,11 @@ export const NewReplyToYouNotification = serverRegisterNotificationType({
       {username: true, fullName: true, displayName: true}
     ).fetch()
     const repliers = await accessFilterMultiple(user, Users, repliersRaw, null)
-    const repliersById = keyBy(repliers, sender => sender._id)
+    const repliersById = keyBy(repliers, (sender: DbUser) => sender._id)
     
     const templateData = comments.map(comment => {
       const commentLink = notifications.find(n => n.documentId === comment._id)?.link
-      const replier = repliersById[comment.userId]
+      const replier = repliersById[comment.userId!]
       const post = comment.postId ? postsById[comment.postId] : null
       const postTitle = post?.title
 
@@ -474,8 +479,8 @@ export const NewReplyToYouNotification = serverRegisterNotificationType({
         replierUsername: userGetDisplayName(replier),
         replierProfileLink: userGetProfileUrlFromSlug(replier.slug, true),
         postTitle,
-        postLink: post ? postGetPageUrl(post, true) : undefined,
-        commentContents: highlightFromHTML(comment.contents.html, 500),
+        postLink: post ? postGetPageUrl(post as PostsMinimumForGetPageUrl, true) : undefined,
+        commentContents: highlightFromHTML(comment?.contents?.html, 500),
         year: moment().year(),
       }
     })
@@ -558,11 +563,11 @@ export const NewMessageNotification = serverRegisterNotificationType({
       {username: true, fullName: true, displayName: true}
     ).fetch()
     const senders = await accessFilterMultiple(user, Users, sendersRaw, null)
-    const sendersById = keyBy(senders, sender => sender._id)
+    const sendersById = keyBy(senders, (sender: DbUser) => sender._id)
     
     const templateData = messages.map(message => {
       const conversationLink = notifications.find(n => n.documentId === message._id)?.link
-      const sender = sendersById[message.userId]
+      const sender = sendersById[message.userId!]
       return {
         conversationLink: conversationLink ? makeAbsolute(conversationLink) : undefined,
         senderUserId: message.userId,

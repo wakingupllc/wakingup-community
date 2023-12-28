@@ -35,7 +35,7 @@ const ExpandedPostsSearchHit = ({hit, showKarma = showKarmaSetting.get, classes}
   />
 }
 
-const getWordCount = (post: SearchPost) => 
+const getWordCount = (post: SearchPost) =>
   post.body?.trim()?.split(/\s+/g)?.length ?? 0
 
 const ExpandedPostsSearchHitComponent = registerComponent('ExpandedPostsSearchHit', ExpandedPostsSearchHit, {styles})
@@ -45,4 +45,3 @@ declare global {
     ExpandedPostsSearchHit: typeof ExpandedPostsSearchHitComponent
   }
 }
-
