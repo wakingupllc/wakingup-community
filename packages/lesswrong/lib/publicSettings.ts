@@ -170,3 +170,4 @@ export const showConversationOptionsSetting = new DatabasePublicSetting<boolean>
 export const defaultCommentOrderSetting = new DatabasePublicSetting<string>('post.defaultCommentOrder', 'postCommentsTop');
 // Null means requests are disabled
 export const requestFeedbackKarmaLevelSetting = new DatabasePublicSetting<number | null>('post.requestFeedbackKarmaLevel', 100);
+export const deletedUsernameSetting = new DatabasePublicSetting<string>('deletedUsername', '[anonymous]');

@@ -186,6 +186,7 @@ export const createNotification = async ({userId, notificationType, documentType
 }) => {
   let user = await Users.findOne({ _id:userId });
   if (!user) throw Error(`Wasn't able to find user to create notification for with id: ${userId}`)
+
   const userSettingField = getNotificationTypeByName(notificationType).userSettingField;
   const notificationTypeSettings = (userSettingField && user[userSettingField]) ? user[userSettingField] : defaultNotificationTypeSettings;
 
@@ -220,7 +221,8 @@ export const createNotification = async ({userId, notificationType, documentType
       });
     }
   }
-  if ((notificationTypeSettings.channel === "email" || notificationTypeSettings.channel === "both") && !noEmail) {
+
+  if (!noEmail && !user.deleted && (notificationTypeSettings.channel === "email" || notificationTypeSettings.channel === "both")) {
     const createdNotification = await createMutator({
       collection: Notifications,
       document: {

@@ -1223,6 +1223,7 @@ const schema: SchemaType<DbUser> = {
     canUpdate: ['members', 'admins'],
     label: 'Deactivate',
     control: 'WUDeactivateAccount',
+    tooltip: "Posts and comments will be listed as '[Removed]', and the user profile won't accessible.",
     group: formGroups.deactivate,
   },
 

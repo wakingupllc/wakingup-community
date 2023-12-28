@@ -4,6 +4,7 @@ import { useHover } from '../common/withHover';
 import { userGetDisplayName, userGetProfileUrl } from '../../lib/collections/users/helpers';
 import { Link } from '../../lib/reactRouterWrapper';
 import { useCurrentUser } from '../common/withUser';
+import { deletedUsernameSetting } from '../../lib/publicSettings';
 
 /**
  * Username for a deleted user. Ordinarily, looks like "[anonymous]" and
@@ -26,7 +27,7 @@ const UserNameDeleted = ({userShownToAdmins}: {
     <div>Author has deactivated their account,</div>
     <div>or is no longer associated with this post.</div>
   </div>}>
-    [anonymous]
+    {deletedUsernameSetting.get()}
   </Components.LWTooltip>
 };
 
@@ -47,7 +48,7 @@ const UserNameDeletedWithAdminHover = ({user}: {
         ? <Link to={userGetProfileUrl(user)}>
             {userGetDisplayName(user)}
           </Link>
-        : "[anonymous]"
+        : deletedUsernameSetting.get()
       }
     </LWTooltip>
   </span>
