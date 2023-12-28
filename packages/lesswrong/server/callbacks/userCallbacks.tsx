@@ -179,7 +179,7 @@ getCollectionHooks("Users").updateAsync.add(function updateUserMayTriggerReview(
  */
 getCollectionHooks("Users").updateAsync.add(function sendDeactivationConfirmationEmail({oldDocument, newDocument, currentUser}: UpdateCallbackProperties<DbUser>) {
   if (!isWakingUp) return
-  if (!oldDocument.deleted && newDocument.deleted && currentUser?._id === newDocument._id) {
+  if (!oldDocument.deleted && newDocument.deleted) {
     const sendgridData = {
       user: newDocument,
       to: getUserEmail(newDocument),

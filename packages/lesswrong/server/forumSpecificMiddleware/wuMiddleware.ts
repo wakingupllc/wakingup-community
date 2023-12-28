@@ -363,6 +363,8 @@ const authenticationResolvers = {
       if (isValidWuUser(wuUser)) {
         const user = await syncOrCreateWuUser(wuUser)
 
+        if (user?.deleted) throw new AuthorizationError({ message: deletedAccountMessage(email), internalData: { error: "User has been deleted" }});
+
         assertCodeRequestNotLocked(user);
         assertCodeEntryNotLocked(user);
 
