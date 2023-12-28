@@ -4,7 +4,6 @@ import { useCurrentUser } from '../common/withUser'
 
 const WUDeactivateAccount = (props: any)  => {
   const currentUser = useCurrentUser()
-  let { ...otherProps } = props;
 
   if (!currentUser?.isAdmin) {
     return <div>Email community@wakingup.com if you'd like to deactivate your Waking Up Community account.</div>
@@ -13,7 +12,7 @@ const WUDeactivateAccount = (props: any)  => {
   return <>
     <Components.FormComponentCheckbox
         disabled
-        {...otherProps}
+        {...props}
         label="Deactivate user"
       />
   </>
