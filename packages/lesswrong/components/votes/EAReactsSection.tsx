@@ -13,10 +13,12 @@ import { useCurrentUser } from "../common/withUser";
 import { useDialog } from "../common/withDialog";
 import {
   eaAnonymousEmojiPalette,
-  eaEmojiPalette,
   EmojiOption,
   getEmojiMutuallyExclusivePartner,
 } from "../../lib/voting/eaEmojiPalette";
+import {
+  wuEmojiPalette,
+} from "../../lib/voting/wuEmojiPalette";
 import type { VotingProps } from "./votingProps";
 import Menu from "@material-ui/core/Menu";
 import classNames from "classnames";
@@ -128,7 +130,7 @@ const getCurrentReactions = <T extends VoteableTypeClient>(
     return result;
   }
 
-  for (const emojiOption of eaEmojiPalette) {
+  for (const emojiOption of wuEmojiPalette) {
     if ((extendedScore[emojiOption.name] ?? 0) > 0) {
       result.push({
         emojiOption,
