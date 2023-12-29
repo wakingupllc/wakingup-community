@@ -13,6 +13,7 @@ import { DEFAULT_QUALITATIVE_VOTE } from '../reviewVotes/schema';
 import { getCollaborativeEditorAccess } from './collabEditingPermissions';
 import { getVotingSystems } from '../../voting/votingSystems';
 import {
+  categoriesEnabledSetting,
   fmCrosspostBaseUrlSetting,
   fmCrosspostSiteNameSetting,
   forumTypeSetting,
@@ -916,10 +917,9 @@ const schema: SchemaType<"Posts"> = {
     canRead: ['guests'],
     
     blackbox: true,
-    group: formGroups.tags,
-    control: "FormComponentPostEditorTagging",
-    /* Tags (topics) are removed for launch, but will be added back later, so I'm leaving this commented out. */
-    hidden: true /* ({eventForm, document}) => eventForm || (isLWorAF && !!document.collabEditorDialogue) */
+    group: formGroups.categories,
+    control: "CategorySelector",
+    hidden: !categoriesEnabledSetting.get(),
   },
   "tagRelevance.$": {
     type: Number,

@@ -1073,3 +1073,5 @@ importComponent("WUEmojiPalette", () => require('../components/votes/WUEmojiPale
 importComponent("WUUsersMetaInfo", () => require('../components/ea-forum/users/WUUsersMetaInfo'))
 importComponent("WUUserOnboarding", () => require('../components/users/WUUserOnboarding'))
 importComponent("WUDeactivateAccount", () => require('../components/users/WUDeactivateAccount'))
+
+importComponent("CategorySelector", () => require('../components/form-components/CategorySelector'));
