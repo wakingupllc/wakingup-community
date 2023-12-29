@@ -177,7 +177,11 @@ export function getDefaultResolvers<N extends CollectionNameString>(collectionNa
   };
 }
 
-const performQueryFromViewParameters = async <T extends DbObject>(collection: CollectionBase<T>, terms: ViewTermsBase, parameters: any): Promise<Array<T>> => {
+const performQueryFromViewParameters = async <N extends CollectionNameString>(
+  collection: CollectionBase<N>,
+  terms: ViewTermsBase,
+  parameters: AnyBecauseTodo,
+): Promise<ObjectsByCollectionName[N][]> => {
   const logger = loggerConstructor(`views-${collection.collectionName.toLowerCase()}`)
   const selector = parameters.selector;
   
@@ -187,16 +191,18 @@ const performQueryFromViewParameters = async <T extends DbObject>(collection: Co
     throw new Error("Exceeded maximum value for skip");
   }
   
-  const options = {
+  const description = describeTerms(collection.collectionName, terms);
+  const options: MongoFindOptions<ObjectsByCollectionName[N]> = {
     ...parameters.options,
     skip: terms.offset,
+    comment: description
   };
   if (parameters.syntheticFields && Object.keys(parameters.syntheticFields).length>0) {
     const pipeline = [
       // First stage: Filter by selector
       { $match: {
         ...selector,
-        $comment: describeTerms(terms),
+        $comment: description,
       }},
       // Second stage: Add computed fields
       { $addFields: parameters.syntheticFields },
@@ -221,7 +227,6 @@ const performQueryFromViewParameters = async <T extends DbObject>(collection: Co
     logger('performQueryFromViewParameters connector find', selector, terms, options);
     return await collection.find({
       ...selector,
-      $comment: describeTerms(terms),
     }, options).fetch();
   }
 }

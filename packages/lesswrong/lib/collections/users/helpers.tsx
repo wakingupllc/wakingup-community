@@ -19,7 +19,7 @@ import Conversations from '../conversations/collection.ts';
 const newUserIconKarmaThresholdSetting = new DatabasePublicSetting<number|null>('newUserIconKarmaThreshold', null)
 
 // Get a user's display name (not unique, can take special characters and spaces)
-export const userGetDisplayName = (user: { username: string | null, fullName?: string | null, displayName: string | null } | null): string => {
+export const userGetDisplayName = (user: { username?: string | null, fullName?: string | null, displayName?: string | null } | null): string => {
   if (!user) {
     return "";
   } else {
@@ -30,7 +30,7 @@ export const userGetDisplayName = (user: { username: string | null, fullName?: s
 };
 
 // Get a user's username (unique, no special characters or spaces)
-export const getUserName = function(user: {username: string | null } | null): string|null {
+export const getUserName = function(user: {username?: string | null } | null): string|null {
   try {
     if (user?.username) return user.username;
   } catch (error) {
@@ -324,7 +324,7 @@ export function getDatadogUser (user: UsersCurrent | UsersEdit | DbUser): Datado
 }
 
 // Replaces Users.getProfileUrl from the vulcan-users package.
-export const userGetProfileUrl = (user: DbUser|UsersMinimumInfo|AlgoliaUser|null, isAbsolute=false): string => {
+export const userGetProfileUrl = (user: DbUser|UsersMinimumInfo|SearchUser|null, isAbsolute=false): string => {
   if (!user) return "";
   
   if (user.slug) {
@@ -334,7 +334,7 @@ export const userGetProfileUrl = (user: DbUser|UsersMinimumInfo|AlgoliaUser|null
   }
 }
 
-export const userGetProfileUrlFromSlug = (userSlug: string | null, isAbsolute=false): string => {
+export const userGetProfileUrlFromSlug = (userSlug?: string | null, isAbsolute=false): string => {
   if (!userSlug) return "";
   
   const prefix = isAbsolute ? getSiteUrl().slice(0,-1) : '';

@@ -61,9 +61,8 @@ export class DatabasePublicSetting<SettingValueType> {
 
 export const googleTagManagerIdSetting = new DatabasePublicSetting<string | null>('googleTagManager.apiKey', null) // Google Tag Manager ID
 export const reCaptchaSiteKeySetting = new DatabasePublicSetting<string | null>('reCaptcha.apiKey', null) // ReCaptcha API Key
-// Algolia Search Settings
-export const algoliaAppIdSetting = new DatabasePublicSetting<string | null>('algolia.appId', null)
-export const algoliaSearchKeySetting = new DatabasePublicSetting<string | null>('algolia.searchKey', null)
+
+// Despite the name, this setting is also used to set the index prefix for Elasticsearch for legacy reasons
 export const algoliaPrefixSetting = new DatabasePublicSetting<string>('algolia.indexPrefix', '')
 
 export const ckEditorUploadUrlSetting = new DatabasePublicSetting<string | null>('ckEditor.uploadUrl', null) // Image Upload URL for CKEditor
@@ -162,6 +161,7 @@ export const showPinnedPostPreviewOnHomepageSetting = new DatabasePublicSetting<
 
 export const dialogueMatchmakingEnabled = new DatabasePublicSetting<boolean>('dialogueMatchmakingEnabled', false)
 
+export const maxRenderQueueSize = new DatabasePublicSetting<number>('maxRenderQueueSize', 10);
 export const performanceMetricLoggingEnabled = new DatabasePublicSetting<boolean>('performanceMetricLoggingEnabled', false)
 export const performanceMetricLoggingBatchSize = new DatabasePublicSetting<number>('performanceMetricLoggingBatchSize', 100)
 export const showSuggestionToCommentIfNoCommentsSetting = new DatabasePublicSetting<boolean>('post.showSuggestionToCommentIfNoComments', true);

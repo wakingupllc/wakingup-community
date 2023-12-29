@@ -287,7 +287,7 @@ export type RateLimitReason = "moderator"|"lowKarma"|"downvoteRatio"|"universal"
  * @summary Users schema
  * @type {Object}
  */
-const schema: SchemaType<DbUser> = {
+const schema: SchemaType<"Users"> = {
   username: {
     type: String,
     optional: true,
@@ -415,7 +415,7 @@ const schema: SchemaType<DbUser> = {
     optional: true,
     canUpdate: ['sunshineRegiment', 'admins'],
     canCreate: ['sunshineRegiment', 'admins'],
-    canRead: ['guests'],
+    canRead: [userOwns, 'sunshineRegiment', 'admins'],
     order: 11,
     group: formGroups.default,
   },
@@ -1451,24 +1451,28 @@ const schema: SchemaType<DbUser> = {
   notificationDebateCommentsOnSubscribedPost: {
     label: "[Old Style] New dialogue content in a dialogue I'm subscribed to",
     ...notificationTypeSettingsField({ batchingFrequency: 'daily' }),
-    hidden: !dialoguesEnabled,
+    hidden: !isLW,
   },
   notificationDebateReplies: {
     label: "[Old Style] New dialogue content in a dialogue I'm participating in",
     ...notificationTypeSettingsField(),
-    hidden: !dialoguesEnabled,
+    hidden: !isLW,
   },
   notificationDialogueMatch: {
     label: "Another user and I have matched for a dialogue",
     ...notificationTypeSettingsField({ channel: "both" }),
-    hidden: !dialoguesEnabled,
+    hidden: !isLW,
   },
   notificationNewDialogueChecks: {
     label: "You have new people interested in dialogue-ing with you",
     ...notificationTypeSettingsField(),
-    hidden: !dialoguesEnabled,
+    hidden: !isLW,
   },
-
+  notificationYourTurnMatchForm: {
+    label: "Fill in the topics form for your dialogue match",
+    ...notificationTypeSettingsField(),
+    hidden: !isLW,
+  },
   hideDialogueFacilitation: {
     type: Boolean,
     canRead: [userOwns, 'sunshineRegiment', 'admins'],
@@ -1554,6 +1558,17 @@ const schema: SchemaType<DbUser> = {
     hidden: !isLW,
     label: "Show a list of recommended dialogue partners inside frontpage widget",
     ...schemaDefaultValue(true)
+  },
+  hideActiveDialogueUsers: {
+    type: Boolean,
+    canRead: [userOwns, 'sunshineRegiment', 'admins'],
+    canCreate: ['members'],
+    canUpdate: [userOwns, 'sunshineRegiment', 'admins'],
+    optional: true,
+    group: formGroups.siteCustomizations,
+    hidden: !isLW,
+    label: "Hides/collapses the active dialogue users in the header",
+    ...schemaDefaultValue(false)
   },
 
   // Karma-change notifier settings
@@ -2340,7 +2355,7 @@ const schema: SchemaType<DbUser> = {
     resolveAs: {
       arguments: 'limit: Int = 5',
       type: '[Post]',
-      resolver: async (user: DbUser, args: { limit: number }, context: ResolverContext): Promise<Array<DbPost>> => {
+      resolver: async (user: DbUser, args: { limit: number }, context: ResolverContext): Promise<Partial<DbPost>[]> => {
         const { limit } = args;
         const { currentUser, Posts } = context;
         const posts = await Posts.find({ userId: user._id }, { limit }).fetch();

@@ -11,20 +11,16 @@
  * - [ ] Uncomment `acceptsSchemaHash` below
  * - [ ] Run `yarn acceptmigrations` to update the accepted schema hash (running makemigrations again will also do this)
  */
-export const acceptsSchemaHash = "f23d5b34694ce7518a560c1b61f003d9";
+export const acceptsSchemaHash = 'f23d5b34694ce7518a560c1b61f003d9'
 
-import Users from "../../lib/collections/users/collection";
-import { addField, dropField } from "./meta/utils";
+import Users from '../../lib/collections/users/collection'
+import {addField, dropField} from './meta/utils'
 
 
 export const up = async ({db}: MigrationContext) => {
-  if (Users.isPostgres()) {
-    await addField(db, Users, 'subscribedToWelcomeEmails');
-  }
+  await addField(db, Users, 'subscribedToWelcomeEmails')
 }
 
 export const down = async ({db}: MigrationContext) => {
-  if (Users.isPostgres()) {
-    await dropField(db, Users, 'subscribedToWelcomeEmails');
-  }
+  await dropField(db, Users, 'subscribedToWelcomeEmails')
 }

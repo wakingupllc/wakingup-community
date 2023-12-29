@@ -2,7 +2,7 @@ import type {
   MappingProperty,
   QueryDslQueryContainer,
 } from "@elastic/elasticsearch/lib/api/types";
-import { AlgoliaIndexCollectionName } from "../../../lib/search/algoliaUtil";
+import { SearchIndexCollectionName } from "../../../lib/search/searchUtil";
 import { postStatuses } from "../../../lib/collections/posts/constants";
 
 export type Ranking = {
@@ -134,7 +134,7 @@ const keywordMapping: MappingProperty = {
   type: "keyword",
 };
 
-const elasticSearchConfig: Record<AlgoliaIndexCollectionName, IndexConfig> = {
+const elasticSearchConfig: Record<SearchIndexCollectionName, IndexConfig> = {
   Comments: {
     fields: [
       "body",
@@ -364,8 +364,8 @@ const elasticSearchConfig: Record<AlgoliaIndexCollectionName, IndexConfig> = {
   },
 };
 
-const indexToCollectionName = (index: string): AlgoliaIndexCollectionName => {
-  const data: Record<string, AlgoliaIndexCollectionName> = {
+const indexToCollectionName = (index: string): SearchIndexCollectionName => {
+  const data: Record<string, SearchIndexCollectionName> = {
     comments: "Comments",
     posts: "Posts",
     users: "Users",
@@ -379,7 +379,7 @@ const indexToCollectionName = (index: string): AlgoliaIndexCollectionName => {
 }
 
 export const collectionNameToConfig = (
-  collectionName: AlgoliaIndexCollectionName,
+  collectionName: SearchIndexCollectionName,
 ): IndexConfig => {
   const config = elasticSearchConfig[collectionName];
   if (!config) {
