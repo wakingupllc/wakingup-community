@@ -35,7 +35,7 @@ getCollectionHooks("Messages").createBefore.add(async function checkMessagePermi
     if (!participant) throw new Error("Recipient doesn't exist");
     if (participant.disableUnsolicitedMessages && !previousParticipants.has(participantId)) {
       throw new UserFacingError({
-        message: `You cannot send a message to this user: ${participant.username}.`
+        message: `${participant.username} has disabled new message requests.`
       })
     }
   }
