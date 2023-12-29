@@ -32,6 +32,7 @@ import { crosspostKarmaThreshold } from '../../publicSettings';
 import { getDefaultViewSelector } from '../../utils/viewUtils';
 import GraphQLJSON from 'graphql-type-json';
 import { addGraphQLSchema } from '../../vulcan-lib/graphql';
+import { getCommentViewOptions } from '../../commentViewOptions';
 
 const urlHintText = isEAForum
     ? 'UrlHintText'
@@ -2350,6 +2351,8 @@ const schema: SchemaType<DbPost> = {
     canRead: ['guests'],
     canCreate: ['admins'],
     canUpdate: ['admins'],
+    control: 'select',
+    options: getCommentViewOptions(),
     optional: true,
     group: formGroups.adminOptions,
   },
