@@ -56,6 +56,7 @@ export const styles = (theme: ThemeType): JssStyles => ({
 export type PostSubmitProps = FormButtonProps & {
   saveDraftLabel?: string,
   feedbackLabel?: string,
+  disabled?: boolean,
   document: PostsPage,
   classes: ClassesType
 }
@@ -65,6 +66,7 @@ const PostSubmit = ({
   cancelLabel = "Cancel",
   saveDraftLabel = "Save as Draft",
   feedbackLabel = "Request Feedback",
+  disabled = false,
   cancelCallback, document, collectionName, classes
 }: PostSubmitProps, { updateCurrentValues, addToSuccessForm, submitForm }: any) => {
   const currentUser = useCurrentUser();
@@ -137,6 +139,7 @@ const PostSubmit = ({
         <Button
           type="submit"
           onClick={onSubmitClick}
+          disabled={disabled}
           className={classNames("primary-form-submit-button", classes.formButton, classes.submitButton)}
           {...(isFriendlyUI ? {
             variant: "contained",
