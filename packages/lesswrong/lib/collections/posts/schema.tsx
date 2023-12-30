@@ -896,7 +896,6 @@ const schema: SchemaType<"Posts"> = {
     type: "[Tag]",
     graphQLtype: "[Tag]",
     canRead: ['guests'],
-    optional: false,
     resolver: async (post: DbPost, args: void, context: ResolverContext) => {
       const { currentUser } = context;
       const tagRelevanceRecord:Record<string, number> = post.tagRelevance || {}

@@ -1075,3 +1075,4 @@ importComponent("WUUserOnboarding", () => require('../components/users/WUUserOnb
 importComponent("WUDeactivateAccount", () => require('../components/users/WUDeactivateAccount'))
 
 importComponent("CategorySelector", () => require('../components/form-components/CategorySelector'));
+importComponent("CategoryItem", () => require('../components/form-components/CategoryItem'));

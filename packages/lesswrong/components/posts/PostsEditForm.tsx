@@ -16,7 +16,7 @@ import { useCurrentUser } from "../common/withUser";
 import type { PostSubmitProps } from './PostSubmit';
 import { styles } from './PostsNewForm';
 import { SHARE_POPUP_QUERY_PARAM } from './PostsPage/PostsPage';
-import { getPostValidationErrors, useValidatePost } from './Validation.ts';
+import {useValidatePost} from './validation'
 
 const editor : Editor | null = null
 export const EditorContext = React.createContext<[Editor | null, (e: Editor) => void]>([editor, _ => {}]);
@@ -115,10 +115,6 @@ const PostsEditForm = ({ documentId, classes }: {
     </div>
   }
 
-
-
-
-
   return (
     <DynamicTableOfContents title={document.title} displayToc={false}>
       <div className={classes.postForm}>
@@ -132,9 +128,7 @@ const PostsEditForm = ({ documentId, classes }: {
               documentId={documentId}
               queryFragment={getFragment('PostsEditQueryFragment')}
               mutationFragment={getFragment('PostsEditMutationFragment')}
-              changeCallback={(post: any, options: any) => {
-                validate(post)
-              }}
+              changeCallback={(post: any) => validate(post)}
               successCallback={(post: any, options: any) => {
                 const alreadySubmittedToAF = post.suggestForAlignmentUserIds && post.suggestForAlignmentUserIds.includes(post.userId)
                 if (!post.draft && !alreadySubmittedToAF) afNonMemberSuccessHandling({currentUser, document: post, openDialog, updateDocument: updatePost})

@@ -17,6 +17,7 @@ import { SHARE_POPUP_QUERY_PARAM } from './PostsPage/PostsPage';
 import { Link, useNavigate } from '../../lib/reactRouterWrapper';
 import { QuestionIcon } from '../icons/questionIcon';
 import {showSocialMediaShareLinksSetting} from '../../lib/publicSettings.ts'
+import {useValidatePost} from './validation.ts'
 
 // Also used by PostsEditForm
 export const styles = (theme: ThemeType): JssStyles => ({
@@ -243,6 +244,7 @@ const PostsNewForm = ({classes}: {
     collectionName: "Posts",
     fragmentName: 'SuggestAlignmentPost',
   })
+  const [validationErrors, validate, isFormValidated] = useValidatePost();
 
   const templateId = query && query.templateId;
   
@@ -265,6 +267,7 @@ const PostsNewForm = ({classes}: {
     PostSubmit, WrappedSmartForm, LoginForm,
     RecaptchaWarning, SingleColumnSection, Typography, Loading, PostsAcceptTos,
     NewPostModerationWarning, RateLimitWarning, DynamicTableOfContents,
+    FormErrors,
   } = Components;
 
   const userHasModerationGuidelines = currentUser && currentUser.moderationGuidelines && currentUser.moderationGuidelines.originalContents
@@ -331,7 +334,7 @@ const PostsNewForm = ({classes}: {
 
   const NewPostsSubmit = (props: PostSubmitProps) => {
     return <div className={classes.formSubmit}>
-      <PostSubmit {...props} />
+      <PostSubmit {...props} disabled={!isFormValidated || validationErrors.length > 0}/>
     </div>
   }
 
@@ -350,6 +353,7 @@ const PostsNewForm = ({classes}: {
                 collectionName="Posts"
                 mutationFragment={getFragment('PostsPage')}
                 prefilledProps={prefilledProps}
+                changeCallback={(post: any) => validate(post)}
                 successCallback={(post: any, options: any) => {
                   if (!post.draft) afNonMemberSuccessHandling({currentUser, document: post, openDialog, updateDocument: updatePost});
                   if (options?.submitOptions?.redirectToEditor) {
@@ -378,6 +382,7 @@ const PostsNewForm = ({classes}: {
           </NoSSR>
         </RecaptchaWarning>
       </div>
+      <FormErrors errors={validationErrors}/>
     </DynamicTableOfContents>
 
   );

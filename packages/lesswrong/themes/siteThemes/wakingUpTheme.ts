@@ -25,6 +25,19 @@ const sansSerifStack = [
   'sans-serif'
 ].join(',')
 
+const postsEditFormOverrides = {
+  postForm: {
+    '& .form-section-categories': {
+      border: 'none',
+      marginTop: "1.5em",
+    },
+    '& .ck-rounded-corners .ck.ck-editor__main > .ck-editor__editable, .ck.ck-editor__main > .ck-editor__editable.ck-rounded-corners': {
+      borderBottomLeftRadius: 6,
+      borderBottomRightRadius: 6,
+    }
+  }
+}
+
 export const wakingUpTheme: SiteThemeSpecification = {
   shadePalette: {
     primaryAlpha: (alpha: number) => `rgba(12, 134, 155,${alpha})`,
@@ -96,7 +109,7 @@ export const wakingUpTheme: SiteThemeSpecification = {
     tag: {
       text: shadePalette.grey[1000],
       background: shadePalette.grey[0],
-      backgroundHover: shadePalette.greyAlpha(0.03),
+      backgroundHover: "#0D5EC9",
       border: shadePalette.greyBorder("1px", .15),
       coreTagText: shadePalette.grey[1000],
       coreTagBackground: shadePalette.grey[250],
@@ -468,7 +481,18 @@ export const wakingUpTheme: SiteThemeSpecification = {
               marginBottom: 6,
             }
           }
-        }
+        },
+        TagsChecklist: {
+          tag: {
+            "&:hover": {
+              backgroundColor: palette.tag.backgroundHover,
+              borderColor: palette.tag.backgroundHover,
+              color: palette.buttons.primaryDarkText,
+            }
+          }
+        },
+        PostsEditForm: postsEditFormOverrides,
+        PostsNewForm: postsEditFormOverrides,
       }
     }
   }
