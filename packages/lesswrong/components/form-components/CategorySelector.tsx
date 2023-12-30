@@ -7,6 +7,10 @@ const styles = (_theme: ThemeType): JssStyles => ({
   root: {
     display: 'flex',
     flexDirection: 'column',
+    '& .TagsChecklist-tag': {
+      opacity: 1,
+      fontWeight: 'unset',
+    }
   },
   sectionDescription: {
     marginBottom: '1em',

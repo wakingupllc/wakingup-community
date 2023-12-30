@@ -1,22 +1,22 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { Components, registerComponent, getFragment } from '../../lib/vulcan-lib';
-import { useSingle } from '../../lib/crud/withSingle';
-import { useMessages } from '../common/withMessages';
-import { postGetPageUrl, postGetEditUrl, getPostCollaborateUrl, isNotHostedHere, canUserEditPostMetadata } from '../../lib/collections/posts/helpers';
-import { useLocation } from '../../lib/routeUtil'
-import NoSSR from 'react-no-ssr';
-import { styles } from './PostsNewForm';
-import { useDialog } from "../common/withDialog";
-import {useCurrentUser} from "../common/withUser";
-import { useUpdate } from "../../lib/crud/withUpdate";
-import { afNonMemberSuccessHandling } from "../../lib/alignment-forum/displayAFNonMemberPopups";
-import type { PostSubmitProps } from './PostSubmit';
-import { userIsPodcaster } from '../../lib/vulcan-users/permissions';
-import { SHARE_POPUP_QUERY_PARAM } from './PostsPage/PostsPage';
-import { isEAForum } from '../../lib/instanceSettings';
 import type { Editor } from '@ckeditor/ckeditor5-core';
+import React, { useEffect, useRef, useState } from 'react';
+import NoSSR from 'react-no-ssr';
+import { afNonMemberSuccessHandling } from "../../lib/alignment-forum/displayAFNonMemberPopups";
+import { canUserEditPostMetadata, getPostCollaborateUrl, isNotHostedHere, postGetEditUrl, postGetPageUrl } from '../../lib/collections/posts/helpers';
+import { useSingle } from '../../lib/crud/withSingle';
+import { useUpdate } from "../../lib/crud/withUpdate";
+import { showSocialMediaShareLinksSetting } from '../../lib/publicSettings.ts';
 import { useNavigate } from '../../lib/reactRouterWrapper';
-import {showSocialMediaShareLinksSetting} from '../../lib/publicSettings.ts'
+import { useLocation } from '../../lib/routeUtil';
+import { Components, getFragment, registerComponent } from '../../lib/vulcan-lib';
+import { userIsPodcaster } from '../../lib/vulcan-users/permissions';
+import { useDialog } from "../common/withDialog";
+import { useMessages } from '../common/withMessages';
+import { useCurrentUser } from "../common/withUser";
+import type { PostSubmitProps } from './PostSubmit';
+import { styles } from './PostsNewForm';
+import { SHARE_POPUP_QUERY_PARAM } from './PostsPage/PostsPage';
+import { getPostValidationErrors, useValidatePost } from './Validation.ts';
 
 const editor : Editor | null = null
 export const EditorContext = React.createContext<[Editor | null, (e: Editor) => void]>([editor, _ => {}]);
@@ -35,6 +35,7 @@ const PostsEditForm = ({ documentId, classes }: {
   });
   const { openDialog } = useDialog();
   const currentUser = useCurrentUser();
+  const [validationErrors, validate] = useValidatePost();
   const isDraft = document && document.draft;
 
   const wasEverDraft = useRef(isDraft);
@@ -44,7 +45,7 @@ const PostsEditForm = ({ documentId, classes }: {
     }
   }, [isDraft]);
 
-  const { WrappedSmartForm, PostSubmit, HeadTags, ForeignCrosspostEditForm, DialogueSubmit, RateLimitWarning, DynamicTableOfContents } = Components
+  const { WrappedSmartForm, PostSubmit, HeadTags, ForeignCrosspostEditForm, DialogueSubmit, RateLimitWarning, DynamicTableOfContents, FormErrors } = Components
 
   const [editorState, setEditorState] = useState<Editor | null>(editor)
   const saveDraftLabel: string = ((post) => {
@@ -108,10 +109,15 @@ const PostsEditForm = ({ documentId, classes }: {
       <PostSubmit
         saveDraftLabel={saveDraftLabel}
         feedbackLabel={"Get Feedback"}
+        disabled={validationErrors.length > 0}
         {...props}
       />
     </div>
   }
+
+
+
+
 
   return (
     <DynamicTableOfContents title={document.title} displayToc={false}>
@@ -126,6 +132,9 @@ const PostsEditForm = ({ documentId, classes }: {
               documentId={documentId}
               queryFragment={getFragment('PostsEditQueryFragment')}
               mutationFragment={getFragment('PostsEditMutationFragment')}
+              changeCallback={(post: any, options: any) => {
+                validate(post)
+              }}
               successCallback={(post: any, options: any) => {
                 const alreadySubmittedToAF = post.suggestForAlignmentUserIds && post.suggestForAlignmentUserIds.includes(post.userId)
                 if (!post.draft && !alreadySubmittedToAF) afNonMemberSuccessHandling({currentUser, document: post, openDialog, updateDocument: updatePost})
@@ -179,6 +188,7 @@ const PostsEditForm = ({ documentId, classes }: {
           </EditorContext.Provider>
         </NoSSR>
       </div>
+      <FormErrors errors={validationErrors}/>
     </DynamicTableOfContents>
   );
 }

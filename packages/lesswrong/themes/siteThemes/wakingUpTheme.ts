@@ -46,8 +46,11 @@ export const wakingUpTheme: SiteThemeSpecification = {
       main: "#3e64bb",
       dark: "#3e64bb",
     },
+    panelBackground: {
+      formErrors: '#FFEBEB',
+    },
     error: {
-      main: "#bf360c",
+      main: "#C91A1A",
     },
     warning: {
       main: "#ffad08"
@@ -445,6 +448,26 @@ export const wakingUpTheme: SiteThemeSpecification = {
           searchHelp: {
             display: 'none'
           },
+        },
+        FormErrors: {
+          root: {
+            '& ul': {
+              padding: 0,
+            },
+            '& li': {
+              '& .ForumIcon-root': {
+                fontSize: 18,
+              },
+              listStyle: 'none',
+              display: 'flex',
+              padding: '10px 20px',
+              alignItems: 'center',
+              gap: '10px',
+              borderRadius: '6px',
+              background: palette.panelBackground.formErrors,
+              marginBottom: 6,
+            }
+          }
         }
       }
     }

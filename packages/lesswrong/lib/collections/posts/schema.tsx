@@ -896,6 +896,7 @@ const schema: SchemaType<"Posts"> = {
     type: "[Tag]",
     graphQLtype: "[Tag]",
     canRead: ['guests'],
+    optional: false,
     resolver: async (post: DbPost, args: void, context: ResolverContext) => {
       const { currentUser } = context;
       const tagRelevanceRecord:Record<string, number> = post.tagRelevance || {}
@@ -910,7 +911,7 @@ const schema: SchemaType<"Posts"> = {
   // submitter applies/upvotes relevance for any tags included as keys.
   tagRelevance: {
     type: Object,
-    optional: true,
+    optional: false,
     canCreate: ['members'],
     // This must be set to editable to allow the data to be sent from the edit form, but in practice it's always overwritten by updatePostDenormalizedTags
     canUpdate: [userOwns, 'sunshineRegiment', 'admins'],
