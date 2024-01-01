@@ -35,7 +35,7 @@ describe("executePromiseQueue", () => {
       expect(
         Math.max(...results.slice(i, i + 4).map((res) => res.endTime)) -
           results[i].startTime
-      ).toBeLessThanOrEqual(140); // allow some tolerance
+      ).toBeLessThanOrEqual(1); // allow some tolerance // temporarily reduced to deliberately cause error for testing
     }
   });
 });

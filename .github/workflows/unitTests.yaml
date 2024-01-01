@@ -34,7 +34,7 @@ jobs:
     - name: Setup Environment
       uses: ./.github/actions/setupEnvironment
     - run: yarn run unit-ci
-    - uses: actions/upload-artifact@v1
+    - uses: actions/upload-artifact@v2
       if: failure()
       with:
         name: Upload schema to accept
