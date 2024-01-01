@@ -40,7 +40,7 @@ const UserNameDeletedWithAdminHover = ({user}: {
   return <span {...eventHandlers}>
     <LWTooltip
       title={<div>
-        This user account has been deleted. The username is only visible to site admins, and only visible on hover-over.
+        This user account has been deactivated. The username is only visible to site admins, and only visible on hover-over.
       </div> }
       inlineBlock={false}
     >
