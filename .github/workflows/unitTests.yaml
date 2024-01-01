@@ -34,6 +34,9 @@ jobs:
     - name: Setup Environment
       uses: ./.github/actions/setupEnvironment
     - run: yarn run unit-ci
+    - name: List files in schema directory
+      if: failure()
+      run: ls -lR schema/
     - uses: actions/upload-artifact@v3
       if: failure()
       with:
