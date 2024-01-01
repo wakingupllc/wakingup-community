@@ -41,7 +41,7 @@ jobs:
       if: failure()
       with:
         name: Upload schema to accept
-        path: schema/schema_to_accept.sql
+        path: schema/accepted_schema.sql
 
   runIntegrationTests:
     runs-on: ubuntu-latest
