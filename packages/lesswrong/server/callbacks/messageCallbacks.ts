@@ -33,7 +33,7 @@ getCollectionHooks("Messages").createBefore.add(async function checkMessagePermi
     if (!participant) throw new Error("Recipient doesn't exist");
     if (participant.deleted) {
       throw new UserFacingError({
-        message: `${participant.username} has been deactivated.`
+        message: 'This account has been deactivated.'
       })
     }
     if (currentUser?.isAdmin) continue;
