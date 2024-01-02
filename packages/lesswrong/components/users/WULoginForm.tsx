@@ -175,7 +175,7 @@ export const WULoginForm = ({ classes }: WULoginFormProps) => {
   const startingState = (pathname === '/code' && emailParam !== '') ? 'enterCode' : 'requestCode';
 
   const [email, setEmail] = useState<string>(emailParam)
-  const [oneTimeCode, setOneTimeCode] = useState<string>("")
+  const [oneTimeCode, setOneTimeCode] = useState<string>(params.get('pin') || '')
   const [currentAction, setCurrentAction] = useState<possibleActions>(startingState)
   const [requestAnotherCode, setRequestAnotherCode] = useState<boolean>(false)
   // This currentActionToMutation thing is regrettably complicated, but the point
