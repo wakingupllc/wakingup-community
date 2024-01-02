@@ -83,12 +83,7 @@ const PostSubmit = ({
     }
   };
 
-  const submitWithoutConfirmation = () => {
-     if(collectionName === 'Posts')  {
-      updateCurrentValues({draft: false})
-      submitForm()
-    }
-  }
+  const submitWithoutConfirmation = () => collectionName === "Posts" && updateCurrentValues({draft: false});
 
   const requireConfirmation = isLW && collectionName === 'Posts' && !!document.debate;
 
