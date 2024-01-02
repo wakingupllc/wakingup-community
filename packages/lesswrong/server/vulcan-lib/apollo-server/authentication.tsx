@@ -44,9 +44,7 @@ async function comparePasswords(password: string, hash: string) {
 }
 
 const passwordAuthStrategy = new GraphQLLocalStrategy(async function getUserPassport(username, password, done) {
-  const user = await (Users.isPostgres()
-    ? new UsersRepo().getUserByUsernameOrEmail(username)
-    : Users.findOne({$or: [{"emails.address": username}, {email: username}, {username: username}]}));
+  const user = await new UsersRepo().getUserByUsernameOrEmail(username);
 
   if (!devLoginsAllowedSetting.get()) return done(null, false, { message: 'Password-based logins are disabled.' });
   if (!user) return done(null, false, { message: 'Invalid login.' }); //Don't reveal that an email exists in DB
@@ -162,19 +160,7 @@ const VerifyEmailToken = new EmailTokenType({
   name: "verifyEmail",
   onUseAction: async (user) => {
     if (userEmailAddressIsVerified(user)) return {message: "Your email address is already verified"}
-    if (Users.isPostgres()) {
-      await new UsersRepo().verifyEmail(user._id);
-    } else {
-      await updateMutator({
-        collection: Users,
-        documentId: user._id,
-        set: {
-          'emails.0.verified': true,
-        } as any,
-        unset: {},
-        validate: false,
-      });  
-    }
+    await new UsersRepo().verifyEmail(user._id);
     return {message: "Your email has been verified" };
   },
   resultComponentName: "EmailTokenResult"
@@ -207,20 +193,7 @@ const ResetPasswordToken = new EmailTokenType({
     const validatePasswordResponse = validatePassword(password)
     if (!validatePasswordResponse.validPassword) throw Error(validatePasswordResponse.reason)
 
-    if (Users.isPostgres()) {
-      await new UsersRepo().resetPassword(user._id, await createPasswordHash(password));
-    } else {
-      await updateMutator({ 
-        collection: Users,
-        documentId: user._id,
-        set: {
-          'services.password.bcrypt': await createPasswordHash(password),
-          'services.resume.loginTokens': []
-        } as any,
-        unset: {},
-        validate: false,
-      });  
-    }
+    await new UsersRepo().resetPassword(user._id, await createPasswordHash(password));
     return {message: "Your new password has been set. Try logging in again." };
   },
   resultComponentName: "EmailTokenResult",

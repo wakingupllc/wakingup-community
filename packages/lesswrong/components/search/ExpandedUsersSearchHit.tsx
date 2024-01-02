@@ -73,7 +73,7 @@ const ExpandedUsersSearchHit = ({hit, showKarma = showKarmaSetting.get, classes}
   classes: ClassesType,
 }) => {
   const {UsersProfileImage, ForumIcon} = Components;
-  const user = hit as AlgoliaUser;
+  const user = hit as SearchUser;
 
   return <div className={classes.root}>
     <Link to={`${userGetProfileUrl(user)}?from=search_page`} className={classes.link}>

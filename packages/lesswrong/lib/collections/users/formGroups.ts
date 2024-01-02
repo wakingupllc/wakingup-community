@@ -1,6 +1,6 @@
 import { isFriendlyUI, preferredHeadingCase } from "../../../themes/forumTheme";
 
-export const formGroups: Partial<Record<string, FormGroupType>> = {
+export const formGroups: Partial<Record<string, FormGroupType<"Users">>> = {
   default: {
     name: "default",
     order: 0,
@@ -78,7 +78,7 @@ export const formGroups: Partial<Record<string, FormGroupType>> = {
   privateMessaging: {
     order: 130,
     name: "privateMessaging",
-    label: preferredHeadingCase("Private Messaging"),
+    label: preferredHeadingCase("Message Requests"),
     startCollapsed: true,
   },
   deactivate: {

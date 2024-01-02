@@ -396,7 +396,7 @@ const DefaultPreview = ({classes, href, onsite=false, id, rel, newTab = false, c
     onsite
   });
   
-  const newTabProps = newTab ? {target: '_blank', rel: rel ?? '' + ' noreferrer'} : {}
+  const newTabProps = newTab ? {target: '_blank', rel: (rel ?? '') + ' noreferrer'} : {}
   return (
     <span {...eventHandlers}>
       <LWPopper open={hover} anchorEl={anchorEl} placement="bottom-start" clickable={false}>

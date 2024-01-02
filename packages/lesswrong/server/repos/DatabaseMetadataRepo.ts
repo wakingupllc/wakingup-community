@@ -3,7 +3,7 @@ import { DatabaseMetadata } from "../../lib/collections/databaseMetadata/collect
 import type { TimeSeries } from "../../lib/collections/posts/karmaInflation";
 import { randomId } from "../../lib/random";
 
-export default class DatabaseMetadataRepo extends AbstractRepo<DbDatabaseMetadata> {
+export default class DatabaseMetadataRepo extends AbstractRepo<"DatabaseMetadata"> {
   constructor() {
     super(DatabaseMetadata);
   }
@@ -11,8 +11,10 @@ export default class DatabaseMetadataRepo extends AbstractRepo<DbDatabaseMetadat
   private getByName(name: string): Promise<DbDatabaseMetadata | null> {
     // We use getRawDb here as this may be executed during server startup
     // before the collection is properly initialized
-    return this.getRawDb().oneOrNone(
-      `SELECT * from "DatabaseMetadata" WHERE "name" = $1`,
+    return this.getRawDb().oneOrNone(`
+      -- DatabaseMetadataRepo.getByName
+      SELECT * from "DatabaseMetadata" WHERE "name" = $1
+    `,
       [name],
       `DatabaseMetadata.${name}`,
     );

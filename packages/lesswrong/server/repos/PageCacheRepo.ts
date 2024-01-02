@@ -3,6 +3,7 @@ import PageCache from "../../lib/collections/pagecache/collection";
 import { randomId } from "../../lib/random";
 import { getServerBundleHash } from "../utils/bundleUtils";
 import AbstractRepo from "./AbstractRepo";
+import { recordPerfMetrics } from "./perfMetricWrapper";
 import type { RenderResult } from "../vulcan-lib/apollo-ssr/renderPage"
 
 export type MeanPostKarma = {
@@ -17,7 +18,7 @@ type SanitizedRenderResult = Omit<RenderResult, Exclude<keyof RenderResult, unde
 
 export const maxCacheAgeMs = 90*1000;
 
-export default class PageCacheRepo extends AbstractRepo<DbPageCacheEntry> {
+class PageCacheRepo extends AbstractRepo<"PageCache"> {
   constructor() {
     super(PageCache);
   }
@@ -29,6 +30,7 @@ export default class PageCacheRepo extends AbstractRepo<DbPageCacheEntry> {
     // abTestGroups in the db that are a subset of the completeAbTestGroups. In this case it shouldn't
     // matter which one we use, so we just take the first one.
     const cacheResult = await this.getRawDb().any(`
+      -- PageCacheRepo.lookupCacheEntry
       SELECT * FROM "PageCache"
       WHERE "path" = $1
       AND "bundleHash" = $2
@@ -41,6 +43,7 @@ export default class PageCacheRepo extends AbstractRepo<DbPageCacheEntry> {
 
   async clearExpiredEntries(): Promise<void> {
     await this.getRawDb().none(`
+      -- PageCacheRepo.clearExpiredEntries
       DELETE FROM "PageCache"
       WHERE "expiresAt" < NOW()`);
   }
@@ -106,3 +109,7 @@ export default class PageCacheRepo extends AbstractRepo<DbPageCacheEntry> {
     return null;
   }
 }
+
+recordPerfMetrics(PageCacheRepo);
+
+export default PageCacheRepo;

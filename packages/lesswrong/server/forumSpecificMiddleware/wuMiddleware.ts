@@ -9,18 +9,23 @@ import {
   addGraphQLResolvers,
   addGraphQLSchema,
   AuthorizationError,
+  getUser,
   slugify,
   Utils,
 } from '../vulcan-lib'
 import type {AddMiddlewareType} from '../apolloServer'
 import express from 'express'
 import {cloudinaryPublicIdFromUrl, moveToCloudinary} from '../scripts/convertImagesToCloudinary'
-import {devLoginsAllowedSetting, wuDefaultProfileImageCloudinaryIdSetting} from '../../lib/publicSettings.ts'
+import {
+  devWakingUpCodeSetting,
+  wuDefaultProfileImageCloudinaryIdSetting,
+} from '../../lib/publicSettings.ts'
 import { sendEmailSendgridTemplate } from '../emails/sendEmail.ts'
 import moment from 'moment'
 import { CODE_ENTRY_LIMIT, CODE_ENTRY_LIMIT_EXCEEDED_MSG, CODE_REQUEST_LIMIT_EXCEEDED_MSG } from '../../lib/collections/users/constants.ts'
 import { codeEntryLockExpiresAt, codeRequestLimitActive, codeRequestLimitExpiresAt, isCodeEntryLocked, isCodeRequestLocked } from '../../lib/collections/users/helpers.tsx'
 import {usernameIsBadWord} from '../../lib/collections/users/username'
+import { getCookieFromReq } from '../utils/httpUtil.ts'
 
 // This file has middleware for redirecting logged-out users to the login page,
 // but it also manages authentication with the Waking Up app. This latter thing
@@ -28,6 +33,7 @@ import {usernameIsBadWord} from '../../lib/collections/users/username'
 // system to manage it.
 
 const authMessageWithEmail = (email: string) => `Sorry, the email ${email} doesn't have access to the Waking Up Community. Email community@wakingup.com if you think this is a mistake.`
+const deletedAccountMessage = (email: string) => `The community account for ${email} has been deactivated. Please email us at community@wakingup.com if you think this is a mistake.`
 
 function urlDisallowedForLoggedOutUsers(req: express.Request) {
   if (req.user) return false;
@@ -50,8 +56,21 @@ export const redirectLoggedOutMiddleware = (req: express.Request, res: express.R
   }
 }
 
+async function logoutDeletedUser(req: express.Request, res: express.Response, next: express.NextFunction) {
+  const loginToken = getCookieFromReq(req, 'loginToken')
+  const user = await getUser(loginToken)
+  if (user?.deleted) {
+    req.logout();
+    res.cookie('loginToken', '', { expires: new Date(0) });
+    res.redirect('/');
+    return;
+  }
+  next();
+}
+
 export const wuMiddleware = (addConnectHandler: AddMiddlewareType) => {
   addConnectHandler(redirectLoggedOutMiddleware);
+  addConnectHandler(logoutDeletedUser);
 }
 
 const wakingUpKeySetting = new DatabaseServerSetting<string | null>('wakingUpKey', null)
@@ -344,6 +363,8 @@ const authenticationResolvers = {
       if (isValidWuUser(wuUser)) {
         const user = await syncOrCreateWuUser(wuUser)
 
+        if (user?.deleted) throw new AuthorizationError({ message: deletedAccountMessage(email), internalData: { error: "User has been deleted" }});
+
         assertCodeRequestNotLocked(user);
         assertCodeEntryNotLocked(user);
 
@@ -377,11 +398,12 @@ const authenticationResolvers = {
 
       if (!user?.wu_subscription_active) throw new AuthorizationError({ message: authMessageWithEmail(email), internalData: { error: "Inactive WU subscription" }});
       if (!user.wu_forum_access) throw new AuthorizationError({ message: authMessageWithEmail(email), internalData: { error: "WU account lacks forum access" }});
+      if (user?.deleted) throw new AuthorizationError({ message: deletedAccountMessage(email), internalData: { error: "User has been deleted" }});
 
       assertCodeEntryNotLocked(user);
 
       const validCode = user && code?.length > 0 && wuProps(user)?.oneTimeCode === code;
-      const devCodeOkay = devLoginsAllowedSetting.get() && user && code === '1234';
+      const devCodeOkay = devWakingUpCodeSetting.get() && user && code === devWakingUpCodeSetting.get()
 
       if (validCode || devCodeOkay) {
         await updateUserLoginProps(user, null, true)
@@ -405,6 +427,7 @@ const authenticationResolvers = {
 
       const user = (await Users.findOne({slug: userSlug}));
       if (!user) throw Error("Can't find user with given slug")
+      if (user.deleted) throw Error("User is deleted")
 
       await updateUserLoginProps(user, null, true)
     }

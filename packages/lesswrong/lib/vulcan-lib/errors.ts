@@ -184,7 +184,16 @@ export const RateLimitError = createError(
   }
 )
 
-const whitelistedErrors = ["SimpleValidationError", "AuthorizationError", "RateLimitError"]
+// Use UserFacingError for miscellaneous errors with error messages that should be shown to the user.
+// (The default is the generic error message, but that's intended to be overwritten.)
+export const UserFacingError = createError(
+  'UserFacingError',
+  {
+    message: GENERIC_ERROR_MESSAGE,
+  }
+)
+
+const whitelistedErrors = ["SimpleValidationError", "AuthorizationError", "RateLimitError", "UserFacingError"]
 
 // Most errors shouldn't be shown to the user. Only a few specific ones should,
 // and they're whitelisted here.

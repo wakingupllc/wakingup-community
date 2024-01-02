@@ -80,25 +80,7 @@ import { isWakingUp } from '../lib/instanceSettings';
 }
 
 export async function getUsersWhereLocationIsInNotificationRadius(location: MongoNearLocation): Promise<Array<DbUser>> {
-  return Users.isPostgres() ? new UsersRepo().getUsersWhereLocationIsInNotificationRadius(location) : await Users.aggregate([
-    {
-      "$geoNear": {
-        "near": location, 
-        "spherical": true,
-        "distanceField": "distance",
-        "distanceMultiplier": 0.001,
-        "maxDistance": 300000, // 300km is maximum distance we allow to set in the UI
-        "key": "nearbyEventsNotificationsMongoLocation"
-      }
-    },
-    {
-      "$match": {
-        "$expr": {
-            "$gt": ["$nearbyEventsNotificationsRadius", "$distance"]
-        }
-      }
-    }
-  ]).toArray()
+  return new UsersRepo().getUsersWhereLocationIsInNotificationRadius(location);
 }
 ensureIndex(Users, {nearbyEventsNotificationsMongoLocation: "2dsphere"}, {name: "users.nearbyEventsNotifications"})
 
@@ -186,6 +168,7 @@ export const createNotification = async ({userId, notificationType, documentType
 }) => {
   let user = await Users.findOne({ _id:userId });
   if (!user) throw Error(`Wasn't able to find user to create notification for with id: ${userId}`)
+
   const userSettingField = getNotificationTypeByName(notificationType).userSettingField;
   const notificationTypeSettings = (userSettingField && user[userSettingField]) ? user[userSettingField] : defaultNotificationTypeSettings;
 
@@ -220,7 +203,8 @@ export const createNotification = async ({userId, notificationType, documentType
       });
     }
   }
-  if ((notificationTypeSettings.channel === "email" || notificationTypeSettings.channel === "both") && !noEmail) {
+
+  if (!noEmail && !user.deleted && (notificationTypeSettings.channel === "email" || notificationTypeSettings.channel === "both")) {
     const createdNotification = await createMutator({
       collection: Notifications,
       document: {

@@ -7,7 +7,6 @@ import { Posts } from '../../lib/collections/posts'
 import { Comments } from '../../lib/collections/comments'
 import { bellNotifyEmailVerificationRequired } from '../notificationCallbacks';
 import { isAnyTest } from '../../lib/executionEnvironment';
-import { randomId } from '../../lib/random';
 import { getCollectionHooks, UpdateCallbackProperties } from '../mutationCallbacks';
 import { voteCallbacks, VoteDocTuple } from '../../lib/voting/vote';
 import { encodeIntlError } from '../../lib/vulcan-lib/utils';
@@ -88,7 +87,7 @@ getCollectionHooks("Users").editSync.add(function maybeSendVerificationEmail (mo
   }
 });
 
-getCollectionHooks("Users").updateBefore.add(async function updateProfileTagsSubscribesUser(data, {oldDocument, newDocument}: UpdateCallbackProperties<DbUser>) {
+getCollectionHooks("Users").updateBefore.add(async function updateProfileTagsSubscribesUser(data, {oldDocument, newDocument}: UpdateCallbackProperties<"Users">) {
   // check if the user added any tags to their profile
   const tagIdsAdded = newDocument.profileTagIds?.filter(tagId => !oldDocument.profileTagIds?.includes(tagId)) || []
   
@@ -137,7 +136,7 @@ getCollectionHooks("Users").editAsync.add(async function approveUnreviewedSubmis
     // to now so that it goes to the right place int he latest posts list.
     const unreviewedPosts = await Posts.find({userId: newUser._id, authorIsUnreviewed: true}).fetch();
     for (let post of unreviewedPosts) {
-      await updateMutator<DbPost>({
+      await updateMutator<"Posts">({
         collection: Posts,
         documentId: post._id,
         set: {
@@ -155,7 +154,7 @@ getCollectionHooks("Users").editAsync.add(async function approveUnreviewedSubmis
     // in that case, we want to trigger the relevant comment notifications once the author is reviewed.
     const unreviewedComments = await Comments.find({userId: newUser._id, authorIsUnreviewed: true}).fetch();
     for (let comment of unreviewedComments) {
-      await updateMutator<DbComment>({
+      await updateMutator<"Comments">({
         collection: Comments,
         documentId: comment._id,
         set: {
@@ -167,7 +166,7 @@ getCollectionHooks("Users").editAsync.add(async function approveUnreviewedSubmis
   }
 });
 
-getCollectionHooks("Users").updateAsync.add(function updateUserMayTriggerReview({document, data}: UpdateCallbackProperties<DbUser>) {
+getCollectionHooks("Users").updateAsync.add(function updateUserMayTriggerReview({document, data}: UpdateCallbackProperties<"Users">) {
   const reviewTriggerFields: (keyof DbUser)[] = ['voteCount', 'mapLocation', 'postCount', 'commentCount', 'biography', 'profileImageId'];
   if (reviewTriggerFields.some(field => field in data)) {
     void triggerReviewIfNeeded(document._id)
@@ -177,9 +176,9 @@ getCollectionHooks("Users").updateAsync.add(function updateUserMayTriggerReview(
 /**
  * Waking Up sends a confirmation email to users when they manually deactivate their own account.
  */
-getCollectionHooks("Users").updateAsync.add(function sendDeactivationConfirmationEmail({oldDocument, newDocument, currentUser}: UpdateCallbackProperties<DbUser>) {
+getCollectionHooks("Users").updateAsync.add(function sendDeactivationConfirmationEmail({oldDocument, newDocument, currentUser}: UpdateCallbackProperties<"Users">) {
   if (!isWakingUp) return
-  if (!oldDocument.deleted && newDocument.deleted && currentUser?._id === newDocument._id) {
+  if (!oldDocument.deleted && newDocument.deleted) {
     const sendgridData = {
       user: newDocument,
       to: getUserEmail(newDocument),
@@ -452,6 +451,23 @@ getCollectionHooks('Users').editAsync.add(async function subscribeToWelcomeEmail
   }
 })
 
+if (isWakingUp) {
+  getCollectionHooks('Users').editAsync.add(async function removeDeletedUserFromEmails(newUser: DbUser, oldUser: DbUser) {
+    const sendgridWelcomeListId = sendgridWelcomeListIdSetting.get()!
+    const sendgridDigestListId = sendgridDigestListIdSetting.get()!
+    if (newUser.deleted && !oldUser.deleted) {
+      void removeFromSendgridList(newUser, sendgridWelcomeListId)
+      void removeFromSendgridList(newUser, sendgridDigestListId)
+    } else if (!newUser.deleted && oldUser.deleted) {
+      if (newUser.subscribedToWelcomeEmails) {
+        void addToSendgridList(newUser, sendgridWelcomeListId)
+      }
+      if (newUser.subscribedToDigest) {
+        void addToSendgridList(newUser, sendgridDigestListId)
+      }
+    }
+  })
+}
 
 const welcomeMessageDelayer = new EventDebouncer({
   name: "welcomeMessageDelay",

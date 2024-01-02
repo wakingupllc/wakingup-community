@@ -1,7 +1,7 @@
-
 import DialogueChecks from "../../lib/collections/dialogueChecks/collection";
 import {randomId} from "../../lib/random";
 import AbstractRepo from "./AbstractRepo";
+import { recordPerfMetrics } from "./perfMetricWrapper";
 
 const BASE_UPSERT_QUERY = `
     INSERT INTO "DialogueChecks" (
@@ -15,13 +15,14 @@ const BASE_UPSERT_QUERY = `
       $1, $2, $3, $4, $5, $6
     ) ON CONFLICT ("userId", "targetUserId")`;
 
-export default class DialogueChecksRepo extends AbstractRepo<DbDialogueCheck> {
+class DialogueChecksRepo extends AbstractRepo<"DialogueChecks"> {
   constructor() {
     super(DialogueChecks);
   }
   async upsertDialogueCheck(userId: string, targetUserId: string, checked: boolean) {
     const checkedAt = new Date() // now
     return this.one(`
+      -- DialogueChecksRepo.upsertDialogueCheck
       ${BASE_UPSERT_QUERY} DO UPDATE SET 
         "checked" = $4,
         "checkedAt" = $5
@@ -32,6 +33,7 @@ export default class DialogueChecksRepo extends AbstractRepo<DbDialogueCheck> {
   async upsertDialogueHideInRecommendations(userId: string, targetUserId: string, hideInRecommendations: boolean) {
     const checkedAt = new Date() // now
     return this.one(`
+      -- DialogueChecksRepo.upsertDialogueHideInRecommendations
       ${BASE_UPSERT_QUERY} DO UPDATE SET 
         "hideInRecommendations" = $6
       RETURNING *
@@ -40,6 +42,7 @@ export default class DialogueChecksRepo extends AbstractRepo<DbDialogueCheck> {
 
   async checkForMatch(userId1: string, userId2: string): Promise<DbDialogueCheck | null> {
     return this.oneOrNone(`
+      -- DialogueChecksRepo.checkForMatch
       SELECT 
         * 
       FROM "DialogueChecks" 
@@ -56,3 +59,7 @@ export default class DialogueChecksRepo extends AbstractRepo<DbDialogueCheck> {
     `, [userId1, userId2])
   }
 }
+
+recordPerfMetrics(DialogueChecksRepo);
+
+export default DialogueChecksRepo;

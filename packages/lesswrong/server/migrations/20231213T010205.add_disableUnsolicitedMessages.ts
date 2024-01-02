@@ -12,9 +12,9 @@
  * -
  * --- Accepted on 2023-11-17T19:44:20.000Z by 20231117T194420.update_notification_defaults.ts
  * +-- Overall schema hash: 6af2520bb336826eb25cb47f89c11745
- *  
+ *
  * @@ -1031,3 +1029,3 @@ CREATE TABLE "UserTagRels" (
- *  
+ *
  * --- Schema for "Users", hash: 62a2c6ad3605bbbd01f6bac610ab2548
  * +-- Schema for "Users", hash: 99cd32e6f8f1b9bedae86a6ae0212345
  *  CREATE TABLE "Users" (
@@ -25,7 +25,7 @@
  * @@ -1270 +1269,2 @@ CREATE TABLE "Votes" (
  *  );
  * +
- * 
+ *
  * -------------------------------------------
  * (run `git diff --no-index schema/accepted_schema.sql schema/schema_to_accept.sql` to see this more clearly)
  *
@@ -34,19 +34,15 @@
  * - [ ] Uncomment `acceptsSchemaHash` below
  * - [ ] Run `yarn acceptmigrations` to update the accepted schema hash (running makemigrations again will also do this)
  */
-export const acceptsSchemaHash = "6af2520bb336826eb25cb47f89c11745";
+export const acceptsSchemaHash = '6af2520bb336826eb25cb47f89c11745'
 
-import Users from "../../lib/collections/users/collection";
-import { addField, dropField } from "./meta/utils";
+import Users from '../../lib/collections/users/collection'
+import {addField, dropField} from './meta/utils'
 
 export const up = async ({db}: MigrationContext) => {
-  if (Users.isPostgres()) {
-    await addField(db, Users, 'disableUnsolicitedMessages');
-  }
+  await addField(db, Users, 'disableUnsolicitedMessages')
 }
 
 export const down = async ({db}: MigrationContext) => {
-  if (Users.isPostgres()) {
-    await dropField(db, Users, 'disableUnsolicitedMessages');
-  }
+  await dropField(db, Users, 'disableUnsolicitedMessages')
 }

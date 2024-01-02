@@ -51,8 +51,9 @@ import { isElasticEnabled } from './search/elastic/elasticSettings';
 import ElasticController from './search/elastic/ElasticController';
 import { GENERIC_ERROR_MESSAGE, shouldHideErrorDetailsFromUser } from './vulcan-lib';
 import type { ApolloServerPlugin, GraphQLRequestContext, GraphQLRequestListener } from 'apollo-server-plugin-base';
-import { closePerfMetric, openPerfMetric, perfMetricMiddleware } from './perfMetrics';
+import { asyncLocalStorage, closePerfMetric, openPerfMetric, perfMetricMiddleware, setAsyncStoreValue } from './perfMetrics';
 import { performanceMetricLoggingEnabled } from '../lib/publicSettings';
+import {addAdminRoutesMiddleware} from './adminRoutesMiddleware'
 
 class ApolloServerLogging implements ApolloServerPlugin<ResolverContext> {
   requestDidStart({ request, context }: GraphQLRequestContext<ResolverContext>): GraphQLRequestListener<ResolverContext> {
@@ -134,7 +135,9 @@ export function startWebserver() {
   app.use('/ckeditor-webhook', express.json({ limit: '50mb' }));
 
   addStripeMiddleware(addMiddleware);
+  // Most middleware need to run after those added by addAuthMiddlewares, so that they can access the user that passport puts on the request.  Be careful if moving it!
   addAuthMiddlewares(addMiddleware);
+  addAdminRoutesMiddleware(addMiddleware);
   addForumSpecificMiddleware(addMiddleware);
   addSentryMiddlewares(addMiddleware);
   addClientIdMiddleware(addMiddleware);
@@ -190,6 +193,7 @@ export function startWebserver() {
     context: async ({ req, res }: { req: express.Request, res: express.Response }) => {
       const context = await getContextFromReqAndRes(req, res);
       configureSentryScope(context);
+      setAsyncStoreValue('resolverContext', context);
       return context;
     },
     plugins: [new ApolloServerLogging()],
@@ -347,7 +351,15 @@ export function startWebserver() {
       response.write(prefetchPrefix);
     }
     
-    const renderResult = await renderWithCache(request, response, user);
+    const renderResult = performanceMetricLoggingEnabled.get()
+      ? await asyncLocalStorage.run({}, () => renderWithCache(request, response, user))
+      : await renderWithCache(request, response, user);
+    
+    if (renderResult.aborted) {
+      response.status(499);
+      response.end();
+      return;
+    }
     
     const {
       ssrBody,
