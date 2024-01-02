@@ -910,7 +910,8 @@ const schema: SchemaType<"Posts"> = {
   // submitter applies/upvotes relevance for any tags included as keys.
   tagRelevance: {
     type: Object,
-    optional: false,
+    // This is maybe a questionable thing to do bc it defines the SQL schema.
+    optional: !categoriesEnabledSetting.get(),
     canCreate: ['members'],
     // This must be set to editable to allow the data to be sent from the edit form, but in practice it's always overwritten by updatePostDenormalizedTags
     canUpdate: [userOwns, 'sunshineRegiment', 'admins'],
