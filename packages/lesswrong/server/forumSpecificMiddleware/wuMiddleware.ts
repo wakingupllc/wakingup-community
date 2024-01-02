@@ -38,7 +38,7 @@ const deletedAccountMessage = (email: string) => `The community account for ${em
 function urlDisallowedForLoggedOutUsers(req: express.Request) {
   if (req.user) return false;
 
-  const whiteListPaths = ['/', '/graphql', '/analyticsEvent', '/browserconfig.xml', '/site.webmanifest']
+  const whiteListPaths = ['/', '/code', '/graphql', '/analyticsEvent', '/browserconfig.xml', '/site.webmanifest']
   if (whiteListPaths.includes(req.path)) return false
   if (req.path.startsWith('/js/bundle.js')) return false
   if (req.path.startsWith('/allStyles')) return false
@@ -375,6 +375,7 @@ const authenticationResolvers = {
         const sendgridData = {
           to: wuUser.email,
           dynamicTemplateData: {
+            email: wuUser.email,
             pin: oneTimeCode,
             pin1: oneTimeCode[0],
             pin2: oneTimeCode[1],
