@@ -22,8 +22,6 @@ getCollectionHooks("Messages").newValidate.add(function NewMessageEmptyCheck (me
  * disableUnsolicitedMessages, or they've messaged together in the past, or the sender is an admin).
  */
 getCollectionHooks("Messages").createBefore.add(async function checkMessagePermission(message: DbMessage, { currentUser, context }) {
-  if (currentUser?.isAdmin) return message;
-
   const { conversationId } = message;
   const conversation = await Conversations.findOne(conversationId);
   const previousParticipants = await previousCorrespondents(currentUser)
@@ -33,6 +31,13 @@ getCollectionHooks("Messages").createBefore.add(async function checkMessagePermi
   for (const participantId of recipients) {
     const participant = await Users.findOne(participantId);
     if (!participant) throw new Error("Recipient doesn't exist");
+    if (participant.deleted) {
+      throw new UserFacingError({
+        message: `${participant.username} has been deactivated.`
+      })
+    }
+    if (currentUser?.isAdmin) continue;
+
     if (participant.disableUnsolicitedMessages && !previousParticipants.has(participantId)) {
       throw new UserFacingError({
         message: `${participant.username} has disabled new message requests.`
