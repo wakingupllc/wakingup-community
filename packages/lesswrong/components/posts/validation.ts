@@ -1,5 +1,6 @@
 import {useState} from 'react'
 import {categoriesEnabledSetting} from '../../lib/instanceSettings.ts'
+import isEqual from 'lodash/isEqual'
 
 export const getPostValidationErrors = (post: PostsPage) => {
   const message = []
@@ -18,8 +19,13 @@ export const useValidatePost = () => {
     useState<{ message: string }[]>([])
 
   const validate = (post: PostsPage) => {
-    const validationErrors = getPostValidationErrors(post)
-    setValidationErrors(validationErrors)
+    const newValidationErrors = getPostValidationErrors(post)
+    // See https://github.com/wakingupllc/wakingup-community/pull/198#issuecomment-1873032657 for context of the check
+    // TLDR is to avoid React thinking the state has changed when it hasn't, which prevents form submission
+    if (!isEqual(validationErrors, newValidationErrors)) {
+      setValidationErrors(newValidationErrors)
+    }
+    
     setIsValidationReady(true)
   }
   return [validationErrors, validate, isValidationReady] as const
