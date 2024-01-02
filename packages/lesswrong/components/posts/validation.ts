@@ -7,9 +7,11 @@ export const getPostValidationErrors = (post: PostsPage) => {
   if (!post.title?.length) {
     message.push({message: 'Please add a post title.'})
   }
+  
   if (categoriesEnabledSetting.get() && !Object.keys(post.tagRelevance ?? {}).length) {
     message.push({message: 'Please select a category for your post.'})
   }
+  
   return message
 }
 
@@ -28,5 +30,6 @@ export const useValidatePost = () => {
     
     setIsValidationReady(true)
   }
+  
   return [validationErrors, validate, isValidationReady] as const
 }

@@ -11,12 +11,14 @@ const styles = (theme: ThemeType): JssStyles => ({
     width: 'fit-content',
     marginLeft: 5,
   },
+
   tagName: {
     ...tagStyle(theme),
     cursor: 'default',
     backgroundColor: theme.palette.tag.backgroundHover,
     color: theme.palette.buttons.primaryDarkText,
   },
+
   removeTag: {
     background: 'transparent',
     color: 'inherit',
@@ -26,10 +28,12 @@ const styles = (theme: ThemeType): JssStyles => ({
     display: 'flex',
     alignItems: 'center',
     marginBottom: 8,
+    padding: 5,
+
     '&:hover': {
       opacity: 0.5,
     },
-    padding: 5,
+
     '& svg': {
       width: 15,
       height: 15,
@@ -54,18 +58,16 @@ const CategoryItem = ({documentId, onDelete, classes}: {
     return <Components.Loading/>
   }
 
-  if (document) {
-    return <div className={classes.tag}>
-      <button className={classes.removeTag} onClick={() => onDelete(document._id)}>
-        <Components.ForumIcon icon="Close"/>
-      </button>
-      <Components.LWTooltip title={document.description?.plaintextDescription}>
-        <div className={classes.tagName}>{document.name}</div>
-      </Components.LWTooltip>
-    </div>
-  }
+  if (!document) return null
 
-  return null
+  return <div className={classes.tag}>
+    <button className={classes.removeTag} onClick={() => onDelete(document._id)}>
+      <Components.ForumIcon icon="Close"/>
+    </button>
+    <Components.LWTooltip title={document.description?.plaintextDescription}>
+      <div className={classes.tagName}>{document.name}</div>
+    </Components.LWTooltip>
+  </div>
 }
 
 const CategoryItemComponent = registerComponent('CategoryItem', CategoryItem, {styles})

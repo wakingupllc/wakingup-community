@@ -1,7 +1,6 @@
 import React, {useCallback} from 'react'
 import {Components, registerComponent} from '../../lib/vulcan-lib'
-import mapValues from 'lodash/mapValues'
-import toDictionary from '../../lib/utils/toDictionary.ts'
+import {useUpdateTagValuesWithArray} from './FormComponentPostEditorTagging.tsx'
 
 const styles = (theme: ThemeType): JssStyles => ({
   root: {
@@ -23,13 +22,16 @@ const styles = (theme: ThemeType): JssStyles => ({
   },
 })
 
-const CategorySelector = ({
-                            value,
-                            updateCurrentValues,
-                            classes,
-                          }: FormComponentProps<any> & {
-  classes: ClassesType,
-}) => {
+const CategorySelector = (
+  {
+    value,
+    updateCurrentValues,
+    classes,
+  }: FormComponentProps<Record<string, number> | null> & {
+    classes: ClassesType,
+  }) => {
+  const updateValuesWithArray = useUpdateTagValuesWithArray(updateCurrentValues)
+
   const {
     CategoryItem,
     CoreTagsChecklist,
@@ -37,30 +39,11 @@ const CategorySelector = ({
   } = Components
   const selectedTagIds = Object.keys(value || {})
 
-  /**
-   * post tagRelevance field needs to look like {string: number}
-   */
-  const updateValuesWithArray = useCallback((arrayOfTagIds: string[]) => {
-    void updateCurrentValues(
-      mapValues(
-        {tagRelevance: arrayOfTagIds},
-        (arrayOfTagIds: string[]) => toDictionary(
-          arrayOfTagIds, tagId => tagId, () => 1,
-        ),
-      ),
-    )
-  }, [updateCurrentValues])
-
   const onTagSelected = useCallback(async (
     tag: { tagId: string, tagName: string, parentTagId?: string },
     existingTagIds: string[],
   ) => {
-    updateValuesWithArray(
-      [
-        tag.tagId,
-        ...existingTagIds,
-      ].filter(Boolean) as string[],
-    )
+    updateValuesWithArray([tag.tagId, ...existingTagIds])
   }, [updateValuesWithArray])
 
   const onTagRemoved = useCallback((tagId: string) =>

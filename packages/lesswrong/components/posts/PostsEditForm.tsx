@@ -1,21 +1,21 @@
-import type { Editor } from '@ckeditor/ckeditor5-core';
 import React, { useEffect, useRef, useState } from 'react';
-import NoSSR from 'react-no-ssr';
-import { afNonMemberSuccessHandling } from "../../lib/alignment-forum/displayAFNonMemberPopups";
-import { canUserEditPostMetadata, getPostCollaborateUrl, isNotHostedHere, postGetEditUrl, postGetPageUrl } from '../../lib/collections/posts/helpers';
+import { Components, registerComponent, getFragment } from '../../lib/vulcan-lib';
 import { useSingle } from '../../lib/crud/withSingle';
-import { useUpdate } from "../../lib/crud/withUpdate";
-import { showSocialMediaShareLinksSetting } from '../../lib/publicSettings.ts';
-import { useNavigate } from '../../lib/reactRouterWrapper';
-import { useLocation } from '../../lib/routeUtil';
-import { Components, getFragment, registerComponent } from '../../lib/vulcan-lib';
-import { userIsPodcaster } from '../../lib/vulcan-users/permissions';
-import { useDialog } from "../common/withDialog";
 import { useMessages } from '../common/withMessages';
-import { useCurrentUser } from "../common/withUser";
-import type { PostSubmitProps } from './PostSubmit';
+import { postGetPageUrl, postGetEditUrl, getPostCollaborateUrl, isNotHostedHere, canUserEditPostMetadata } from '../../lib/collections/posts/helpers';
+import { useLocation } from '../../lib/routeUtil'
+import NoSSR from 'react-no-ssr';
 import { styles } from './PostsNewForm';
+import { useDialog } from "../common/withDialog";
+import {useCurrentUser} from "../common/withUser";
+import { useUpdate } from "../../lib/crud/withUpdate";
+import { afNonMemberSuccessHandling } from "../../lib/alignment-forum/displayAFNonMemberPopups";
+import type { PostSubmitProps } from './PostSubmit';
+import { userIsPodcaster } from '../../lib/vulcan-users/permissions';
 import { SHARE_POPUP_QUERY_PARAM } from './PostsPage/PostsPage';
+import type { Editor } from '@ckeditor/ckeditor5-core';
+import { useNavigate } from '../../lib/reactRouterWrapper';
+import {showSocialMediaShareLinksSetting} from '../../lib/publicSettings.ts'
 import {useValidatePost} from './validation'
 
 const editor : Editor | null = null
@@ -128,7 +128,7 @@ const PostsEditForm = ({ documentId, classes }: {
               documentId={documentId}
               queryFragment={getFragment('PostsEditQueryFragment')}
               mutationFragment={getFragment('PostsEditMutationFragment')}
-              changeCallback={(post: any) => validate(post)}
+              changeCallback={(post: PostsPage) => validate(post)}
               successCallback={(post: any, options: any) => {
                 const alreadySubmittedToAF = post.suggestForAlignmentUserIds && post.suggestForAlignmentUserIds.includes(post.userId)
                 if (!post.draft && !alreadySubmittedToAF) afNonMemberSuccessHandling({currentUser, document: post, openDialog, updateDocument: updatePost})

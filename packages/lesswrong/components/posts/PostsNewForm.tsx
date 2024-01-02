@@ -353,7 +353,7 @@ const PostsNewForm = ({classes}: {
                 collectionName="Posts"
                 mutationFragment={getFragment('PostsPage')}
                 prefilledProps={prefilledProps}
-                changeCallback={(post: any) => validate(post)}
+                changeCallback={(post: PostsPage) => validate(post)}
                 successCallback={(post: any, options: any) => {
                   if (!post.draft) afNonMemberSuccessHandling({currentUser, document: post, openDialog, updateDocument: updatePost});
                   if (options?.submitOptions?.redirectToEditor) {
