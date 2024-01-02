@@ -57,6 +57,7 @@ export type PostSubmitProps = FormButtonProps & {
   saveDraftLabel?: string,
   feedbackLabel?: string,
   disabled?: boolean,
+  onDisabledSubmitClick?: () => void,
   document: PostsPage,
   classes: ClassesType
 }
@@ -67,6 +68,7 @@ const PostSubmit = ({
   saveDraftLabel = "Save as Draft",
   feedbackLabel = "Request Feedback",
   disabled = false,
+  onDisabledSubmitClick,
   cancelCallback, document, collectionName, classes
 }: PostSubmitProps, { updateCurrentValues, addToSuccessForm, submitForm }: any) => {
   const currentUser = useCurrentUser();
@@ -136,18 +138,20 @@ const PostSubmit = ({
         >
           {saveDraftLabel}
         </Button>
-        <Button
-          type="submit"
-          onClick={onSubmitClick}
-          disabled={disabled}
-          className={classNames("primary-form-submit-button", classes.formButton, classes.submitButton)}
-          {...(isFriendlyUI ? {
-            variant: "contained",
-            color: "primary",
-          } : {})}
-        >
-          {submitLabel}
-        </Button>
+        <span onClick={disabled ? onDisabledSubmitClick : undefined}>
+          <Button
+            type="submit"
+            onClick={onSubmitClick}
+            disabled={disabled}
+            className={classNames('primary-form-submit-button', classes.formButton, classes.submitButton)}
+            {...(isFriendlyUI ? {
+              variant: 'contained',
+              color: 'primary',
+            } : {})}
+          >
+            {submitLabel}
+          </Button>
+        </span>
       </div>
     </React.Fragment>
   );

@@ -3,7 +3,7 @@ import { useMessages } from '../common/withMessages';
 import { userCanPost } from '../../lib/collections/posts';
 import { postGetPageUrl, postGetEditUrl, isPostCategory, postDefaultCategory } from '../../lib/collections/posts/helpers';
 import pick from 'lodash/pick';
-import React from 'react';
+import React, {useState} from 'react'
 import { useCurrentUser } from '../common/withUser'
 import { useLocation } from '../../lib/routeUtil';
 import NoSSR from 'react-no-ssr';
@@ -245,6 +245,7 @@ const PostsNewForm = ({classes}: {
     fragmentName: 'SuggestAlignmentPost',
   })
   const [validationErrors, validate, isFormValidated] = useValidatePost();
+  const [showValidationErrors, setShowValidationErrors] = useState(false);
 
   const templateId = query && query.templateId;
   
@@ -334,7 +335,7 @@ const PostsNewForm = ({classes}: {
 
   const NewPostsSubmit = (props: PostSubmitProps) => {
     return <div className={classes.formSubmit}>
-      <PostSubmit {...props} disabled={!isFormValidated || validationErrors.length > 0}/>
+      <PostSubmit {...props} disabled={!isFormValidated || validationErrors.length > 0} onDisabledSubmitClick={() => setShowValidationErrors(true)}/>
     </div>
   }
 
@@ -382,7 +383,7 @@ const PostsNewForm = ({classes}: {
           </NoSSR>
         </RecaptchaWarning>
       </div>
-      <FormErrors errors={validationErrors}/>
+      {showValidationErrors && <FormErrors errors={validationErrors}/>}
     </DynamicTableOfContents>
 
   );
