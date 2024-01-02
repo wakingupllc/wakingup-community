@@ -170,7 +170,7 @@ export const WULoginForm = ({ classes }: WULoginFormProps) => {
   const emailParam = params.get('email') || '';
   const startingState = (pathname === '/code' && emailParam !== '') ? 'enterCode' : 'requestCode';
 
-  const [email, setEmail] = useState<string>(params.get('email') || '')
+  const [email, setEmail] = useState<string>(emailParam)
   const [oneTimeCode, setOneTimeCode] = useState<string>("")
   const [currentAction, setCurrentAction] = useState<possibleActions>(startingState)
   const [requestAnotherCode, setRequestAnotherCode] = useState<boolean>(false)
