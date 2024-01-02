@@ -354,6 +354,7 @@ const authenticationResolvers = {
         const sendgridData = {
           to: wuUser.email,
           dynamicTemplateData: {
+            email: wuUser.email,
             pin: oneTimeCode,
             pin1: oneTimeCode[0],
             pin2: oneTimeCode[1],
