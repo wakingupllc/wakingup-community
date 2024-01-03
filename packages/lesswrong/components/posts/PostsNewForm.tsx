@@ -3,7 +3,7 @@ import { useMessages } from '../common/withMessages';
 import { userCanPost } from '../../lib/collections/posts';
 import { postGetPageUrl, postGetEditUrl, isPostCategory, postDefaultCategory } from '../../lib/collections/posts/helpers';
 import pick from 'lodash/pick';
-import React from 'react';
+import React, {useState} from 'react'
 import { useCurrentUser } from '../common/withUser'
 import { useLocation } from '../../lib/routeUtil';
 import NoSSR from 'react-no-ssr';
@@ -17,6 +17,7 @@ import { SHARE_POPUP_QUERY_PARAM } from './PostsPage/PostsPage';
 import { Link, useNavigate } from '../../lib/reactRouterWrapper';
 import { QuestionIcon } from '../icons/questionIcon';
 import {showSocialMediaShareLinksSetting} from '../../lib/publicSettings.ts'
+import {useValidatePost} from './validation.ts'
 
 // Also used by PostsEditForm
 export const styles = (theme: ThemeType): JssStyles => ({
@@ -243,6 +244,8 @@ const PostsNewForm = ({classes}: {
     collectionName: "Posts",
     fragmentName: 'SuggestAlignmentPost',
   })
+  const [validationErrors, validate, isFormValidated] = useValidatePost();
+  const [showValidationErrors, setShowValidationErrors] = useState(false);
 
   const templateId = query && query.templateId;
   
@@ -265,6 +268,7 @@ const PostsNewForm = ({classes}: {
     PostSubmit, WrappedSmartForm, LoginForm,
     RecaptchaWarning, SingleColumnSection, Typography, Loading, PostsAcceptTos,
     NewPostModerationWarning, RateLimitWarning, DynamicTableOfContents,
+    FormErrors,
   } = Components;
 
   const userHasModerationGuidelines = currentUser && currentUser.moderationGuidelines && currentUser.moderationGuidelines.originalContents
@@ -331,7 +335,7 @@ const PostsNewForm = ({classes}: {
 
   const NewPostsSubmit = (props: PostSubmitProps) => {
     return <div className={classes.formSubmit}>
-      <PostSubmit {...props} />
+      <PostSubmit {...props} disabled={!isFormValidated || validationErrors.length > 0} onDisabledSubmitClick={() => setShowValidationErrors(true)}/>
     </div>
   }
 
@@ -350,6 +354,7 @@ const PostsNewForm = ({classes}: {
                 collectionName="Posts"
                 mutationFragment={getFragment('PostsPage')}
                 prefilledProps={prefilledProps}
+                changeCallback={(post: PostsPage) => validate(post)}
                 successCallback={(post: any, options: any) => {
                   if (!post.draft) afNonMemberSuccessHandling({currentUser, document: post, openDialog, updateDocument: updatePost});
                   if (options?.submitOptions?.redirectToEditor) {
@@ -378,6 +383,7 @@ const PostsNewForm = ({classes}: {
           </NoSSR>
         </RecaptchaWarning>
       </div>
+      {showValidationErrors && <FormErrors errors={validationErrors}/>}
     </DynamicTableOfContents>
 
   );

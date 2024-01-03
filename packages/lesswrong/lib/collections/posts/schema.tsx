@@ -13,6 +13,7 @@ import { DEFAULT_QUALITATIVE_VOTE } from '../reviewVotes/schema';
 import { getCollaborativeEditorAccess } from './collabEditingPermissions';
 import { getVotingSystems } from '../../voting/votingSystems';
 import {
+  categoriesEnabledSetting,
   fmCrosspostBaseUrlSetting,
   fmCrosspostSiteNameSetting,
   forumTypeSetting,
@@ -909,17 +910,17 @@ const schema: SchemaType<"Posts"> = {
   // submitter applies/upvotes relevance for any tags included as keys.
   tagRelevance: {
     type: Object,
-    optional: true,
+    // This is maybe a questionable thing to do bc it defines the SQL schema.
+    optional: !categoriesEnabledSetting.get(),
     canCreate: ['members'],
     // This must be set to editable to allow the data to be sent from the edit form, but in practice it's always overwritten by updatePostDenormalizedTags
     canUpdate: [userOwns, 'sunshineRegiment', 'admins'],
     canRead: ['guests'],
     
     blackbox: true,
-    group: formGroups.tags,
-    control: "FormComponentPostEditorTagging",
-    /* Tags (topics) are removed for launch, but will be added back later, so I'm leaving this commented out. */
-    hidden: true /* ({eventForm, document}) => eventForm || (isLWorAF && !!document.collabEditorDialogue) */
+    group: formGroups.categories,
+    control: "CategorySelector",
+    hidden: !categoriesEnabledSetting.get(),
   },
   "tagRelevance.$": {
     type: Number,

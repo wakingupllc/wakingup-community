@@ -83,8 +83,12 @@ export interface ChecklistTag {
 }
 
 interface TagsChecklistItem {
-  tag: ChecklistTag,
+  tag: TagsChecklistTag,
   selected: boolean,
+}
+
+type TagsChecklistTag = Pick<TagFragment, '_id' | 'name' | 'shortName'> & {
+  description?: TagFragment_description | null
 }
 
 const TagsChecklist = ({
@@ -106,7 +110,7 @@ const TagsChecklist = ({
   onTagRemoved?: (tag: { tagId: string; tagName: string; parentTagId?: string }, existingTagIds: Array<string>) => void;
   classes: ClassesType;
   selectedTagIds?: Array<string | undefined>;
-  tags: Pick<TagFragment, "_id" | "name" | "shortName">[];
+  tags: (TagsChecklistTag)[];
   displaySelected?: "highlight" | "hide";
   tooltips?: boolean;
   truncate?: boolean;
@@ -175,8 +179,7 @@ const TagsChecklist = ({
             disabled={!tooltips}
             title={
               <div>
-                Click to assign <em>{tagChecklistItem.tag.name}</em> {taggingNameSetting.get()}
-                {!!tagChecklistItem.tag.parentTag && <span>. Its parent {taggingNameSetting.get()} <em>{tagChecklistItem.tag.parentTag.name}</em> will also be assigned automatically</span>}
+                { tagChecklistItem.tag.description?.plaintextDescription }
               </div>
             }
             hideOnTouchScreens

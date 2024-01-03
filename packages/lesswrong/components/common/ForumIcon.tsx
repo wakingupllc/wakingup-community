@@ -75,6 +75,7 @@ import MuiNotificationsIcon from '@material-ui/icons/Notifications';
 import MuiLinkIcon from "@material-ui/icons/Link";
 import MuiTagIcon from "@material-ui/icons/LocalOfferOutlined";
 import MuiReportIcon from "@material-ui/icons/ReportOutlined";
+import MuiErrorIcon from "@material-ui/icons/Error";
 import MuiVisibilityOff from "@material-ui/icons/VisibilityOff";
 import MuiVisibility from "@material-ui/icons/Visibility";
 import MuiEditIcon from "@material-ui/icons/Edit";
@@ -160,6 +161,7 @@ export type ForumIconName =
   "Shortform" |
   "Warning" |
   "Report" |
+  "Error" |
   "ListBullet" |
   "Eye" |
   "EyeOutline" |
@@ -245,6 +247,7 @@ const ICONS: ForumOptions<Record<ForumIconName, IconComponent>> = {
     Warning: MuiWarningIcon,
     ListBullet: ListBulletIcon,
     Report: MuiReportIcon,
+    Error: MuiErrorIcon,
     Tag: MuiTagIcon,
     TagFilled: TagFilledIcon,
     Eye: MuiVisibility,
@@ -328,6 +331,7 @@ const ICONS: ForumOptions<Record<ForumIconName, IconComponent>> = {
     Warning: WarningIcon,
     ListBullet: ListBulletIcon,
     Report: ReportIcon,
+    Error: MuiErrorIcon,
     Tag: TagIcon,
     TagFilled: TagFilledIcon,
     Eye: EyeIcon,

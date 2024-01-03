@@ -38,6 +38,21 @@ const splitBy = (
 }
 
 /**
+ * post tagRelevance field needs to look like {string: number}
+ */
+export const useUpdateTagValuesWithArray = (updateCurrentValues: (newValues: any, options?: { mode: 'overwrite' | 'merge' }) => Promise<void>) => 
+  useCallback((arrayOfTagIds: string[]) => {
+  void updateCurrentValues(
+    mapValues(
+      {tagRelevance: arrayOfTagIds},
+      (arrayOfTagIds: string[]) => toDictionary(
+        arrayOfTagIds, tagId => tagId, () => 1,
+      ),
+    ),
+  )
+}, [updateCurrentValues])
+
+/**
  * Edit tags on the new or edit post form. If it's the new form, use
  * TagMultiSelect; a server-side callback will convert tags to tag-relevances.
  * If it's the edit form, instead use FooterTagList, which has the same
@@ -68,6 +83,7 @@ const FormComponentPostEditorTagging = ({value, path, document, formType, update
     limit: 100,
     skip: !showCoreAndTypesTopicSections,
   });
+  const updateValuesWithArray = useUpdateTagValuesWithArray(updateCurrentValues)
 
   const loading = coreTagResult.loading || postTypeResult.loading;
 
@@ -91,20 +107,6 @@ const FormComponentPostEditorTagging = ({value, path, document, formType, update
     (tagId: string) => !!postTypeTags?.find((tag) => tag._id === tagId),
     () => true,
   ], selectedTagIds);
-
-  /**
-   * post tagRelevance field needs to look like {string: number}
-   */
-  const updateValuesWithArray = useCallback((arrayOfTagIds: string[]) => {
-    void updateCurrentValues(
-      mapValues(
-        {tagRelevance: arrayOfTagIds},
-        (arrayOfTagIds: string[]) => toDictionary(
-          arrayOfTagIds, tagId=>tagId, _tagId=>1
-        ),
-      ),
-    );
-  }, [updateCurrentValues]);
 
   const onMultiselectUpdate = useCallback((changes: {tagRelevance: string[]}) => {
     updateValuesWithArray([
