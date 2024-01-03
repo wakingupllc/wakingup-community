@@ -1076,3 +1076,4 @@ importComponent("WUDeactivateAccount", () => require('../components/users/WUDeac
 
 importComponent("CategorySelector", () => require('../components/form-components/CategorySelector'));
 importComponent("CategoryItem", () => require('../components/form-components/CategoryItem'));
+importComponent("HomeTagBar", () => require('../components/common/HomeTagBar'));
