@@ -1,22 +1,20 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { Components, registerComponent } from '../../lib/vulcan-lib';
-import { useCurrentUser } from '../common/withUser';
-import { useLocation, useNavigate } from '../../lib/routeUtil';
-import { AnalyticsContext, useOnMountTracking } from '../../lib/analyticsEvents';
-import { useFilterSettings } from '../../lib/filterSettings';
-import { useCurrentTime } from '../../lib/utils/timeUtil';
-import { isLW, isLWorAF } from '../../lib/instanceSettings';
-import { sectionTitleStyle } from '../common/SectionTitle';
-import { AllowHidingFrontPagePostsContext } from '../dropdowns/posts/PostActions';
-import { HideRepeatedPostsProvider } from '../posts/HideRepeatedPostsContext';
-import classNames from 'classnames';
-import { reviewIsActive } from '../../lib/reviewUtils';
-import { isFriendlyUI } from '../../themes/forumTheme';
-import type { Option } from '../common/InlineSelect';
-import { getPostViewOptions } from '../../lib/postViewOptions';
-import Button from '@material-ui/core/Button';
+import React, {useMemo, useState} from 'react'
+import {Components, registerComponent} from '../../lib/vulcan-lib'
+import {useCurrentUser} from '../common/withUser'
+import {useLocation, useNavigate} from '../../lib/routeUtil'
+import {AnalyticsContext} from '../../lib/analyticsEvents'
+import {isLW, isLWorAF} from '../../lib/instanceSettings'
+import {sectionTitleStyle} from '../common/SectionTitle'
+import {AllowHidingFrontPagePostsContext} from '../dropdowns/posts/PostActions'
+import {HideRepeatedPostsProvider} from '../posts/HideRepeatedPostsContext'
+import classNames from 'classnames'
+import {reviewIsActive} from '../../lib/reviewUtils'
+import {isFriendlyUI} from '../../themes/forumTheme'
+import type {Option} from '../common/InlineSelect'
+import {getPostViewOptions} from '../../lib/postViewOptions'
+import Button from '@material-ui/core/Button'
 import qs from 'qs'
-import { Link } from '../../lib/reactRouterWrapper';
+import {Link} from '../../lib/reactRouterWrapper'
 import {TopicsBarTab} from '../common/HomeTagBar'
 import {tagPostTerms} from '../tagging/TagPage'
 import {
@@ -124,79 +122,6 @@ const styles = (theme: ThemeType): JssStyles => ({
     right: 15,
     color: "#fff",
   },
-  tagBar: {
-    marginTop: '2em',
-    marginBottom: '1.5em',
-    fontSize: 15,
-    fontWeight: 400,
-    '& .CategoryItem-removeTag': {
-      backgroundColor: theme.palette.panelBackground.default,
-      borderRadius: '50%',
-      width: 27,
-      height: 27,
-      '&:hover': {
-        opacity: 1,
-        backgroundColor: theme.palette.tag.backgroundHover,
-        '& svg': {
-          stroke: theme.palette.buttons.primaryDarkText,
-        }
-      },
-      '& svg': {
-        margin: 'auto',
-        width: 18,
-        height: 18,
-      }
-    },
-    '& .HomeTagBar-tabsSection': {
-      marginBottom: 0,
-    },
-    '& .HomeTagBar-tab': {
-      lineHeight: 1.4,
-      padding: '8px 12px',
-      fontSize: 15,
-      fontWeight: 400,
-      backgroundColor: theme.palette.panelBackground.default,
-      '&:hover': {
-        backgroundColor: theme.palette.tag.backgroundHover,
-        color: theme.palette.buttons.primaryDarkText,
-      }
-    },
-    '& .HomeTagBar-activeTab': {
-      backgroundColor: theme.palette.tag.backgroundHover,
-    },
-    '& .HomeTagBar-arrow': {
-      width: 40,
-      height: 40,
-      marginTop: -5,
-      '&:hover svg': {
-        backgroundColor: theme.palette.tag.backgroundHover,
-        color: theme.palette.buttons.primaryDarkText,
-      },
-      '& svg': {
-        width: '100%',
-        height: '100%',
-        color: '#000',
-        background: '#fff',
-        borderRadius: '50%',
-        '& path': {
-          strokeWidth: 0.1,
-        }
-      }
-    },
-    '& .HomeTagBar-rightArrow': {
-      right: -40,
-      '& svg': {
-        paddingLeft: 3,
-      }
-    },
-    '& .HomeTagBar-leftArrow': {
-      left: -50,
-      '& svg': {
-        paddingRight: 3,
-      }
-    }
-  }
-
 })
 
 const defaultLimit = frontpagePostsCountSetting.get() ?? isFriendlyUI ? 11 : 13;
@@ -205,30 +130,20 @@ const WUHomeLatestPosts = ({classes}:{classes: ClassesType}) => {
   const location = useLocation();
   const currentUser = useCurrentUser();
 
-  const {filterSettings} = useFilterSettings()
-  // While hiding desktop settings is stateful over time, on mobile the filter settings always start out hidden
-  // (except that on the EA Forum/FriendlyUI it always starts out hidden)
-  const [filterSettingsVisibleDesktop] = useState(isFriendlyUI ? false : !currentUser?.hideFrontpageFilterSettingsDesktop);
-  const { captureEvent } = useOnMountTracking({eventType:"frontpageFilterSettings", eventProps: {filterSettings, filterSettingsVisible: filterSettingsVisibleDesktop, pageSectionContext: "latestPosts"}, captureOnMount: true})
   const { query } = location;
   const {
-    SingleColumnSection, PostsList2, CuratedPostsList, Typography, InlineSelect, HomeTagBar, CategoryItem
+    SingleColumnSection, 
+    PostsList2, 
+    CuratedPostsList, 
+    Typography, 
+    InlineSelect, 
+    HomeTagBarSingleSelectedTag
   } = Components
   const navigate = useNavigate();
   const frontpageTab = useMemo(() => ({_id: '0', name: FRONTPAGE_TAB_NAME}), [])
   const [activeTab, setActiveTab] = useState<TopicsBarTab>(frontpageTab)
-
-  // We need to reset the tab state if we have previously set it to a tag and then navigated back to the homepage, whether
-  // via clicking the logo or clicking the remove tag button
-  useEffect(() => {
-    if (!query.tab) {
-      setActiveTab(frontpageTab)
-    }
-  }, [query.tab, frontpageTab])
-
+  
   const limit = frontpagePostsCountSetting.get() ?? (parseInt(query.limit) || defaultLimit);
-
-  const now = useCurrentTime();
 
   const currentSorting = (query.view || currentUser?.allPostsSorting || 'magic') as PostSortingMode;
   const viewOptions = getPostViewOptions();
@@ -269,22 +184,9 @@ const WUHomeLatestPosts = ({classes}:{classes: ClassesType}) => {
             </Button>
           </div>
         </Link>
-        <div className={classes.tagBar}>
-          {activeTab.name === frontpageTab.name ? 
-            <HomeTagBar onTagSelectionUpdated={setActiveTab} frontpageTab={frontpageTab} /> :
-              <CategoryItem
-                documentId={activeTab._id}
-                onDelete={(_: string) => {
-                  // We derive the selected tab based on the query, so we need to update the query to remove the tab
-                  navigate({
-                    ...location,
-                    search: qs.stringify({...query, tab: undefined}),
-                  }, {replace: true})}
-                }
-              />
-          }
-        </div>
-
+        
+        <HomeTagBarSingleSelectedTag setActiveTab={setActiveTab} activeTab={activeTab} frontpageTab={frontpageTab} />
+        
         <Typography
           variant="body2"
           component='span'
@@ -292,6 +194,7 @@ const WUHomeLatestPosts = ({classes}:{classes: ClassesType}) => {
         >
           <InlineSelect options={viewOptions} selected={selectedOption} handleSelect={handleViewClick} displayStyle={classes.selectTitle} appendChevron={true} />
         </Typography>
+        
         <HideRepeatedPostsProvider>
           {showCurated && <CuratedPostsList />}
           <AnalyticsContext listContext={"latestPosts"}>
