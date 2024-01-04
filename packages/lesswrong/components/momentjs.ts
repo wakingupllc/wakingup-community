@@ -4,7 +4,11 @@ moment.defineLocale('descriptive-durations', {
     relativeTime: {
         future: "%s",
         past:   "%s ago",
-        s:      "%d second",
+        s: function (number, withoutSuffix, key, isFuture) {
+            // 's' is usually for "a few seconds", but we want to be precise, hence this function
+            if (number === 1) return '1 second';
+            return number + ' seconds';
+        },
         ss:     "%d seconds",
         m:      "a minute",
         mm:     "%d minutes",
