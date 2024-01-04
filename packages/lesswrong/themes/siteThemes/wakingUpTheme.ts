@@ -462,6 +462,17 @@ export const wakingUpTheme: SiteThemeSpecification = {
             display: 'none'
           },
         },
+        FormGroupLayout: {
+          formSectionBody: {
+            '& .form-component-select': {
+              display: 'flex',
+              alignItems: 'center',
+              '& .FormComponentInner-formComponentClear span': {
+                position: 'unset',
+              },
+            },
+          },
+        },
         FormErrors: {
           root: {
             '& ul': {

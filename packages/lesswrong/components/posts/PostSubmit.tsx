@@ -85,7 +85,12 @@ const PostSubmit = ({
     }
   };
 
-  const submitWithoutConfirmation = () => collectionName === "Posts" && updateCurrentValues({draft: false});
+  const submitWithoutConfirmation = async () => {
+     if(collectionName === 'Posts')  {
+      await updateCurrentValues({draft: false})
+      submitForm()
+    }
+  }
 
   const requireConfirmation = isLW && collectionName === 'Posts' && !!document.debate;
 
