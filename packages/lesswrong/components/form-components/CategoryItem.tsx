@@ -1,7 +1,36 @@
 import React from 'react'
 import {Components, registerComponent} from '../../lib/vulcan-lib'
 import {useSingle} from '../../lib/crud/withSingle'
-import {tagStyle} from '../tagging/FooterTag'
+
+export const categoryStyle = (theme: ThemeType) => ({
+  fontWeight: 400,
+  fontSize: 15,
+  fontFamily: theme.typography.fontFamily,
+  lineHeight: 1.4,
+  
+  cursor: 'pointer',
+  backgroundColor: theme.palette.tag.background,
+  border: 'unset',
+  borderRadius: 6,
+  padding: '8px 12px',
+  
+  // for hover preview not being flush with the element
+  marginBottom: 8,
+  
+  '&:hover': {
+    backgroundColor: theme.palette.tag.backgroundHover,
+    color: theme.palette.buttons.primaryDarkText,
+  },
+})
+
+export const selectedCategoryStyle = (theme: ThemeType) => ({
+  ...categoryStyle(theme),
+  cursor: 'default',
+  backgroundColor: theme.palette.tag.backgroundHover,
+  color: theme.palette.buttons.primaryDarkText,
+
+  '&:hover': {},
+})
 
 const styles = (theme: ThemeType): JssStyles => ({
   tag: {
@@ -13,18 +42,7 @@ const styles = (theme: ThemeType): JssStyles => ({
   },
 
   tagName: {
-    ...tagStyle(theme),
-    fontWeight: 400,
-    cursor: 'default',
-    backgroundColor: theme.palette.tag.backgroundHover,
-    color: theme.palette.buttons.primaryDarkText,
-    border: 'unset',
-    borderRadius: 6,
-    paddingTop: 8,
-    paddingRight: 12,
-    paddingBottom: 8,
-    paddingLeft: 12,
-    lineHeight: 1.4,
+    ...selectedCategoryStyle(theme),
   },
 
   removeTag: {

@@ -4,13 +4,12 @@ import {useNavigate} from '../../lib/reactRouterWrapper'
 import {useLocation} from '../../lib/routeUtil'
 import qs from 'qs'
 import {TopicsBarTab} from './HomeTagBar.tsx'
+import {categoryStyle, selectedCategoryStyle} from '../form-components/CategoryItem'
 
 const styles = (theme: ThemeType): JssStyles => ({
   root: {
     marginTop: '2em',
     marginBottom: '1.5em',
-    fontSize: 15,
-    fontWeight: 400,
     '& .CategoryItem-removeTag': {
       backgroundColor: theme.palette.panelBackground.default,
       borderRadius: '50%',
@@ -33,19 +32,10 @@ const styles = (theme: ThemeType): JssStyles => ({
       marginBottom: 0,
     },
     '& .HomeTagBar-tab': {
-      lineHeight: 1.4,
-      padding: '8px 12px',
-      fontSize: 15,
-      fontWeight: 400,
+      ...categoryStyle(theme),
       backgroundColor: theme.palette.panelBackground.default,
-      '&:hover': {
-        backgroundColor: theme.palette.tag.backgroundHover,
-        color: theme.palette.buttons.primaryDarkText,
-      },
     },
-    '& .HomeTagBar-activeTab': {
-      backgroundColor: theme.palette.tag.backgroundHover,
-    },
+    '& .HomeTagBar-activeTab': selectedCategoryStyle(theme),
     '& .HomeTagBar-arrow': {
       width: 40,
       height: 40,

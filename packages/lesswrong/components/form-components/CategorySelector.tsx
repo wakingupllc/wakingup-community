@@ -1,16 +1,16 @@
 import React, {useCallback} from 'react'
 import {Components, registerComponent} from '../../lib/vulcan-lib'
-import {useUpdateTagValuesWithArray} from './FormComponentPostEditorTagging.tsx'
+import {useUpdateTagValuesWithArray} from './FormComponentPostEditorTagging'
+import {categoryStyle} from './CategoryItem'
 
 const styles = (theme: ThemeType): JssStyles => ({
   root: {
     display: 'flex',
     flexDirection: 'column',
-    fontSize: 15,
     '& .TagsChecklist-tag': {
       opacity: 1,
-      fontWeight: 'unset',
-      padding: '8px 12px',
+      ...categoryStyle(theme),
+      backgroundColor: theme.palette.tag.coreTagBackground,
     },
   },
   sectionDescription: {
