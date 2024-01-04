@@ -85,9 +85,9 @@ const PostSubmit = ({
     }
   };
 
-  const submitWithoutConfirmation = () => {
+  const submitWithoutConfirmation = async () => {
      if(collectionName === 'Posts')  {
-      updateCurrentValues({draft: false})
+      await updateCurrentValues({draft: false})
       submitForm()
     }
   }
