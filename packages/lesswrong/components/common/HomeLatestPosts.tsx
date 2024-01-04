@@ -1,31 +1,24 @@
 import React, { useState } from 'react';
 import { Components, registerComponent } from '../../lib/vulcan-lib';
 import { useCurrentUser } from '../common/withUser';
-import { useLocation, useNavigate } from '../../lib/routeUtil';
+import { Link } from '../../lib/reactRouterWrapper';
+import { useLocation } from '../../lib/routeUtil';
 import { useTimezone } from './withTimezone';
 import { AnalyticsContext, useOnMountTracking } from '../../lib/analyticsEvents';
 import { FilterSettings, useFilterSettings } from '../../lib/filterSettings';
+import moment from '../../lib/moment-timezone';
 import { useCurrentTime } from '../../lib/utils/timeUtil';
-import { isEAForum, isLW, isLWorAF } from '../../lib/instanceSettings';
+import { isEAForum, isLW, isLWorAF, taggingNamePluralSetting, taggingNameSetting} from '../../lib/instanceSettings';
 import { sectionTitleStyle } from '../common/SectionTitle';
 import { AllowHidingFrontPagePostsContext } from '../dropdowns/posts/PostActions';
 import { HideRepeatedPostsProvider } from '../posts/HideRepeatedPostsContext';
 import classNames from 'classnames';
 import {useUpdateCurrentUser} from "../hooks/useUpdateCurrentUser";
 import { reviewIsActive } from '../../lib/reviewUtils';
+import { forumSelect } from '../../lib/forumTypeUtils';
 import { frontpageDaysAgoCutoffSetting } from '../../lib/scoring';
 import { isFriendlyUI } from '../../themes/forumTheme';
 import { EA_FORUM_TRANSLATION_TOPIC_ID } from '../../lib/collections/tags/collection';
-import type { Option } from '../common/InlineSelect';
-import { getPostViewOptions } from '../../lib/postViewOptions';
-import Button from '@material-ui/core/Button';
-import qs from 'qs'
-import { Link } from '../../lib/reactRouterWrapper';
-import {
-  frontpagePostsCountSetting,
-  frontpagePostsLoadMoreCountSetting,
-  showPinnedPostPreviewOnHomepageSetting,
-} from '../../lib/publicSettings'
 
 const titleWrapper = isLWorAF ? {
   marginBottom: 8
@@ -61,72 +54,30 @@ const styles = (theme: ThemeType): JssStyles => ({
       display: "none"
     },
   },
-  icon: {
-    cursor: "pointer",
-    color: theme.palette.grey[600],
-    fontSize: 18,
-    position: 'relative',
-    top: '4px',
-  },
-  iconWithLabelGroup: {
-    display: "flex",
-    alignItems: "center",
-    cursor: "pointer",
-  },
-  sortMenuContainer: {
-    fontSize: "1.1rem",
-    fontWeight: "450",
-    lineHeight: "1.5em",
-    fontFamily: theme.palette.fonts.sansSerifStack,
-  },
-  selectTitle: {
-    fontFamily: theme.palette.fonts.sansSerifStack,
-    fontSize: "14px",
-    lineHeight: "21px",
-    fontWeight: 700,
-    letterSpacing: "0.03em",
-    color: `${theme.palette.grey[600]} !important`,
-    textTransform: "uppercase",
-  },
-  selectTitleContainer: {
-    marginBottom: 8,
-  },
-  noHoverLink: {
-    '&:hover': {
-      opacity: 1,
-    },
-  },
-  createPostContainer: {
-    borderRadius: '6px',
-    backgroundColor: '#fff',
-    marginBottom: '8px',
-    height: 62,
-    cursor: 'text',
-  },
-  createPostPlaceholder: {
-    fontFamily: theme.palette.fonts.sansSerifStack,
-    position: 'absolute',
-    left: 15,
-    top: 21,
-    color: theme.palette.grey[400],
-    fontWeight: 600,
-    fontSize: 16,
-  },
-  createPostButton: {
-    fontFamily: theme.typography.fontFamily,
-    marginLeft: "5px",
-    fontSize: 14,
-    fontWeight: 500,
-    textTransform: "none",
-    background: theme.palette.primary.main,
-    position: 'absolute',
-    top: 13,
-    right: 15,
-    color: "#fff",
-  },
 })
 
-const defaultLimit = frontpagePostsCountSetting.get() ?? isFriendlyUI ? 11 : 13;
+const latestPostsName = isFriendlyUI ? 'New & upvoted' : 'Latest Posts'
+
+const filterSettingsToggleLabels = forumSelect({
+  EAForum: {
+    desktopVisible: "Customize feed",
+    desktopHidden: "Customize feed",
+    mobileVisible: "Customize feed",
+    mobileHidden: "Customize feed",
+  },
+  default: {
+    desktopVisible: "Customize Feed (Hide)",
+    desktopHidden: "Customize Feed",
+    mobileVisible: "Customize Feed (Hide)",
+    mobileHidden: "Customize Feed (Show)",
+  }
+})
+
+const advancedSortingText = isFriendlyUI
+  ? "Advanced sorting & filtering"
+  : "Advanced Sorting/Filtering";
+
+const defaultLimit = isFriendlyUI ? 11 : 13;
 
 const applyConstantFilters = (filterSettings: FilterSettings): FilterSettings => {
   if (!isEAForum) {
@@ -156,35 +107,37 @@ const HomeLatestPosts = ({classes}:{classes: ClassesType}) => {
   // (except that on the EA Forum/FriendlyUI it always starts out hidden)
   const [filterSettingsVisibleDesktop, setFilterSettingsVisibleDesktop] = useState(isFriendlyUI ? false : !currentUser?.hideFrontpageFilterSettingsDesktop);
   const [filterSettingsVisibleMobile, setFilterSettingsVisibleMobile] = useState(false);
+  const { timezone } = useTimezone();
   const { captureEvent } = useOnMountTracking({eventType:"frontpageFilterSettings", eventProps: {filterSettings, filterSettingsVisible: filterSettingsVisibleDesktop, pageSectionContext: "latestPosts"}, captureOnMount: true})
   const { query } = location;
   const {
     SingleColumnSection, PostsList2, TagFilterSettings, LWTooltip, SettingsButton,
-    CuratedPostsList, SectionTitle, StickiedPosts, Typography, InlineSelect
+    CuratedPostsList, SectionTitle, StickiedPosts
   } = Components
-  const navigate = useNavigate();
-
-  const limit = frontpagePostsCountSetting.get() ?? (parseInt(query.limit) || defaultLimit);
+  const limit = parseInt(query.limit) || defaultLimit;
 
   const now = useCurrentTime();
+  const dateCutoff = moment(now).tz(timezone).subtract(frontpageDaysAgoCutoffSetting.get(), 'days').format("YYYY-MM-DD");
 
-  const currentSorting = (query.view || currentUser?.allPostsSorting || 'magic') as PostSortingMode;
-  const viewOptions = getPostViewOptions();
-  const selectedOption = viewOptions.find((option) => option.value === query.view) || viewOptions[0]
-
-  const handleViewClick = (opt: Option & {value: CommentsViewName}) => {
-    const view = opt.value
-    const { query } = location;
-    const newQuery = {...query, view: view}
-    navigate({...location.location, search: `?${qs.stringify(newQuery)}`})
-  };
-
-  const postsTerms = {
+  const recentPostsTerms = {
     ...query,
     filterSettings: applyConstantFilters(filterSettings),
-    view: currentSorting,
+    after: dateCutoff,
+    view: "magic",
     forum: true,
-    limit:limit,
+    limit:limit
+  }
+  
+  const changeShowTagFilterSettingsDesktop = () => {
+    setFilterSettingsVisibleDesktop(!filterSettingsVisibleDesktop)
+    if (isLWorAF) {
+      void updateCurrentUser({hideFrontpageFilterSettingsDesktop: filterSettingsVisibleDesktop})
+    }
+    
+    captureEvent("filterSettingsClicked", {
+      settingsVisible: !filterSettingsVisibleDesktop,
+      settings: filterSettings,
+    })
   }
 
   const showCurated = isFriendlyUI || (isLW && reviewIsActive())
@@ -192,40 +145,58 @@ const HomeLatestPosts = ({classes}:{classes: ClassesType}) => {
   return (
     <AnalyticsContext pageSectionContext="latestPosts">
       <SingleColumnSection>
-        <Link to={{pathname:"/newPost"}} className={classes.noHoverLink}>
-          <div className={classes.createPostContainer}>
-            <span className={classes.createPostPlaceholder}>
-              Share your thoughts...
-            </span>
-            <Button
-              type="button"
-              className={classes.createPostButton}
-              variant="contained"
-              color="primary"
-            >
-              Create Post
-            </Button>
+        <SectionTitle title={latestPostsName} noTopMargin={isFriendlyUI} noBottomPadding>
+          <LWTooltip
+            title={`Use these buttons to increase or decrease the visibility of posts based on ${taggingNameSetting.get()}. Use the "+" button at the end to add additional ${taggingNamePluralSetting.get()} to boost or reduce them.`}
+            hideOnTouchScreens
+          >
+            <SettingsButton
+              className={classes.hideOnMobile}
+              label={filterSettingsVisibleDesktop ?
+                filterSettingsToggleLabels.desktopVisible :
+                filterSettingsToggleLabels.desktopHidden}
+              showIcon={false}
+              onClick={changeShowTagFilterSettingsDesktop}
+            />
+            <SettingsButton
+              className={classes.hideOnDesktop}
+              label={filterSettingsVisibleMobile ?
+                filterSettingsToggleLabels.mobileVisible :
+                filterSettingsToggleLabels.mobileHidden}
+              showIcon={false}
+              onClick={() => {
+                setFilterSettingsVisibleMobile(!filterSettingsVisibleMobile)
+                captureEvent("filterSettingsClicked", {
+                  settingsVisible: !filterSettingsVisibleMobile,
+                  settings: filterSettings,
+                  pageSectionContext: "latestPosts"
+                })
+              }} />
+          </LWTooltip>
+        </SectionTitle>
+  
+        <AnalyticsContext pageSectionContext="tagFilterSettings">
+          <div className={classNames({
+            [classes.hideOnDesktop]: !filterSettingsVisibleDesktop,
+            [classes.hideOnMobile]: !filterSettingsVisibleMobile,
+          })}>
+            <TagFilterSettings
+              filterSettings={filterSettings} setPersonalBlogFilter={setPersonalBlogFilter} setTagFilter={setTagFilter} removeTagFilter={removeTagFilter}
+            />
           </div>
-        </Link>
-        <Typography
-          variant="body2"
-          component='span'
-          className={classNames(classes.inline, classes.selectTitleContainer)}
-        >
-          <InlineSelect options={viewOptions} selected={selectedOption} handleSelect={handleViewClick} displayStyle={classes.selectTitle} appendChevron={true} />
-        </Typography>
+        </AnalyticsContext>
+        {isFriendlyUI && <StickiedPosts />}
         <HideRepeatedPostsProvider>
           {showCurated && <CuratedPostsList />}
           <AnalyticsContext listContext={"latestPosts"}>
             {/* Allow hiding posts from the front page*/}
             <AllowHidingFrontPagePostsContext.Provider value={true}>
               <PostsList2
-                terms={postsTerms}
+                terms={recentPostsTerms}
                 alwaysShowLoadMore
                 hideHiddenFrontPagePosts
-                itemsPerPage={frontpagePostsLoadMoreCountSetting.get()}
-                hideContentPreviewIfSticky={!showPinnedPostPreviewOnHomepageSetting.get()}
               >
+                <Link to={"/allPosts"}>{advancedSortingText}</Link>
               </PostsList2>
             </AllowHidingFrontPagePostsContext.Provider>
           </AnalyticsContext>

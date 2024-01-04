@@ -14,14 +14,23 @@ const styles = (theme: ThemeType): JssStyles => ({
 
   tagName: {
     ...tagStyle(theme),
+    fontWeight: 400,
     cursor: 'default',
     backgroundColor: theme.palette.tag.backgroundHover,
     color: theme.palette.buttons.primaryDarkText,
+    border: 'unset',
+    borderRadius: 6,
+    paddingTop: 8,
+    paddingRight: 12,
+    paddingBottom: 8,
+    paddingLeft: 12,
+    lineHeight: 1.4,
   },
 
   removeTag: {
     background: 'transparent',
     color: 'inherit',
+    fontSize: 15,
     position: 'relative',
     minWidth: 15,
     boxSizing: 'content-box',

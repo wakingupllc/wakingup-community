@@ -6,10 +6,11 @@ const styles = (theme: ThemeType): JssStyles => ({
   root: {
     display: 'flex',
     flexDirection: 'column',
-
+    fontSize: 15,
     '& .TagsChecklist-tag': {
       opacity: 1,
       fontWeight: 'unset',
+      padding: '8px 12px',
     },
   },
   sectionDescription: {

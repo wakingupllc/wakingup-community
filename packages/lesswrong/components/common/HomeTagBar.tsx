@@ -96,7 +96,7 @@ const styles = (theme: ThemeType): JssStyles => ({
     fontFamily: theme.typography.fontFamily,
     fontSize: 14,
     lineHeight: '23px',
-    fontWeight: '500',
+    fontWeight: 400,
     padding: '4px 8px',
     borderRadius: 6,
     cursor: 'pointer',
