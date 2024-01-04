@@ -99,7 +99,7 @@ const HomeTagBarSingleSelectedTag = (
 
   return <div className={classes.root}>
     {activeTab.name === frontpageTab.name ?
-      <HomeTagBar onTagSelectionUpdated={setActiveTab} frontpageTab={frontpageTab}/> :
+      <HomeTagBar onTagSelectionUpdated={setActiveTab} frontpageTab={frontpageTab} showDescriptionOnHover={true}/> :
       <CategoryItem
         documentId={activeTab._id}
         onDelete={(_: string) => {
