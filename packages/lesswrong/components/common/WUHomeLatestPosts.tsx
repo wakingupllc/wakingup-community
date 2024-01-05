@@ -197,7 +197,7 @@ const WUHomeLatestPosts = ({classes}:{classes: ClassesType}) => {
         
         <HideRepeatedPostsProvider>
           {showCurated && <CuratedPostsList />}
-          <AnalyticsContext listContext={"latestPosts"}>
+          <AnalyticsContext pageSectionContext={"latestPosts"}>
             {/* Allow hiding posts from the front page*/}
             <AllowHidingFrontPagePostsContext.Provider value={true}>
               <PostsList2
