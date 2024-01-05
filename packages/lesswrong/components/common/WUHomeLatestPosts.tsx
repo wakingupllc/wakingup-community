@@ -3,7 +3,7 @@ import {Components, registerComponent} from '../../lib/vulcan-lib'
 import {useCurrentUser} from '../common/withUser'
 import {useLocation, useNavigate} from '../../lib/routeUtil'
 import {AnalyticsContext} from '../../lib/analyticsEvents'
-import {isLW, isLWorAF} from '../../lib/instanceSettings'
+import {categoriesEnabledSetting, isLW, isLWorAF} from '../../lib/instanceSettings'
 import {sectionTitleStyle} from '../common/SectionTitle'
 import {AllowHidingFrontPagePostsContext} from '../dropdowns/posts/PostActions'
 import {HideRepeatedPostsProvider} from '../posts/HideRepeatedPostsContext'
@@ -185,7 +185,7 @@ const WUHomeLatestPosts = ({classes}:{classes: ClassesType}) => {
           </div>
         </Link>
         
-        <HomeTagBarSingleSelectedTag setActiveTab={setActiveTab} activeTab={activeTab} frontpageTab={frontpageTab} />
+        {categoriesEnabledSetting.get() && <HomeTagBarSingleSelectedTag setActiveTab={setActiveTab} activeTab={activeTab} frontpageTab={frontpageTab} />}
         
         <Typography
           variant="body2"
