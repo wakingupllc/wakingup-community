@@ -2,6 +2,8 @@ import React, {useCallback} from 'react'
 import {Components, registerComponent} from '../../lib/vulcan-lib'
 import {useUpdateTagValuesWithArray} from './FormComponentPostEditorTagging'
 import {categoryStyle} from './CategoryItem'
+import {canVoteOnTag} from '../../lib/voting/tagRelVoteRules'
+import {useCurrentUser} from '../common/withUser'
 
 const styles = (theme: ThemeType): JssStyles => ({
   root: {
@@ -27,11 +29,13 @@ const CategorySelector = (
   {
     value,
     updateCurrentValues,
+    document,
     classes,
   }: FormComponentProps<Record<string, number> | null> & {
     classes: ClassesType,
   }) => {
   const updateValuesWithArray = useUpdateTagValuesWithArray(updateCurrentValues)
+  const user = useCurrentUser()
 
   const {
     CategoryItem,
@@ -62,7 +66,10 @@ const CategorySelector = (
         documentId={selectedCategory}
         onDelete={(_: string) => onTagRemoved(selectedCategory)}
       /> : <div>
-        <CoreTagsChecklist onTagSelected={onTagSelected}/>
+        <CoreTagsChecklist 
+          onTagSelected={onTagSelected} 
+          shouldDisplayTag={(tag) => !canVoteOnTag(tag.canVoteOnRels, user, document, 'smallUpvote').fail}
+        />
       </div>}
   </div>
 }
