@@ -5,7 +5,7 @@ import { useCurrentUser } from '../common/withUser';
 
 const WakingUpHome = () => {
   const currentUser = useCurrentUser();
-  const { HomeLatestPosts, AnalyticsInViewTracker, WULoginForm } = Components
+  const { WUHomeLatestPosts, AnalyticsInViewTracker, WULoginForm } = Components
 
   return (
       <AnalyticsContext pageContext="homePage">
@@ -14,7 +14,7 @@ const WakingUpHome = () => {
               eventProps={{inViewType: "latestPosts"}}
               observerProps={{threshold:[0, 0.5, 1]}}
           >
-            {currentUser && <HomeLatestPosts />}
+            {currentUser && <WUHomeLatestPosts />}
             {!currentUser && <WULoginForm />}
           </AnalyticsInViewTracker>
         </React.Fragment>

@@ -1069,6 +1069,7 @@ importComponent("CookieTable", () => require('../components/common/CookieBanner/
 
 importComponent("WULoginForm", () => require('../components/users/WULoginForm'));
 importComponent("WakingUpHome", () => require('../components/common/WakingUpHome'));
+importComponent("WUHomeLatestPosts", () => require('../components/common/WUHomeLatestPosts'));
 importComponent("WUEmojiPalette", () => require('../components/votes/WUEmojiPalette'));
 importComponent("WUUsersMetaInfo", () => require('../components/ea-forum/users/WUUsersMetaInfo'))
 importComponent("WUUserOnboarding", () => require('../components/users/WUUserOnboarding'))
@@ -1076,3 +1077,5 @@ importComponent("WUDeactivateAccount", () => require('../components/users/WUDeac
 
 importComponent("CategorySelector", () => require('../components/form-components/CategorySelector'));
 importComponent("CategoryItem", () => require('../components/form-components/CategoryItem'));
+importComponent("HomeTagBar", () => require('../components/common/HomeTagBar'));
+importComponent("HomeTagBarSingleSelectedTag", () => require('../components/common/HomeTagBarSingleSelectedTag'));
