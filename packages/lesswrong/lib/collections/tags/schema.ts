@@ -185,6 +185,7 @@ const schema: SchemaType<"Tags"> = {
     canUpdate: ['admins', 'sunshineRegiment'],
     group: formGroups.advancedOptions,
     optional: true,
+    hidden: true, // Hiding bc it's confusing and implies that this is a tag only admins can apply, but in practice it doesn't do this
     ...schemaDefaultValue(false),
   },
   canEditUserIds: {
