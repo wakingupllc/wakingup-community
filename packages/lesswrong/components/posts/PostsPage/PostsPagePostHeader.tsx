@@ -7,7 +7,7 @@ import { getUrlClass } from '../../../lib/routeUtil';
 import classNames from 'classnames';
 import { isServer } from '../../../lib/executionEnvironment';
 import moment from 'moment';
-import { isLWorAF, isEAForum } from '../../../lib/instanceSettings';
+import {isLWorAF, isEAForum, categoriesEnabledSetting} from '../../../lib/instanceSettings'
 import { useCookiesWithConsent } from '../../hooks/useCookiesWithConsent';
 import { PODCAST_TOOLTIP_SEEN_COOKIE } from '../../../lib/cookies/cookies';
 import { isBookUI, isFriendlyUI } from '../../../themes/forumTheme';
@@ -364,6 +364,9 @@ const PostsPagePostHeader = ({post, answers = [], dialogueResponses = [], showEm
     secondaryInfoNode = <div className={classes.secondaryInfo}>
       <div className={classes.secondaryInfoLeft}>
         {!minimalSecondaryInfo && <PostsPageDate post={post} hasMajorRevision={hasMajorRevision} />}
+        {categoriesEnabledSetting.get() 
+          && post.tags[0] 
+          && <span>{post.tags[0].name}</span>}
         {showReadingTimeSetting.get() && readingTimeNode}
         {showAudioNodeSetting.get() && audioNode}
         {post.isEvent && <GroupLinks document={post} noMargin />}
