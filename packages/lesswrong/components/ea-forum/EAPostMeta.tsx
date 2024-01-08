@@ -4,6 +4,7 @@ import { InteractionWrapper } from "../common/useClickableCell";
 import { DateWithoutTime } from "../posts/PostsItemMeta";
 import classNames from "classnames";
 import {showReadingTimeSetting} from '../../lib/publicSettings.ts'
+import {categoriesEnabledSetting} from '../../lib/instanceSettings.ts'
 
 const styles = (theme: ThemeType) => ({
   root: {
@@ -103,6 +104,9 @@ const EAPostMeta = ({post, useEventStyles, showAuthorTooltip = true, className, 
           <span className={classes.readTime}>
           {" · "}{post.readTimeMinutes || 1}m read
         </span>}
+        {categoriesEnabledSetting.get() 
+          && post.tags[0] 
+          && <span>{' · '}{post.tags[0].name}</span>}
       </div>
     </div>
   );
