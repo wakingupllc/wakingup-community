@@ -16,6 +16,9 @@ const clearStyle = (theme: ThemeType): JssStyles => ({
   "*, *::before, *::after": {
     boxSizing: "inherit",
   },
+  "body:has(.WUHomeLatestPosts-inline)": {
+    overflowY: "scroll",
+  },
   body: {
     margin: 0,
     backgroundColor: theme.palette.background.default,
