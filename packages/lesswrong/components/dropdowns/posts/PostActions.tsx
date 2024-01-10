@@ -69,8 +69,7 @@ const PostActions = ({post, closeMenu, includeBookmark=true, classes}: {
       />
       {!currentUserIsAuthor && includeBookmark && <BookmarkDropdownItem post={post} />}
       {!currentUserIsAuthor && <ReportPostDropdownItem post={post}/>}
-      {/* Tags (topics) are removed for launch, but will be added back later, so I'm leaving this commented out. */}
-      {/*currentUser && <EditTagsDropdownItem post={post} closeMenu={closeMenu} />*/}
+      {currentUser?.isAdmin && <EditTagsDropdownItem post={post} closeMenu={closeMenu} />}
       <SummarizeDropdownItem post={post} closeMenu={closeMenu} />
       {hasCuratedPostsSetting.get() && <SuggestCuratedDropdownItem post={post} />}
       <MoveToDraftDropdownItem post={post} />
