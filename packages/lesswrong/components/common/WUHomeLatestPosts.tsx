@@ -22,6 +22,7 @@ import {
   frontpagePostsLoadMoreCountSetting,
   showPinnedPostPreviewOnHomepageSetting,
 } from '../../lib/publicSettings'
+import {FilterSettings, useFilterSettings} from '../../lib/filterSettings'
 
 const FRONTPAGE_TAB_NAME = 'All'
 
@@ -126,9 +127,18 @@ const styles = (theme: ThemeType): JssStyles => ({
 
 const defaultLimit = frontpagePostsCountSetting.get() ?? isFriendlyUI ? 11 : 13;
 
+const tagSearchTerms = (activeTab: TopicsBarTab, filterSettings: FilterSettings) => {
+  const tagSearchTerms = tagPostTerms(activeTab, {})
+  return {
+    ...tagSearchTerms,
+    filterSettings: {...filterSettings, ...tagSearchTerms.filterSettings},
+  }
+}
+
 const WUHomeLatestPosts = ({classes}:{classes: ClassesType}) => {
   const location = useLocation();
   const currentUser = useCurrentUser();
+  const {filterSettings} = useFilterSettings()
 
   const { query } = location;
   const {
@@ -156,9 +166,11 @@ const WUHomeLatestPosts = ({classes}:{classes: ClassesType}) => {
     navigate({...location.location, search: `?${qs.stringify(newQuery)}`})
   };
 
+  const weAreOnFrontpage = activeTab.name === FRONTPAGE_TAB_NAME
   const postsTerms = {
     ...query,
-    ...(activeTab.name === FRONTPAGE_TAB_NAME ? {} : tagPostTerms(activeTab, {})),
+    filterSettings,
+    ...(weAreOnFrontpage ? {} : tagSearchTerms(activeTab, filterSettings)),
     view: currentSorting,
     forum: true,
     limit:limit,
