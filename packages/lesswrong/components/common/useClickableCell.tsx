@@ -5,14 +5,14 @@ import { useTracking } from "../../lib/analyticsEvents";
 export type ClickableCellProps = {
   href: string,
   onClick?: never,
-  infiniteScrollPathQuery?: string,
+  navCallback?: Function,
 } | {
   href?: never,
   onClick: (e: MouseEvent<HTMLDivElement>) => void,
-  infiniteScrollPathQuery?: string,
+  navCallback?: Function,
 };
 
-export const useClickableCell = ({href, onClick, infiniteScrollPathQuery}: ClickableCellProps) => {
+export const useClickableCell = ({href, onClick, navCallback}: ClickableCellProps) => {
   const navigate = useNavigate();
   // Note that we only trigger this event if an href is provided
   const { captureEvent } = useTracking({eventType: "linkClicked", eventProps: {to: href}})
@@ -29,17 +29,11 @@ export const useClickableCell = ({href, onClick, infiniteScrollPathQuery}: Click
       captureEvent();
       window.open(href, "_blank");
     } else {
-      if (infiniteScrollPathQuery) {
-        const infiniteScrollPosition = JSON.stringify({
-          pathQuery: infiniteScrollPathQuery,
-          scrollPosition: window.scrollY,
-        })
-        localStorage.setItem('infiniteScrollPosition', infiniteScrollPosition);
-      }
+      if (navCallback) navCallback();
       captureEvent();
       navigate(href);
     }
-  }, [navigate, href, onClick, captureEvent, infiniteScrollPathQuery]);
+  }, [navigate, href, onClick, captureEvent, navCallback]);
 
   return {
     onClick: wrappedOnClick,
