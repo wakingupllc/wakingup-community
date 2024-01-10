@@ -58,6 +58,7 @@ export type PostsListConfig = {
   hideShortform?: boolean,
   hideContentPreviewIfSticky?: boolean,
   loadMoreMessage?: string,
+  infiniteScroll?: boolean,
 }
 
 const defaultTooltipPlacement = isFriendlyUI
@@ -107,7 +108,10 @@ export const usePostsList = ({
     }
     : {};
 
-  const {results, loading, error, loadMore, loadMoreProps, limit} = useMulti({
+  // Awkwardly, usePostsList has a showLoadMore prop variable, and useMulti also returns a variable of that name.
+  // The useMulti variable is a boolean that indicates whether there are more posts to load, which is useful, so
+  // that's what we return from this function.
+  const {results, loading, error, loadMore, loadMoreProps, limit, showLoadMore: showLoadMoreResult} = useMulti({
     terms,
     collectionName: "Posts",
     fragmentName: !!tagId ? 'PostsListTagWithVotes' : 'PostsListWithVotes',
@@ -118,6 +122,17 @@ export const usePostsList = ({
     alwaysShowLoadMore,
     ...tagVariables
   });
+
+  // Saving infinite scroll state requires storing the number of loaded posts, i.e. the `limit` variable returned from
+  // useMulti, which we store here. We also need to store the scroll position on click, which we do in useClickableCell
+  // when called from EAPostItem.
+  const infiniteScrollState = {
+    view: terms.view,
+    limit,
+    expiresAt: Date.now() + (1000 * 60 * 30),
+  }
+
+  if ((typeof localStorage !== 'undefined')) localStorage.setItem('infiniteScrollState', JSON.stringify(infiniteScrollState));
 
   // Map from post._id to whether to hide it. Used for client side post filtering
   // like e.g. hiding read posts
@@ -224,7 +239,7 @@ export const usePostsList = ({
   return {
     children,
     showNoResults,
-    showLoadMore,
+    showLoadMore: showLoadMoreResult,
     showLoading,
     dimWhenLoading,
     topLoading,

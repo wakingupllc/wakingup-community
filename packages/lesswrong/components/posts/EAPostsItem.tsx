@@ -217,7 +217,13 @@ const EAPostsItem = ({
     hideContentPreviewIfSticky,
     className,
   } = usePostsItem(props);
-  const {onClick} = useClickableCell({href: postLink});
+
+  // We pass infiniteScrollPathQuery to useClickableCell to save the scroll position when the user clicks on a post.
+  // The other variable needed to save infinite scroll state is the number of posts loaded, which in usePostsList is
+  // the `limit` variable returned by useMulti. Beware that that is not the same as the props.terms.limit variable
+  // we have here. Regrettably, saving infinite scroll state must be done partly here, and partly in usePostsList.
+  const infiniteScrollPathQuery = (typeof window === 'undefined') ? '' : window.location.pathname + window.location.search;
+  const {onClick} = useClickableCell({href: postLink, infiniteScrollPathQuery});
 
   if (isRepeated) {
     return null;

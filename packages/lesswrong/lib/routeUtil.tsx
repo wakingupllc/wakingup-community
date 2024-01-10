@@ -62,7 +62,11 @@ export const useNavigate = (): NavigateFunction => {
     if (options?.replace) {
       history.replace(url);
     } else {
-      history.push(url);
+      if (history.location.pathname !== url) {
+        // If someone clicks on a PostItem title on the front page, this both navigates the link and also runs
+        // the useClickableCell navigation, which would cause two navigations to be saved if we didn't check.
+        history.push(url);
+      }
     }
   }, [history]);
 }
