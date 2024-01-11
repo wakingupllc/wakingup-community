@@ -254,7 +254,7 @@ export const userIsAllowedToComment = (user: UsersCurrent|DbUser|null, post: Pos
 
 export const userBlockedCommentingReason = (user: UsersCurrent|DbUser|null, post: PostsDetails|DbPost, postAuthor: PostsAuthors_user|null): JSX.Element => {
   if (!user) {
-    return <>Can't recognize user</>
+    return <>Can't recognize user.</>
   }
 
   if (userIsBannedFromPost(user, post, postAuthor)) {
@@ -274,10 +274,10 @@ export const userBlockedCommentingReason = (user: UsersCurrent|DbUser|null, post
   }
 
   if (post?.commentsLockedToAccountsCreatedAfter) {
-    return <>Comments on this post are disabled to accounts created after <Components.CalendarDate date={post.commentsLockedToAccountsCreatedAfter}/></>
+    return <>Comments on this post are disabled to accounts created after <Components.CalendarDate date={post.commentsLockedToAccountsCreatedAfter}/>.</>
   }
 
-  return <>You cannot comment at this time</>
+  return <>You cannot comment at this time.</>
 }
 
 // Return true if the user's account has at least one verified email address.
