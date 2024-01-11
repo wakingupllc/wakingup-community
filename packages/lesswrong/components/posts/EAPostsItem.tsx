@@ -1,8 +1,8 @@
-import React, { FC } from "react";
+import React, { FC, MouseEvent } from "react";
 import { registerComponent, Components } from "../../lib/vulcan-lib";
 import { AnalyticsContext } from "../../lib/analyticsEvents";
 import { usePostsItem, PostsItemConfig } from "./usePostsItem";
-import { Link } from "../../lib/reactRouterWrapper";
+import { Link, useNavigate } from "../../lib/reactRouterWrapper";
 import { SECTION_WIDTH } from "../common/SingleColumnSection";
 import withErrorBoundary from "../common/withErrorBoundary";
 import classNames from "classnames";
@@ -218,12 +218,14 @@ const EAPostsItem = ({
     className,
   } = usePostsItem(props);
 
+  const navigate = useNavigate();
+
   // We pass a function to useClickableCell to save the scroll position when the user clicks on a post. The
   // other variable needed to save infinite scroll state is the number of posts loaded, which in usePostsList is
   // the `limit` variable returned by useMulti. Beware that that is not the same as the props.terms.limit variable
   // we have here, so saving infinite scroll state must be done partly here, and partly in usePostsList.
   const infiniteScrollPathQuery = (typeof window !== 'undefined') ? window.location.pathname + window.location.search : null;
-  const navCallback = () => {
+  const onNavigate = (e: MouseEvent<HTMLDivElement>) => {
     if (typeof window === 'undefined') return;
 
     const infiniteScrollPosition = JSON.stringify({
@@ -231,9 +233,14 @@ const EAPostsItem = ({
       scrollPosition: window.scrollY,
     })
     localStorage.setItem('infiniteScrollPosition', infiniteScrollPosition);
+    if (e.metaKey || e.ctrlKey) {
+      window.open(postLink, "_blank");
+    } else {
+      navigate(postLink)
+    }
   }
 
-  const {onClick} = useClickableCell({href: postLink, navCallback});
+  const {onClick} = useClickableCell({onClick: onNavigate});
 
   if (isRepeated) {
     return null;
