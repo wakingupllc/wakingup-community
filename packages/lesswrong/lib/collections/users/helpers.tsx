@@ -270,7 +270,7 @@ export const userBlockedCommentingReason = (user: UsersCurrent|DbUser|null, post
   }
 
   if (post?.commentsLocked) {
-    return <>Comments on this post are disabled.</>
+    return <>Comments have been disabled on this post.</>
   }
 
   if (post?.commentsLockedToAccountsCreatedAfter) {
