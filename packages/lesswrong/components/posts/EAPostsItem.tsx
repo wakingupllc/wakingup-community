@@ -218,29 +218,24 @@ const EAPostsItem = ({
     className,
   } = usePostsItem(props);
 
-  const navigate = useNavigate();
-
-  // We pass a function to useClickableCell to save the scroll position when the user clicks on a post. The
-  // other variable needed to save infinite scroll state is the number of posts loaded, which in usePostsList is
-  // the `limit` variable returned by useMulti. Beware that that is not the same as the props.terms.limit variable
-  // we have here, so saving infinite scroll state must be done partly here, and partly in usePostsList.
+  // We save the scroll position when the user clicks on a post so we can restore their position in the infinite scroll
+  // if they click back from this post later. The other variable needed to save infinite scroll state is the number of
+  // posts loaded, which in usePostsList is the `limit` variable returned by useMulti. Beware that that is not the same
+  // as the props.terms.limit variable we have here, so saving infinite scroll state must be done partly here, and partly
+  // in usePostsList.
   const infiniteScrollPathQuery = (typeof window !== 'undefined') ? window.location.pathname + window.location.search : null;
-  const onNavigate = (e: MouseEvent<HTMLDivElement>) => {
-    if (typeof window === 'undefined') return;
+  const {onClick: clickableCellOnclick} = useClickableCell({href: postLink});
+  const onClick = (e: MouseEvent<HTMLDivElement>) => {
+      if (typeof window === 'undefined') return;
 
-    const infiniteScrollPosition = JSON.stringify({
-      pathQuery: infiniteScrollPathQuery,
-      scrollPosition: window.scrollY,
-    })
-    localStorage.setItem('infiniteScrollPosition', infiniteScrollPosition);
-    if (e.metaKey || e.ctrlKey) {
-      window.open(postLink, "_blank");
-    } else {
-      navigate(postLink)
-    }
+      const infiniteScrollPosition = JSON.stringify({
+        pathQuery: infiniteScrollPathQuery,
+        scrollPosition: window.scrollY,
+      })
+      localStorage.setItem('infiniteScrollPosition', infiniteScrollPosition);
+
+      clickableCellOnclick(e)
   }
-
-  const {onClick} = useClickableCell({onClick: onNavigate});
 
   if (isRepeated) {
     return null;
