@@ -25,7 +25,7 @@ import moment from 'moment'
 import { CODE_ENTRY_LIMIT, CODE_ENTRY_LIMIT_EXCEEDED_MSG, CODE_REQUEST_LIMIT_EXCEEDED_MSG } from '../../lib/collections/users/constants.ts'
 import { codeEntryLockExpiresAt, codeRequestLimitActive, codeRequestLimitExpiresAt, isCodeEntryLocked, isCodeRequestLocked } from '../../lib/collections/users/helpers.tsx'
 import {usernameIsBadWord} from '../../lib/collections/users/username'
-import { getCookieFromReq } from '../utils/httpUtil.ts'
+import { getCookieFromReq, setCookieOnResponse } from '../utils/httpUtil.ts';
 
 // This file has middleware for redirecting logged-out users to the login page,
 // but it also manages authentication with the Waking Up app. This latter thing
@@ -39,9 +39,9 @@ function urlDisallowedForLoggedOutUsers(req: express.Request) {
   if (req.user) return false;
 
   const whiteListPaths = ['/', '/code', '/graphql', '/analyticsEvent', '/browserconfig.xml', '/site.webmanifest']
+  const whiteListPathStarts = ['/js/bundle.js', '/allStyles', '/dev-favicon']
   if (whiteListPaths.includes(req.path)) return false
-  if (req.path.startsWith('/js/bundle.js')) return false
-  if (req.path.startsWith('/allStyles')) return false
+  if (whiteListPathStarts.some(path => req.path.startsWith(path))) return false
 
   return true
 }
@@ -50,6 +50,14 @@ function urlDisallowedForLoggedOutUsers(req: express.Request) {
 // (Except requests that are made from the home page, like the logo, JavaScript, and CSS.)
 export const redirectLoggedOutMiddleware = (req: express.Request, res: express.Response, next: express.NextFunction) => {
   if (urlDisallowedForLoggedOutUsers(req)) {
+    if (!req.originalUrl.startsWith("/api/")) {
+      setCookieOnResponse({
+        req, res,
+        cookieName: "redirectTo",
+        cookieValue: req.originalUrl,
+        maxAge: 30 * 60
+      });
+    }
     res.redirect('/');
   } else {
     next();
@@ -256,7 +264,8 @@ const requestedCodeData = `type requestedCodeData {
 }`
 
 const loginData = `type LoginReturnData2 {
-  token: String
+  token: String,
+  redirectTo: String
 }`
 
 addGraphQLSchema(loginData);
@@ -409,7 +418,9 @@ const authenticationResolvers = {
         await updateUserLoginProps(user, null, true)
 
         const token = await createAndSetToken(req, res, user)
-        return { token };
+        const redirectTo = getCookieFromReq(req as express.Request, "redirectTo") ?? '/';
+
+        return { token, redirectTo };
       } else {
         await incrementOtcEntryAttempts(user);
         assertCodeEntryNotLocked(user);

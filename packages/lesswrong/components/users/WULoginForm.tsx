@@ -143,6 +143,7 @@ const codeLoginMutation = gql`
   mutation codeLogin($email: String, $code: String) {
     codeLogin(email: $email, code: $code) {
       token
+      redirectTo
     }
   }
 `
@@ -238,7 +239,13 @@ export const WULoginForm = ({ classes }: WULoginFormProps) => {
       if (data?.requestLoginCode?.result === "success") {
         setCurrentAction("enterCode")
       }
-      if (data?.codeLogin?.token) location.reload()
+      if (data?.codeLogin?.token) {
+        if (data?.codeLogin?.redirectTo) {
+          window.location.href = data?.codeLogin?.redirectTo;
+        } else {
+          location.reload()
+        }
+      }
     })
   }
 
