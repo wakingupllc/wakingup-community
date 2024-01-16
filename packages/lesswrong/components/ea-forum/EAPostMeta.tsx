@@ -105,7 +105,7 @@ const EAPostMeta = ({post, useEventStyles, showAuthorTooltip = true, className, 
           {" · "}{post.readTimeMinutes || 1}m read
         </span>}
         {categoriesEnabledSetting.get() 
-          && post.tags[0] 
+          && post.tags?.[0]
           && <span>{' · '}{post.tags[0].name}</span>}
       </div>
     </div>
