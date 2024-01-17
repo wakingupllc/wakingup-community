@@ -192,13 +192,17 @@ export const usePostsList = ({
 
   // Saving infinite scroll state requires storing the number of loaded posts, i.e. the `limit` variable returned from
   // useMulti, which we store here. We also need to store the scroll position on click, which we do in EAPostsItem.
-  const infiniteScrollState = {
-    view: terms.view,
-    limit,
-    expiresAt: Date.now() + (1000 * 60 * 30),
-  }
+  useEffect(() => {
+    const infiniteScrollState = {
+      view: terms.view,
+      limit,
+      expiresAt: Date.now() + (1000 * 60 * 30),
+    };
 
-  if ((typeof localStorage !== 'undefined')) localStorage.setItem('infiniteScrollState', JSON.stringify(infiniteScrollState));
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('infiniteScrollState', JSON.stringify(infiniteScrollState));
+    }
+  }, [limit, terms.view]);
 
   // Map from post._id to whether to hide it. Used for client side post filtering
   // like e.g. hiding read posts
