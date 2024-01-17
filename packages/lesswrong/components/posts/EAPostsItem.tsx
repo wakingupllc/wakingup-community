@@ -2,11 +2,11 @@ import React, { FC, MouseEvent } from "react";
 import { registerComponent, Components } from "../../lib/vulcan-lib";
 import { AnalyticsContext } from "../../lib/analyticsEvents";
 import { usePostsItem, PostsItemConfig } from "./usePostsItem";
-import { Link, useNavigate } from "../../lib/reactRouterWrapper";
 import { SECTION_WIDTH } from "../common/SingleColumnSection";
 import withErrorBoundary from "../common/withErrorBoundary";
 import classNames from "classnames";
 import { InteractionWrapper, useClickableCell } from "../common/useClickableCell";
+import { isClient } from "../../lib/executionEnvironment";
 
 export const styles = (theme: ThemeType) => ({
   root: {
@@ -223,13 +223,11 @@ const EAPostsItem = ({
   // posts loaded, which in usePostsList is the `limit` variable returned by useMulti. Beware that that is not the same
   // as the props.terms.limit variable we have here, so saving infinite scroll state must be done partly here, and partly
   // in usePostsList.
-  const infiniteScrollPathQuery = (typeof window !== 'undefined') ? window.location.pathname + window.location.search : null;
+  const infiniteScrollHref = isClient ? window.location.href : null;
   const {onClick: clickableCellOnclick} = useClickableCell({href: postLink});
   const onClick = (e: MouseEvent<HTMLDivElement>) => {
-      if (typeof window === 'undefined') return;
-
       const infiniteScrollPosition = JSON.stringify({
-        pathQuery: infiniteScrollPathQuery,
+        href: infiniteScrollHref,
         scrollPosition: window.scrollY,
       })
       localStorage.setItem('infiniteScrollPosition', infiniteScrollPosition);

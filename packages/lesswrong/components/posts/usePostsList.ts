@@ -65,6 +65,22 @@ const defaultTooltipPlacement = isFriendlyUI
   ? "bottom-start"
   : "bottom-end";
 
+// If they clicked the Back button to get back to the infinite scrolling homepage, we want to restore the state
+// as it was before. Here, we find out how many posts we need to load. Once those posts have loaded, a useEffect
+// hook calls restoreScrollPosition().
+const previousInfiniteScrollLimit = function(currentView: string, defaultLimit: number) {
+  if (typeof localStorage === 'undefined') return defaultLimit;
+
+  const { view, limit, expiresAt } = JSON.parse(localStorage.getItem('infiniteScrollState') || '{}');
+
+  if (view === currentView && expiresAt > Date.now()) {
+    return limit ?? defaultLimit;
+  } else {
+    localStorage.removeItem('infiniteScrollState');
+    return defaultLimit;
+  }
+}
+
 export const usePostsList = ({
   children,
   terms,
@@ -108,11 +124,19 @@ export const usePostsList = ({
     }
     : {};
 
+  // On first loading posts, we might be restoring scroll position from before, so we use previousInfiniteScrollLimit
+  // which will return the limit if there is one (otherwise the default limit). For subsequent loads called by loadMore,
+  // we use the limit from the props.
+  const postsLimit = haveLoadedMore ?
+    terms.limit :
+    previousInfiniteScrollLimit(terms.view, terms.limit);
+  const termsWithLimit = {...terms, limit: postsLimit};
+
   // Awkwardly, usePostsList has a showLoadMore prop variable, and useMulti also returns a variable of that name.
   // The useMulti variable is a boolean that indicates whether there are more posts to load, which is useful, so
   // that's what we return from this function.
   const {results, loading, error, loadMore, loadMoreProps, limit, showLoadMore: showLoadMoreResult} = useMulti({
-    terms,
+    terms: termsWithLimit,
     collectionName: "Posts",
     fragmentName: !!tagId ? 'PostsListTagWithVotes' : 'PostsListWithVotes',
     enableTotal,
@@ -124,8 +148,7 @@ export const usePostsList = ({
   });
 
   // Saving infinite scroll state requires storing the number of loaded posts, i.e. the `limit` variable returned from
-  // useMulti, which we store here. We also need to store the scroll position on click, which we do in useClickableCell
-  // when called from EAPostItem.
+  // useMulti, which we store here. We also need to store the scroll position on click, which we do in EAPostsItem.
   const infiniteScrollState = {
     view: terms.view,
     limit,
@@ -215,7 +238,7 @@ export const usePostsList = ({
   ).map((post, i) => ({
     post,
     index: i,
-    terms,
+    termsWithLimit,
     showNominationCount,
     showReviewCount,
     showDraftTag,

@@ -29,25 +29,9 @@ const throttledLoadMore = throttle((loadMore) => {
   loadMore()
 }, 100)
 
-// If they clicked the Back button to get back to the infinite scrolling homepage, we want to restore the state
-// as it was before. Here, we find out how many posts we need to load. Once those posts have loaded, a useEffect
-// hook calls restoreScrollPosition().
-const previousInfiniteScrollLimit = function(currentView: string, defaultLimit: number) {
-  if (typeof localStorage === 'undefined') return defaultLimit;
-
-  const { view, limit, expiresAt } = JSON.parse(localStorage.getItem('infiniteScrollState') || '{}');
-
-  if (view === currentView && expiresAt > Date.now()) {
-    return limit ?? defaultLimit;
-  } else {
-    localStorage.removeItem('infiniteScrollState');
-    return defaultLimit;
-  }
-}
-
 const restoreScrollPosition = () => {
-  const { scrollPosition, pathQuery } = JSON.parse(localStorage.getItem('infiniteScrollPosition') || '{}');
-  if (scrollPosition && pathQuery === window.location.pathname + window.location.search) {
+  const { scrollPosition, href } = JSON.parse(localStorage.getItem('infiniteScrollPosition') || '{}');
+  if (scrollPosition && href === window.location.href) {
     localStorage.removeItem('infiniteScrollPosition');
     window.scrollTo(0, scrollPosition);
   }
@@ -55,15 +39,6 @@ const restoreScrollPosition = () => {
 
 /** A list of posts, defined by a query that returns them. */
 const PostsList2 = ({classes, ...props}: PostsList2Props) => {
-  const [loadedMore, setLoadedMore] = useState(false);
-  // On first loading posts, we might be restoring scroll position from before, so we use previousInfiniteScrollLimit
-  // which will return the limit if there is one (otherwise the default limit). For subsequent loads called by loadMore,
-  // we use the limit from the props.
-  const postsLimit = loadedMore ?
-    props.terms.limit :
-    previousInfiniteScrollLimit(props.terms.view, props.terms.limit);
-  const propsWithLimit = {...props, terms: {...props.terms, limit: postsLimit}};
-
   const {
     children,
     showNoResults,
@@ -80,7 +55,7 @@ const PostsList2 = ({classes, ...props}: PostsList2Props) => {
     orderedResults,
     itemProps,
     hideContentPreviewIfSticky,
-  }= usePostsList(propsWithLimit);
+  }= usePostsList(props);
 
   // Reference to a bottom-marker used for checking scroll position.
   const bottomRef = useRef<HTMLDivElement|null>(null);
@@ -103,7 +78,6 @@ const PostsList2 = ({classes, ...props}: PostsList2Props) => {
       && orderedResults
       && showLoadMore)
     {
-      setLoadedMore(true);
       throttledLoadMore(loadMore);
     }
   }

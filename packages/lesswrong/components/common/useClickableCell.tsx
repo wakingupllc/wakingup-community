@@ -5,14 +5,12 @@ import { useTracking } from "../../lib/analyticsEvents";
 export type ClickableCellProps = {
   href: string,
   onClick?: never,
-  navCallback?: Function,
 } | {
   href?: never,
   onClick: (e: MouseEvent<HTMLDivElement>) => void,
-  navCallback?: Function,
 };
 
-export const useClickableCell = ({href, onClick, navCallback}: ClickableCellProps) => {
+export const useClickableCell = ({href, onClick}: ClickableCellProps) => {
   const navigate = useNavigate();
   // Note that we only trigger this event if an href is provided
   const { captureEvent } = useTracking({eventType: "linkClicked", eventProps: {to: href}})
@@ -29,11 +27,10 @@ export const useClickableCell = ({href, onClick, navCallback}: ClickableCellProp
       captureEvent();
       window.open(href, "_blank");
     } else {
-      if (navCallback) navCallback();
       captureEvent();
       navigate(href);
     }
-  }, [navigate, href, onClick, captureEvent, navCallback]);
+  }, [navigate, href, onClick, captureEvent]);
 
   return {
     onClick: wrappedOnClick,
