@@ -198,19 +198,7 @@ const PostsTitle = ({
         </InteractionWrapper>
       </span>}
       <span className={!wrap ? classes.eaTitleDesktopEllipsis : undefined}>
-        {isLink ?
-          <Link
-            to={url}
-            eventProps={linkEventProps}
-            onClick={(e) => {
-              // We want to prevent the default behavior of the link here bc we are already inside the
-              // clickable cell and want that handler to run instead
-              e.preventDefault()
-            }}
-          >
-            {title}
-          </Link> :
-          title}
+        {isLink ? <Link to={url} eventProps={linkEventProps}>{title}</Link> : title }
       </span>
       {showIcons && <span className={classes.hideXsDown}>
         <InteractionWrapper className={classes.interactionWrapper}>

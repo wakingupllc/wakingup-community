@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { useMulti } from "../../lib/crud/withMulti";
 import { useCurrentUser } from "../common/withUser";
 import { sortBy } from 'underscore';
@@ -6,10 +6,6 @@ import { postGetLastCommentedAt } from "../../lib/collections/posts/helpers";
 import { useOnMountTracking } from "../../lib/analyticsEvents";
 import type { PopperPlacementType } from "@material-ui/core/Popper";
 import { isFriendlyUI } from "../../themes/forumTheme";
-import { useOnPageScroll } from "../common/withOnPageScroll";
-import throttle from "lodash/throttle";
-import { isClient } from "../../lib/executionEnvironment";
-import { elementIsNearVisible } from "../common/MixedTypeFeed";
 
 export type PostsListConfig = {
   /** Child elements will be put in a footer section */
@@ -62,33 +58,11 @@ export type PostsListConfig = {
   hideShortform?: boolean,
   hideContentPreviewIfSticky?: boolean,
   loadMoreMessage?: string,
-  infiniteScroll?: boolean,
-  bottomRef?: React.RefObject<HTMLDivElement>|null,
 }
 
 const defaultTooltipPlacement = isFriendlyUI
   ? "bottom-start"
   : "bottom-end";
-
-// If they clicked the Back button to get back to the infinite scrolling homepage, we want to restore the state
-// as it was before. Here, we find out how many posts we need to load. Once those posts have loaded, a useEffect
-// hook calls restoreScrollPosition().
-const previousInfiniteScrollLimit = function(currentView: string, defaultLimit: number) {
-  if (typeof localStorage === 'undefined') return defaultLimit;
-
-  const { view, limit, expiresAt } = JSON.parse(localStorage.getItem('infiniteScrollState') || '{}');
-
-  if (view === currentView && expiresAt > Date.now()) {
-    return limit ?? defaultLimit;
-  } else {
-    localStorage.removeItem('infiniteScrollState');
-    return defaultLimit;
-  }
-}
-
-const throttledLoadMore = throttle((fn) => {
-  fn()
-}, 100)
 
 export const usePostsList = ({
   children,
@@ -120,9 +94,7 @@ export const usePostsList = ({
   hideHiddenFrontPagePosts = false,
   hideShortform = false, 
   hideContentPreviewIfSticky = false,
-  infiniteScroll = false,
   loadMoreMessage,
-  bottomRef
 }: PostsListConfig) => {
   const [haveLoadedMore, setHaveLoadedMore] = useState(false);
 
@@ -135,29 +107,8 @@ export const usePostsList = ({
     }
     : {};
 
-  // On first loading posts, we might be restoring scroll position from before, so we use previousInfiniteScrollLimit
-  // which will return the limit if there is one (otherwise the default limit). For subsequent loads called by loadMore,
-  // we use the limit from the props.
-  const postsLimit = haveLoadedMore ?
-    terms.limit :
-    previousInfiniteScrollLimit(terms.view, terms.limit);
-  const termsWithLimit = {...terms, limit: postsLimit};
-
-  const restoreScrollPosition = () => {
-    const { scrollPosition, href } = JSON.parse(localStorage.getItem('infiniteScrollPosition') || '{}');
-    if (scrollPosition && href === window.location.href) {
-      localStorage.removeItem('infiniteScrollPosition');
-      window.scrollTo(0, scrollPosition);
-    }
-  }
-
-  // Awkwardly, usePostsList has a showLoadMore prop variable, and useMulti also returns a variable of that name.
-  // The useMulti return variable is a boolean that indicates whether there are more posts to load, which is useful
-  // both here and in the PostsLists2 component that uses this hook. Here, we rename it to moreToLoad,
-  // and pass it to PostsList2 as showLoadMore.
-
-  const {results, loading, error, loadMore, loadMoreProps, limit, showLoadMore: moreToLoad} = useMulti({
-    terms: termsWithLimit,
+  const {results, loading, error, loadMore, loadMoreProps, limit} = useMulti({
+    terms,
     collectionName: "Posts",
     fragmentName: !!tagId ? 'PostsListTagWithVotes' : 'PostsListWithVotes',
     enableTotal,
@@ -167,42 +118,6 @@ export const usePostsList = ({
     alwaysShowLoadMore,
     ...tagVariables
   });
-
-  const loadMoreDistance = 500;
-
-  // maybeStartLoadingMore: Test whether the scroll position is close enough to
-  // the bottom that we should start loading the next page, and if so, start loading it.
-  const maybeStartLoadingMore = () => {
-    // Client side, scrolled to near the bottom? Start loading if we aren't loading already.
-    if (infiniteScroll
-      && isClient
-      && bottomRef?.current
-      && elementIsNearVisible(bottomRef?.current, loadMoreDistance)
-      && !loading
-      && orderedResults
-      && moreToLoad)
-    {
-      throttledLoadMore(onLoadMore);
-    }
-  }
-
-  // Load-more triggers. Check (1) after render, and (2) when the page is scrolled.
-  useEffect(maybeStartLoadingMore);
-  useOnPageScroll(maybeStartLoadingMore);
-
-  // Saving infinite scroll state requires storing the number of loaded posts, i.e. the `limit` variable returned from
-  // useMulti, which we store here. We also need to store the scroll position on click, which we do in EAPostsItem.
-  useEffect(() => {
-    const infiniteScrollState = {
-      view: terms.view,
-      limit,
-      expiresAt: Date.now() + (1000 * 60 * 30),
-    };
-
-    if (typeof localStorage !== 'undefined') {
-      localStorage.setItem('infiniteScrollState', JSON.stringify(infiniteScrollState));
-    }
-  }, [limit, terms.view]);
 
   // Map from post._id to whether to hide it. Used for client side post filtering
   // like e.g. hiding read posts
@@ -285,7 +200,7 @@ export const usePostsList = ({
   ).map((post, i) => ({
     post,
     index: i,
-    terms: termsWithLimit,
+    terms,
     showNominationCount,
     showReviewCount,
     showDraftTag,
@@ -301,12 +216,6 @@ export const usePostsList = ({
     tooltipPlacement,
   }));
 
-  useEffect(() => {
-    if (!itemProps || itemProps.length === 0) return;
-
-    restoreScrollPosition();
-  }, [itemProps])
-
   const onLoadMore = useCallback(() => {
     loadMore();
     setHaveLoadedMore(true);
@@ -315,7 +224,7 @@ export const usePostsList = ({
   return {
     children,
     showNoResults,
-    showLoadMore: moreToLoad,
+    showLoadMore,
     showLoading,
     dimWhenLoading,
     topLoading,
