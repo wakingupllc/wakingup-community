@@ -1,8 +1,7 @@
-import React, { FC } from "react";
+import React, { FC, MouseEvent } from "react";
 import { registerComponent, Components } from "../../lib/vulcan-lib";
 import { AnalyticsContext } from "../../lib/analyticsEvents";
 import { usePostsItem, PostsItemConfig } from "./usePostsItem";
-import { Link } from "../../lib/reactRouterWrapper";
 import { SECTION_WIDTH } from "../common/SingleColumnSection";
 import withErrorBoundary from "../common/withErrorBoundary";
 import classNames from "classnames";
@@ -217,7 +216,22 @@ const EAPostsItem = ({
     hideContentPreviewIfSticky,
     className,
   } = usePostsItem(props);
-  const {onClick} = useClickableCell({href: postLink});
+
+  // We save the scroll position when the user clicks on a post so we can restore their position in the infinite scroll
+  // if they click back from this post later. The other variable needed to save infinite scroll state is the number of
+  // posts loaded, which in usePostsList is the `limit` variable returned by useMulti. Beware that that is not the same
+  // as the props.terms.limit variable we have here, so saving infinite scroll state must be done partly here, and partly
+  // in usePostsList.
+  const {onClick: clickableCellOnclick} = useClickableCell({href: postLink});
+  const onClick = (e: MouseEvent<HTMLDivElement>) => {
+    const infiniteScrollPosition = JSON.stringify({
+      href: window.location.href,
+      scrollPosition: window.scrollY,
+    })
+    localStorage.setItem('infiniteScrollPosition', infiniteScrollPosition);
+
+    clickableCellOnclick(e)
+  }
 
   if (isRepeated) {
     return null;

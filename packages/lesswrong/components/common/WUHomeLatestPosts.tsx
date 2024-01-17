@@ -176,8 +176,6 @@ const WUHomeLatestPosts = ({classes}:{classes: ClassesType}) => {
     limit:limit,
   }
 
-  const showCurated = isFriendlyUI || (isLW && reviewIsActive())
-
   return (
     <AnalyticsContext pageSectionContext="latestPosts">
       <SingleColumnSection>
@@ -208,16 +206,15 @@ const WUHomeLatestPosts = ({classes}:{classes: ClassesType}) => {
         </Typography>
         
         <HideRepeatedPostsProvider>
-          {showCurated && <CuratedPostsList />}
           <AnalyticsContext pageSectionContext={"latestPosts"}>
             {/* Allow hiding posts from the front page*/}
             <AllowHidingFrontPagePostsContext.Provider value={true}>
               <PostsList2
                 terms={postsTerms}
-                alwaysShowLoadMore
                 hideHiddenFrontPagePosts
                 itemsPerPage={frontpagePostsLoadMoreCountSetting.get()}
                 hideContentPreviewIfSticky={!showPinnedPostPreviewOnHomepageSetting.get()}
+                infiniteScroll={true}
               >
               </PostsList2>
             </AllowHidingFrontPagePostsContext.Provider>
