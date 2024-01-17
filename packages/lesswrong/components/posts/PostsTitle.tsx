@@ -203,7 +203,7 @@ const PostsTitle = ({
             to={url}
             eventProps={linkEventProps}
             onClick={(e) => {
-              // We want to prevent the default behavior of the link here bc we are already inside the 
+              // We want to prevent the default behavior of the link here bc we are already inside the
               // clickable cell and want that handler to run instead
               e.preventDefault()
             }}
