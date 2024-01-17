@@ -285,7 +285,7 @@ export const usePostsList = ({
   ).map((post, i) => ({
     post,
     index: i,
-    termsWithLimit,
+    terms: termsWithLimit,
     showNominationCount,
     showReviewCount,
     showDraftTag,
