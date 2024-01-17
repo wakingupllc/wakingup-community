@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useMulti } from "../../lib/crud/withMulti";
 import { useCurrentUser } from "../common/withUser";
 import { sortBy } from 'underscore';
@@ -6,6 +6,10 @@ import { postGetLastCommentedAt } from "../../lib/collections/posts/helpers";
 import { useOnMountTracking } from "../../lib/analyticsEvents";
 import type { PopperPlacementType } from "@material-ui/core/Popper";
 import { isFriendlyUI } from "../../themes/forumTheme";
+import { useOnPageScroll } from "../common/withOnPageScroll";
+import throttle from "lodash/throttle";
+import { isClient } from "../../lib/executionEnvironment";
+import { elementIsNearVisible } from "../../lib/utils/elementIsNearVisible";
 
 export type PostsListConfig = {
   /** Child elements will be put in a footer section */
@@ -59,6 +63,7 @@ export type PostsListConfig = {
   hideContentPreviewIfSticky?: boolean,
   loadMoreMessage?: string,
   infiniteScroll?: boolean,
+  bottomRef?: React.RefObject<HTMLDivElement>|null,
 }
 
 const defaultTooltipPlacement = isFriendlyUI
@@ -80,6 +85,10 @@ const previousInfiniteScrollLimit = function(currentView: string, defaultLimit: 
     return defaultLimit;
   }
 }
+
+const throttledLoadMore = throttle((fn) => {
+  fn()
+}, 100)
 
 export const usePostsList = ({
   children,
@@ -111,7 +120,9 @@ export const usePostsList = ({
   hideHiddenFrontPagePosts = false,
   hideShortform = false, 
   hideContentPreviewIfSticky = false,
+  infiniteScroll = false,
   loadMoreMessage,
+  bottomRef
 }: PostsListConfig) => {
   const [haveLoadedMore, setHaveLoadedMore] = useState(false);
 
@@ -132,10 +143,20 @@ export const usePostsList = ({
     previousInfiniteScrollLimit(terms.view, terms.limit);
   const termsWithLimit = {...terms, limit: postsLimit};
 
+  const restoreScrollPosition = () => {
+    const { scrollPosition, href } = JSON.parse(localStorage.getItem('infiniteScrollPosition') || '{}');
+    if (scrollPosition && href === window.location.href) {
+      localStorage.removeItem('infiniteScrollPosition');
+      window.scrollTo(0, scrollPosition);
+    }
+  }
+
   // Awkwardly, usePostsList has a showLoadMore prop variable, and useMulti also returns a variable of that name.
-  // The useMulti variable is a boolean that indicates whether there are more posts to load, which is useful, so
-  // that's what we return from this function.
-  const {results, loading, error, loadMore, loadMoreProps, limit, showLoadMore: showLoadMoreResult} = useMulti({
+  // The useMulti return variable is a boolean that indicates whether there are more posts to load, which is useful
+  // both here and in the PostsLists2 component that uses this hook. Here, we rename it to moreToLoad,
+  // and pass it to PostsList2 as showLoadMore.
+
+  const {results, loading, error, loadMore, loadMoreProps, limit, showLoadMore: moreToLoad} = useMulti({
     terms: termsWithLimit,
     collectionName: "Posts",
     fragmentName: !!tagId ? 'PostsListTagWithVotes' : 'PostsListWithVotes',
@@ -146,6 +167,28 @@ export const usePostsList = ({
     alwaysShowLoadMore,
     ...tagVariables
   });
+
+  const loadMoreDistance = 500;
+
+  // maybeStartLoadingMore: Test whether the scroll position is close enough to
+  // the bottom that we should start loading the next page, and if so, start loading it.
+  const maybeStartLoadingMore = () => {
+    // Client side, scrolled to near the bottom? Start loading if we aren't loading already.
+    if (infiniteScroll
+      && isClient
+      && bottomRef?.current
+      && elementIsNearVisible(bottomRef?.current, loadMoreDistance)
+      && !loading
+      && orderedResults
+      && moreToLoad)
+    {
+      throttledLoadMore(onLoadMore);
+    }
+  }
+
+  // Load-more triggers. Check (1) after render, and (2) when the page is scrolled.
+  useEffect(maybeStartLoadingMore);
+  useOnPageScroll(maybeStartLoadingMore);
 
   // Saving infinite scroll state requires storing the number of loaded posts, i.e. the `limit` variable returned from
   // useMulti, which we store here. We also need to store the scroll position on click, which we do in EAPostsItem.
@@ -254,6 +297,12 @@ export const usePostsList = ({
     tooltipPlacement,
   }));
 
+  useEffect(() => {
+    if (!itemProps || itemProps.length === 0) return;
+
+    restoreScrollPosition();
+  }, [itemProps])
+
   const onLoadMore = useCallback(() => {
     loadMore();
     setHaveLoadedMore(true);
@@ -262,7 +311,7 @@ export const usePostsList = ({
   return {
     children,
     showNoResults,
-    showLoadMore: showLoadMoreResult,
+    showLoadMore: moreToLoad,
     showLoading,
     dimWhenLoading,
     topLoading,

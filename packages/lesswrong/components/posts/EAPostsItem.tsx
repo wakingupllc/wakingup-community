@@ -226,13 +226,13 @@ const EAPostsItem = ({
   const infiniteScrollHref = isClient ? window.location.href : null;
   const {onClick: clickableCellOnclick} = useClickableCell({href: postLink});
   const onClick = (e: MouseEvent<HTMLDivElement>) => {
-      const infiniteScrollPosition = JSON.stringify({
-        href: infiniteScrollHref,
-        scrollPosition: window.scrollY,
-      })
-      localStorage.setItem('infiniteScrollPosition', infiniteScrollPosition);
+    const infiniteScrollPosition = JSON.stringify({
+      href: infiniteScrollHref,
+      scrollPosition: window.scrollY,
+    })
+    localStorage.setItem('infiniteScrollPosition', infiniteScrollPosition);
 
-      clickableCellOnclick(e)
+    clickableCellOnclick(e)
   }
 
   if (isRepeated) {
