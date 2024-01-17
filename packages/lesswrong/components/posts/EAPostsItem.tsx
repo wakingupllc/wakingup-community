@@ -6,7 +6,6 @@ import { SECTION_WIDTH } from "../common/SingleColumnSection";
 import withErrorBoundary from "../common/withErrorBoundary";
 import classNames from "classnames";
 import { InteractionWrapper, useClickableCell } from "../common/useClickableCell";
-import { isClient } from "../../lib/executionEnvironment";
 
 export const styles = (theme: ThemeType) => ({
   root: {
@@ -223,11 +222,10 @@ const EAPostsItem = ({
   // posts loaded, which in usePostsList is the `limit` variable returned by useMulti. Beware that that is not the same
   // as the props.terms.limit variable we have here, so saving infinite scroll state must be done partly here, and partly
   // in usePostsList.
-  const infiniteScrollHref = isClient ? window.location.href : null;
   const {onClick: clickableCellOnclick} = useClickableCell({href: postLink});
   const onClick = (e: MouseEvent<HTMLDivElement>) => {
     const infiniteScrollPosition = JSON.stringify({
-      href: infiniteScrollHref,
+      href: window.location.href,
       scrollPosition: window.scrollY,
     })
     localStorage.setItem('infiniteScrollPosition', infiniteScrollPosition);

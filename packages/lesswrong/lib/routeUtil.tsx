@@ -62,15 +62,7 @@ export const useNavigate = (): NavigateFunction => {
     if (options?.replace) {
       history.replace(url);
     } else {
-      if (history.location.pathname !== url) {
-        // If someone clicks on a PostItem title <a> link on the front page, this both navigates the link
-        // (which updates the URL) and also runs the useClickableCell onClick handler, which uses this
-        // useNavigate function which would also update the URL with this history.push(url) call.
-        // (How exactly does the <a> link cause some navigation that isn't this useNavigate function,
-        // but isn't a full page reload either? Copilot suggests two ways to continue this comment:
-        // 1) "Probably some kind of react-router magic.", and 2) "Devilry!". Both seem plauisble.)
-        history.push(url);
-      }
+      history.push(url);
     }
   }, [history]);
 }
