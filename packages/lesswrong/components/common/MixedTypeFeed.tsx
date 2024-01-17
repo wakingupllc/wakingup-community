@@ -5,7 +5,6 @@ import { useOnPageScroll } from './withOnPageScroll';
 import { isClient } from '../../lib/executionEnvironment';
 import * as _ from 'underscore';
 import { useOrderPreservingArray } from '../hooks/useOrderPreservingArray';
-import { elementIsNearVisible } from '../../lib/utils/elementIsNearVisible';
 
 const loadMoreDistance = 500;
 
@@ -220,6 +219,17 @@ const RenderFeedItem = React.memo(({renderers, item}: {
   return renderFn ? renderFn(item[item.type]) : item[item.type];
 });
 
+// Returns whether an element, which is presumed to be either visible or below
+// the screen, is within `distance` of being visible. This is used for infinite
+// scroll; the next segment starts loading when the scroll position reaches
+// `distance` of the bottom.
+export function elementIsNearVisible(element: HTMLElement|null, distance: number) {
+  if (!element) return false;
+  const top = element.getBoundingClientRect().y;
+  const windowHeight = window.innerHeight;
+  return (top-distance) <= windowHeight;
+}
+
 const MixedTypeInfiniteComponent = registerComponent('MixedTypeFeed', MixedTypeFeed);
 
 declare global {
@@ -227,4 +237,3 @@ declare global {
     MixedTypeFeed: typeof MixedTypeInfiniteComponent,
   }
 }
-

@@ -9,7 +9,7 @@ import { isFriendlyUI } from "../../themes/forumTheme";
 import { useOnPageScroll } from "../common/withOnPageScroll";
 import throttle from "lodash/throttle";
 import { isClient } from "../../lib/executionEnvironment";
-import { elementIsNearVisible } from "../../lib/utils/elementIsNearVisible";
+import { elementIsNearVisible } from "../common/MixedTypeFeed";
 
 export type PostsListConfig = {
   /** Child elements will be put in a footer section */
