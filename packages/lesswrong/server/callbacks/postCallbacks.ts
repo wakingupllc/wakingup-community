@@ -16,7 +16,7 @@ import { performCrosspost, handleCrosspostUpdate } from "../fmCrosspost/crosspos
 import { addOrUpvoteTag } from '../tagging/tagsGraphQL';
 import { userIsAdmin } from '../../lib/vulcan-users';
 import { MOVED_POST_TO_DRAFT, REJECTED_POST } from '../../lib/collections/moderatorActions/schema';
-import { isEAForum } from '../../lib/instanceSettings';
+import {isEAForum, isWakingUp} from '../../lib/instanceSettings'
 import { captureException } from '@sentry/core';
 import { TOS_NOT_ACCEPTED_ERROR } from '../fmCrosspost/resolvers';
 import TagRels from '../../lib/collections/tagRels/collection';
@@ -532,6 +532,16 @@ async function bulkApplyPostTags ({postId, tagsToApply, currentUser, context}: {
 async function bulkRemovePostTags ({tagRels, currentUser, context}: {tagRels: DbTagRel[], currentUser: DbUser, context: ResolverContext}) {
   const clearOneTag = async (tagRel: DbTagRel) => {
     try {
+      /**
+       * In waking up there are no such thing as tag relevance, so we can just remove the tagRel
+       * We want to do that specifically to allow for admin to edit post tags via the post edit UI
+       * Because otherwise this wouldn't clear the votes for original user who set the tag
+       * 
+       */
+      if (isWakingUp) {
+        await TagRels.rawRemove({_id: tagRel._id})
+      }
+      
       await clearVotesServer({ document: tagRel, collection: TagRels, user: currentUser, context})
     } catch(e) {
       captureException(e)
