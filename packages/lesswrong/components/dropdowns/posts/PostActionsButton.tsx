@@ -5,7 +5,7 @@ import MoreVertIcon from '@material-ui/icons/MoreVert';
 import { useCurrentUser } from '../../common/withUser';
 import { useTracking } from '../../../lib/analyticsEvents';
 import { PopperPlacementType } from '@material-ui/core/Popper';
-import { useIsAboveBreakpoint } from '../../hooks/useScreenWidth';
+import { useIsAboveBreakpoint, useIsMobile } from '../../hooks/useScreenWidth';
 import { isFriendlyUI } from '../../../themes/forumTheme';
 
 const styles = (theme: ThemeType): JssStyles => ({
@@ -41,9 +41,12 @@ const PostActionsButton = ({post, vertical, popperGap, autoPlace, flip, includeB
   // interaction
   const isDesktopWatched = useIsAboveBreakpoint('xl');
 
-  const popperPlacement: PopperPlacementType = isDesktopWatched || !autoPlace
-    ? 'right-start'
-    : 'left-start';
+  const popperPlacement: PopperPlacementType = useIsMobile()
+    ? 'bottom-start'
+    : isDesktopWatched || !autoPlace
+      ? 'right-start'
+      : 'left-start';
+
   let gapStyle: CSSProperties | undefined
   if (popperGap) {
     switch (popperPlacement) {
@@ -72,7 +75,6 @@ const PostActionsButton = ({post, vertical, popperGap, autoPlace, flip, includeB
       open={isOpen}
       anchorEl={anchorEl.current}
       placement={popperPlacement}
-      allowOverflow
       flip={flip}
       style={gapStyle}
     >
