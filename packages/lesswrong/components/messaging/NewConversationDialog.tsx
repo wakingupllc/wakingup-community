@@ -9,6 +9,7 @@ import { useNavigate } from "../../lib/reactRouterWrapper";
 import { Hit } from "react-instantsearch-core";
 import Chip from "@material-ui/core/Chip";
 import Button from "@material-ui/core/Button";
+import {isWakingUp} from '../../lib/instanceSettings.ts'
 
 const styles = (theme: ThemeType): JssStyles => ({
   paper: {
@@ -264,7 +265,11 @@ const NewConversationDialog = ({
                         currentUser={currentUser}
                         onClose={onClose}
                         onSelect={(u) => {
-                          toggleUserSelected(u)
+                          if (isWakingUp) { // No multi-people conversations in Waking Up
+                            initiateConversation([u._id])
+                          } else { 
+                            toggleUserSelected(u) 
+                          }
                           setQuery("")
                         }}
                         isModInbox={isModInbox}
