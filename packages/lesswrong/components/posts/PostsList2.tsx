@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { Components, registerComponent } from '../../lib/vulcan-lib/components';
 import { decodeIntlError } from '../../lib/vulcan-lib/utils';
 import classNames from 'classnames';
@@ -25,6 +25,9 @@ type PostsList2Props = PostsListConfig & {classes: ClassesType};
 
 /** A list of posts, defined by a query that returns them. */
 const PostsList2 = ({classes, ...props}: PostsList2Props) => {
+  // Reference to a bottom-marker used for checking scroll position.
+  const bottomRef = useRef<HTMLDivElement|null>(null);
+
   const {
     children,
     showNoResults,
@@ -42,7 +45,7 @@ const PostsList2 = ({classes, ...props}: PostsList2Props) => {
     orderedResults,
     itemProps,
     hideContentPreviewIfSticky,
-  }= usePostsList(props);
+  }= usePostsList({...props, bottomRef});
 
   const { Loading, LoadMore, PostsNoResults, SectionFooter, PostsItem } = Components;
 
@@ -89,6 +92,7 @@ const PostsList2 = ({classes, ...props}: PostsList2Props) => {
         />
         { children }
       </SectionFooter>}
+      <div ref={bottomRef}/>
     </div>
   )
 }

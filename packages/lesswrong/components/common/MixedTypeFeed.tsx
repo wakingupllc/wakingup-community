@@ -223,7 +223,7 @@ const RenderFeedItem = React.memo(({renderers, item}: {
 // the screen, is within `distance` of being visible. This is used for infinite
 // scroll; the next segment starts loading when the scroll position reaches
 // `distance` of the bottom.
-function elementIsNearVisible(element: HTMLElement|null, distance: number) {
+export function elementIsNearVisible(element: HTMLElement|null, distance: number) {
   if (!element) return false;
   const top = element.getBoundingClientRect().y;
   const windowHeight = window.innerHeight;
@@ -237,4 +237,3 @@ declare global {
     MixedTypeFeed: typeof MixedTypeInfiniteComponent,
   }
 }
-
