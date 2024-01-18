@@ -2330,7 +2330,7 @@ const schema: SchemaType<"Posts"> = {
     canCreate: ['admins'],
     canUpdate: ['admins'],
     control: 'select',
-    options: getCommentViewOptions(),
+    options: () => getCommentViewOptions(),
     optional: true,
     group: formGroups.adminOptions,
   },

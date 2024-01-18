@@ -558,5 +558,10 @@
     "acceptsSchemaHash": "7b3fdcd195cd62025722543603fa51e0",
     "acceptedByMigration": "20240116T194702.remove_giving_season_2023_user_fields.ts",
     "timestamp": "2024-01-16T19:47:02.000Z"
+  },
+  {
+    "acceptsSchemaHash": "aa8cfb94d8917f3abe4464e08be1175a",
+    "acceptedByMigration": "20240118T194744.merge_noop_migration.ts",
+    "timestamp": "2024-01-18T19:47:44.000Z"
   }
 ]

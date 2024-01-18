@@ -180,11 +180,13 @@ const WU: {POSTS: PostAutoRateLimit[], COMMENTS: CommentAutoRateLimit[]} = {
       ...timeframe('1 Posts per 8 seconds'),
       rateLimitType: "universal",
       rateLimitMessage: "Please wait [fromNow] before posting again.",
+      isActive: ()  => true,
     },
     {
       ...timeframe('2 Posts per 6 hours'),
       rateLimitType: "universal",
       rateLimitMessage: "Looks like you've created multiple posts recently. Please wait [fromNow] before submitting a new post.",
+      isActive: ()  => true,
     }
   ],
   COMMENTS: [
@@ -192,7 +194,8 @@ const WU: {POSTS: PostAutoRateLimit[], COMMENTS: CommentAutoRateLimit[]} = {
       ...timeframe('1 Comments per 8 seconds'),
       rateLimitType: "universal",
       rateLimitMessage: "Please wait [fromNow] before commenting again.",
-      appliesToOwnPosts: true
+      appliesToOwnPosts: true,
+      isActive: ()  => true,
     }
   ]
 }
