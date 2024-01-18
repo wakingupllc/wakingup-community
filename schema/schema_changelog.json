@@ -563,5 +563,10 @@
     "acceptsSchemaHash": "aa8cfb94d8917f3abe4464e08be1175a",
     "acceptedByMigration": "20240118T194744.merge_noop_migration.ts",
     "timestamp": "2024-01-18T19:47:44.000Z"
+  },
+  {
+    "acceptsSchemaHash": "452d6688d27d827ad9b58ca74b57e119",
+    "acceptedByMigration": "20240118T224519.update_tag_not_required.ts",
+    "timestamp": "2024-01-18T22:45:19.000Z"
   }
 ]

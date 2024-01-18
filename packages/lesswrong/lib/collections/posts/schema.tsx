@@ -34,6 +34,7 @@ import { getDefaultViewSelector } from '../../utils/viewUtils';
 import GraphQLJSON from 'graphql-type-json';
 import { addGraphQLSchema } from '../../vulcan-lib/graphql';
 import { getCommentViewOptions } from '../../commentViewOptions';
+import {SimpleValidationError} from '../../vulcan-lib'
 
 const urlHintText = isEAForum
     ? 'UrlHintText'
@@ -165,6 +166,13 @@ const userPassesCrosspostingKarmaThreshold = (user: DbUser | UsersMinimumInfo | 
 const schemaDefaultValueFmCrosspost = schemaDefaultValue({
   isCrosspost: false,
 })
+
+const checkCategoryPresent = async ({document}: { document: DbPost }) => {
+  if (categoriesEnabledSetting.get() && Object.keys(document.tagRelevance ?? {}).length === 0) {
+    throw new SimpleValidationError({message: 'Please select a category for your post.'})
+  }
+  return document.tagRelevance
+}
 
 const schema: SchemaType<"Posts"> = {
   // Timestamp of post first appearing on the site (i.e. being approved)
@@ -915,8 +923,10 @@ const schema: SchemaType<"Posts"> = {
   // submitter applies/upvotes relevance for any tags included as keys.
   tagRelevance: {
     type: Object,
-    // This is maybe a questionable thing to do bc it defines the SQL schema.
-    optional: !categoriesEnabledSetting.get(),
+    optional: true,
+    // Soft-require categories. (not on DB level)
+    onUpdate: checkCategoryPresent,
+    onCreate: checkCategoryPresent,
     canCreate: ['members'],
     // This must be set to editable to allow the data to be sent from the edit form, but in practice it's always overwritten by updatePostDenormalizedTags
     canUpdate: [userOwns, 'sunshineRegiment', 'admins'],
