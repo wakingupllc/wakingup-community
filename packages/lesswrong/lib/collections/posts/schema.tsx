@@ -93,6 +93,7 @@ const rsvpType = new SimpleSchema({
 
 addGraphQLSchema(`
   type SocialPreviewType {
+    _id: String
     imageId: String
     imageUrl: String
     text: String
@@ -623,6 +624,8 @@ const schema: SchemaType<"Posts"> = {
     graphQLtype: '[PostRelation!]!',
     canRead: ['guests'],
     resolver: async (post: DbPost, args: void, context: ResolverContext) => {
+      if (!post.question) return [];
+
       const result = await PostRelations.find({targetPostId: post._id}).fetch()
       return await accessFilterMultiple(context.currentUser, PostRelations, result, context);
     }
@@ -637,6 +640,8 @@ const schema: SchemaType<"Posts"> = {
     graphQLtype: '[PostRelation!]!',
     canRead: ['guests'],
     resolver: async (post: DbPost, args: void, context: ResolverContext) => {
+      if (!post.question) return [];
+
       const {currentUser, repos} = context;
       const postRelations = await repos.postRelations.getPostRelationsByPostId(post._id);
       if (!postRelations || postRelations.length < 1) return []
@@ -1418,6 +1423,7 @@ const schema: SchemaType<"Posts"> = {
         const { imageId, text } = post.socialPreview || {};
         const imageUrl = getSocialPreviewImage(post);
         return {
+          _id: post._id,
           imageId,
           imageUrl,
           text,
@@ -1432,7 +1438,7 @@ const schema: SchemaType<"Posts"> = {
     control: "SocialPreviewUpload",
     group: formGroups.socialPreview,
     order: 4,
-    hidden: ({document}) => (isLWorAF && !!document.collabEditorDialogue) || (isEAForum && document.isEvent),
+    hidden: ({document}) => (isLWorAF && !!document?.collabEditorDialogue) || (isEAForum && !!document?.isEvent),
   },
 
   fmCrosspost: {
@@ -2038,7 +2044,7 @@ const schema: SchemaType<"Posts"> = {
 
   endTime: {
     type: Date,
-    hidden: (props) => !props.eventForm || props.document.eventType === 'course',
+    hidden: (props) => !props.eventForm || props.document?.eventType === 'course',
     canRead: ['guests'],
     canUpdate: ['members', 'sunshineRegiment', 'admins'],
     canCreate: ['members'],
@@ -2406,7 +2412,7 @@ const schema: SchemaType<"Posts"> = {
     type: Boolean,
     optional: true,
     canRead: ['guests'],
-    hidden: ({document}) => !!document.collabEditorDialogue,
+    hidden: ({document}) => !!document?.collabEditorDialogue,
     resolveAs: {
       type: 'Boolean',
       resolver: async (post: DbPost, args: void, context: ResolverContext): Promise<boolean> => {
@@ -2444,7 +2450,7 @@ const schema: SchemaType<"Posts"> = {
     canCreate: ['sunshineRegiment', 'admins'],
     blackbox: true,
     order: 55,
-    hidden: ({document}) => !!document.collabEditorDialogue,
+    hidden: ({document}) => !!document?.collabEditorDialogue,
     form: {
       options: function () { // options for the select form control
         return [
@@ -2461,7 +2467,7 @@ const schema: SchemaType<"Posts"> = {
     type: Boolean,
     optional: true,
     nullable: true,
-    hidden: ({document}) => isEAForum || !!document.collabEditorDialogue,
+    hidden: ({document}) => isEAForum || !!document?.collabEditorDialogue,
     tooltip: "Allow rate-limited users to comment freely on this post",
     group: formGroups.moderationGroup,
     canRead: ["guests"],

@@ -1,7 +1,7 @@
 import React from 'react';
 import md5 from "md5";
 import Users from "../../lib/collections/users/collection";
-import { isAdmin, userGetGroups } from '../../lib/vulcan-users/permissions';
+import { userGetGroups } from '../../lib/vulcan-users/permissions';
 import { createMutator, updateMutator } from '../vulcan-lib/mutators';
 import { Posts } from '../../lib/collections/posts'
 import { Comments } from '../../lib/collections/comments'
@@ -33,8 +33,6 @@ import { hasDigests } from '../../lib/betas';
 import { addToSendgridList, removeFromSendgridList } from '../emails/sendgridListManagement';
 import { sendEmailSendgridTemplate } from '../emails/sendEmail';
 import {SimpleValidationError, throwValidationError} from '../vulcan-lib'
-import ElectionVotes from '../../lib/collections/electionVotes/collection';
-import { eaGivingSeason23ElectionName } from '../../lib/eaGivingSeason';
 import {usernameTakenError} from '../../lib/collections/users/username.ts'
 
 const MODERATE_OWN_PERSONAL_THRESHOLD = 50
@@ -580,26 +578,6 @@ getCollectionHooks("Users").updateBefore.add(async function UpdateDisplayName(da
         message: usernameTakenError,
         data: {path: 'displayName'},
       })
-    }
-  }
-  return data;
-});
-
-/**
- * Only allow users to update givingSeason2023VotedFlair if they have voted in the 2023 donation election
- */
-getCollectionHooks("Users").updateBefore.add(async function UpdateGivingSeason2023VotedFlair(data: DbUser, {oldDocument}) {
-  if (isAdmin(oldDocument)) return data;
-
-  if (data.givingSeason2023VotedFlair && data.givingSeason2023VotedFlair !== oldDocument.givingSeason2023VotedFlair) {
-    const vote = await ElectionVotes.findOne({
-      electionName: eaGivingSeason23ElectionName,
-      userId: oldDocument._id,
-      submittedAt: { $exists: true },
-    });
-
-    if (!vote) {
-      throw new Error("You must vote in the 2023 donation election to set this flair");
     }
   }
   return data;

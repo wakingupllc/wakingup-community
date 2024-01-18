@@ -541,7 +541,7 @@ type ModeratorActionsCollection = CollectionBase<"ModeratorActions">;
 interface DbModeratorAction extends DbObject {
   __collectionName?: "ModeratorActions"
   userId: string
-  type: "rateLimitOnePerDay" | "rateLimitOnePerThreeDays" | "rateLimitOnePerWeek" | "rateLimitOnePerFortnight" | "rateLimitOnePerMonth" | "rateLimitThreeCommentsPerPost" | "recentlyDownvotedContentAlert" | "lowAverageKarmaCommentAlert" | "lowAverageKarmaPostAlert" | "negativeUserKarmaAlert" | "movedPostToDraft" | "sentModeratorMessage" | "manualFlag" | "votingPatternWarningDelivered" | "flaggedForNDMs" | "autoBlockedFromSendingDMs" | "rejectedPost" | "rejectedComment" | "potentialTargetedDownvoting"
+  type: "rateLimitOnePerDay" | "rateLimitOnePerThreeDays" | "rateLimitOnePerWeek" | "rateLimitOnePerFortnight" | "rateLimitOnePerMonth" | "rateLimitThreeCommentsPerPost" | "recentlyDownvotedContentAlert" | "lowAverageKarmaCommentAlert" | "lowAverageKarmaPostAlert" | "negativeUserKarmaAlert" | "movedPostToDraft" | "sentModeratorMessage" | "manualFlag" | "votingPatternWarningDelivered" | "flaggedForNDMs" | "autoBlockedFromSendingDMs" | "rejectedPost" | "rejectedComment" | "potentialTargetedDownvoting" | "exemptFromRateLimits"
   endedAt: Date | null
   createdAt: Date
   legacyData: any /*{"definitions":[{"blackbox":true}]}*/
@@ -1436,7 +1436,6 @@ interface DbUser extends DbObject {
   }
   karmaChangeLastOpened: Date | null
   karmaChangeBatchStart: Date | null
-  givingSeasonNotifyForVoting: boolean
   emailSubscribedToCurated: boolean | null
   subscribedToDigest: boolean
   subscribedToWelcomeEmails: boolean
@@ -1549,8 +1548,8 @@ interface DbUser extends DbObject {
   reviewForAlignmentForumUserId: string | null
   afApplicationText: string | null
   afSubmittedApplication: boolean | null
-  givingSeason2023DonatedFlair: boolean
-  givingSeason2023VotedFlair: boolean
+  hideSunshineSidebar: boolean
+  wrapped2023Viewed: boolean
   wu_uuid: string | null
   first_name: string | null
   last_name: string | null

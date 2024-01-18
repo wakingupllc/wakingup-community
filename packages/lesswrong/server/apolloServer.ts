@@ -33,7 +33,7 @@ import expressSession from 'express-session';
 import MongoStore from './vendor/ConnectMongo/MongoStore';
 import { ckEditorTokenHandler } from './ckEditor/ckEditorToken';
 import { getEAGApplicationData } from './zohoUtils';
-import { faviconOverrideSetting, faviconUrlSetting, isEAForum, testServerSetting } from '../lib/instanceSettings';
+import { faviconOverrideSetting, faviconUrlSetting, isEAForum, testServerSetting, performanceMetricLoggingEnabled } from '../lib/instanceSettings';
 import { parseRoute, parsePath } from '../lib/vulcan-core/appContext';
 import { globalExternalStylesheets } from '../themes/globalStyles/externalStyles';
 import { addCypressRoutes } from './testingSqlClient';
@@ -52,8 +52,7 @@ import ElasticController from './search/elastic/ElasticController';
 import { GENERIC_ERROR_MESSAGE, shouldHideErrorDetailsFromUser } from './vulcan-lib';
 import type { ApolloServerPlugin, GraphQLRequestContext, GraphQLRequestListener } from 'apollo-server-plugin-base';
 import { asyncLocalStorage, closePerfMetric, openPerfMetric, perfMetricMiddleware, setAsyncStoreValue } from './perfMetrics';
-import { performanceMetricLoggingEnabled } from '../lib/publicSettings';
-import {addAdminRoutesMiddleware} from './adminRoutesMiddleware'
+import { addAdminRoutesMiddleware } from './adminRoutesMiddleware'
 
 class ApolloServerLogging implements ApolloServerPlugin<ResolverContext> {
   requestDidStart({ request, context }: GraphQLRequestContext<ResolverContext>): GraphQLRequestListener<ResolverContext> {

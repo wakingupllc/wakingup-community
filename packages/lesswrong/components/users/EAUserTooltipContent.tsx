@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import { registerComponent, Components } from "../../lib/vulcan-lib";
 import { htmlToTextDefault } from "../../lib/htmlToText";
+import { FRIENDLY_THIN_HOVER_OVER_WIDTH } from "../common/FriendlyHoverOver";
 import moment from "moment";
 import { showKarmaSetting } from "../../lib/publicSettings";
 
@@ -8,7 +9,7 @@ const styles = (theme: ThemeType): JssStyles => ({
   root: {
     display: "flex",
     flexDirection: "column",
-    width: showKarmaSetting.get() ? 270 : 200,
+    width: showKarmaSetting.get() ? FRIENDLY_THIN_HOVER_OVER_WIDTH : 200,
     maxWidth: "100%",
     gap: "12px",
     fontSize: 14,

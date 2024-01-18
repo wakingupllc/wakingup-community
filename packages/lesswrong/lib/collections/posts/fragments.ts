@@ -213,6 +213,7 @@ registerFragment(`
       html
     }
     lastPromotedComment {
+      _id
       user {
         ...UsersMinimumInfo
       }
@@ -224,6 +225,7 @@ registerFragment(`
       ...TagPreviewFragment
     }
     socialPreviewData {
+      _id
       imageUrl
     }
 
@@ -275,6 +277,7 @@ registerFragment(`
     noIndex
     viewCount
     socialPreviewData {
+      _id
       text
       imageUrl
     }
@@ -309,6 +312,7 @@ registerFragment(`
     podcastEpisode {
       title
       podcast {
+        _id
         title
         applePodcastLink
         spotifyPodcastLink
@@ -503,6 +507,7 @@ registerFragment(`
     socialPreviewImageId
     socialPreview
     socialPreviewData {
+      _id
       imageId
       text
     }
@@ -677,6 +682,7 @@ registerFragment(`
       _id
       title
       podcast {
+        _id
         title
         applePodcastLink
         spotifyPodcastLink
@@ -685,6 +691,7 @@ registerFragment(`
       externalEpisodeId
     }
     socialPreviewData {
+      _id
       text
       imageUrl
     }

@@ -5,6 +5,8 @@ import classNames from 'classnames';
 import { PostsListConfig, usePostsList } from './usePostsList';
 import FormattedMessage from '../../lib/vulcan-i18n/message';
 import { isGenericError } from '../../lib/vulcan-lib';
+import moment from 'moment';
+import { isEAForum } from '../../lib/instanceSettings';
 
 const Error = ({error}: any) => <div>
   <FormattedMessage id={error.id} values={{value: error.value}} html={isGenericError(error.message)}/>{error.message}
@@ -26,6 +28,7 @@ const PostsList2 = ({classes, ...props}: PostsList2Props) => {
   const {
     children,
     showNoResults,
+    hideLastUnread,
     showLoadMore,
     showLoading,
     dimWhenLoading,
@@ -48,6 +51,18 @@ const PostsList2 = ({classes, ...props}: PostsList2Props) => {
   }
 
   if (!orderedResults?.length && !showNoResults) {
+    return null
+  }
+  
+  // If this is the EA Forum frontpage pinned curated posts list,
+  // and we haven't curated a post in the last 5 days,
+  // then hide this entire section.
+  if (
+    isEAForum &&
+    hideLastUnread &&
+    !!orderedResults?.[0].curatedDate &&
+    moment(orderedResults[0].curatedDate).isBefore(moment().subtract(5, 'days'))
+  ) {
     return null
   }
 

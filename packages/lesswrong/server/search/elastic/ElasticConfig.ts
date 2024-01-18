@@ -268,7 +268,6 @@ const elasticSearchConfig: Record<SearchIndexCollectionName, IndexConfig> = {
     ],
     tiebreaker: "karma",
     filters: [
-      {range: {karma: {gte: 0}}},
       {term: {deleted: false}},
       {term: {completedOnboarding: true}},
       {term: {deleteContent: false}},

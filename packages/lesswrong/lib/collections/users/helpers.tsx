@@ -572,11 +572,6 @@ export const voteButtonsDisabledForUser = (user: UsersMinimumInfo|DbUser|null): 
   return { fail: false };
 };
 
-export const showDonatedFlair = (user: UsersMinimumInfo|DbUser|null): boolean => {
-  // Fundraiser closes on 2023-12-20
-  return isEAForum && !!user?.givingSeason2023DonatedFlair && new Date() < new Date('2023-12-21');
-}
-
 function wuProps(user: DbUser|UsersAdmin) {
   return user.services?.wakingUp
 }
@@ -622,11 +617,6 @@ export function codeEntryLockExpiresAt(user: DbUser|UsersAdmin) {
 
 export function loginLockedUntil(user: DbUser|UsersAdmin) {
   return codeEntryLockExpiresAt(user) || codeRequestLimitExpiresAt(user)
-}
-
-export const showVotedFlair = (user: UsersMinimumInfo|DbUser|null): boolean => {
-  // Fundraiser closes on 2023-12-20
-  return isEAForum && !!user?.givingSeason2023VotedFlair && new Date() < new Date('2023-12-21');
 }
 
 export const previousCorrespondents = async (user: DbUser|UsersCurrent|null) => {
