@@ -1,3 +1,5 @@
+import {SECTION_WIDTH} from '../../components/common/SingleColumnSection.tsx'
+
 const titleStack = [
   'GreekFallback', // Ensures that greek letters render consistently
   'Inter',
@@ -504,6 +506,16 @@ export const wakingUpTheme: SiteThemeSpecification = {
         },
         PostsEditForm: postsEditFormOverrides,
         PostsNewForm: postsEditFormOverrides,
+        SearchPageTabbed: {
+          resultsColumn: {
+            maxWidth: SECTION_WIDTH,
+          }
+        },
+        ExpandedUsersSearchHit: {
+          root: {
+            maxWidth: 'unset',
+          }
+        },
       }
     }
   }
