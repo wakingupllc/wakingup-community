@@ -315,6 +315,7 @@ export const usePostsList = ({
   return {
     children,
     showNoResults,
+    hideLastUnread,
     showLoadMore: moreToLoad,
     showLoading,
     dimWhenLoading,

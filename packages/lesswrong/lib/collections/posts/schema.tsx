@@ -34,6 +34,7 @@ import { getDefaultViewSelector } from '../../utils/viewUtils';
 import GraphQLJSON from 'graphql-type-json';
 import { addGraphQLSchema } from '../../vulcan-lib/graphql';
 import { getCommentViewOptions } from '../../commentViewOptions';
+import {SimpleValidationError} from '../../vulcan-lib'
 
 const urlHintText = isEAForum
     ? 'UrlHintText'
@@ -93,6 +94,7 @@ const rsvpType = new SimpleSchema({
 
 addGraphQLSchema(`
   type SocialPreviewType {
+    _id: String
     imageId: String
     imageUrl: String
     text: String
@@ -164,6 +166,13 @@ const userPassesCrosspostingKarmaThreshold = (user: DbUser | UsersMinimumInfo | 
 const schemaDefaultValueFmCrosspost = schemaDefaultValue({
   isCrosspost: false,
 })
+
+const checkCategoryPresent = async ({document}: { document: DbPost }) => {
+  if (categoriesEnabledSetting.get() && Object.keys(document.tagRelevance ?? {}).length === 0) {
+    throw new SimpleValidationError({message: 'Please select a category for your post.'})
+  }
+  return document.tagRelevance
+}
 
 const schema: SchemaType<"Posts"> = {
   // Timestamp of post first appearing on the site (i.e. being approved)
@@ -623,6 +632,8 @@ const schema: SchemaType<"Posts"> = {
     graphQLtype: '[PostRelation!]!',
     canRead: ['guests'],
     resolver: async (post: DbPost, args: void, context: ResolverContext) => {
+      if (!post.question) return [];
+
       const result = await PostRelations.find({targetPostId: post._id}).fetch()
       return await accessFilterMultiple(context.currentUser, PostRelations, result, context);
     }
@@ -637,6 +648,8 @@ const schema: SchemaType<"Posts"> = {
     graphQLtype: '[PostRelation!]!',
     canRead: ['guests'],
     resolver: async (post: DbPost, args: void, context: ResolverContext) => {
+      if (!post.question) return [];
+
       const {currentUser, repos} = context;
       const postRelations = await repos.postRelations.getPostRelationsByPostId(post._id);
       if (!postRelations || postRelations.length < 1) return []
@@ -910,8 +923,10 @@ const schema: SchemaType<"Posts"> = {
   // submitter applies/upvotes relevance for any tags included as keys.
   tagRelevance: {
     type: Object,
-    // This is maybe a questionable thing to do bc it defines the SQL schema.
-    optional: !categoriesEnabledSetting.get(),
+    optional: true,
+    // Soft-require categories. (not on DB level)
+    onUpdate: checkCategoryPresent,
+    onCreate: checkCategoryPresent,
     canCreate: ['members'],
     // This must be set to editable to allow the data to be sent from the edit form, but in practice it's always overwritten by updatePostDenormalizedTags
     canUpdate: [userOwns, 'sunshineRegiment', 'admins'],
@@ -1418,6 +1433,7 @@ const schema: SchemaType<"Posts"> = {
         const { imageId, text } = post.socialPreview || {};
         const imageUrl = getSocialPreviewImage(post);
         return {
+          _id: post._id,
           imageId,
           imageUrl,
           text,
@@ -1432,7 +1448,7 @@ const schema: SchemaType<"Posts"> = {
     control: "SocialPreviewUpload",
     group: formGroups.socialPreview,
     order: 4,
-    hidden: ({document}) => (isLWorAF && !!document.collabEditorDialogue) || (isEAForum && document.isEvent),
+    hidden: ({document}) => (isLWorAF && !!document?.collabEditorDialogue) || (isEAForum && !!document?.isEvent),
   },
 
   fmCrosspost: {
@@ -2038,7 +2054,7 @@ const schema: SchemaType<"Posts"> = {
 
   endTime: {
     type: Date,
-    hidden: (props) => !props.eventForm || props.document.eventType === 'course',
+    hidden: (props) => !props.eventForm || props.document?.eventType === 'course',
     canRead: ['guests'],
     canUpdate: ['members', 'sunshineRegiment', 'admins'],
     canCreate: ['members'],
@@ -2324,7 +2340,7 @@ const schema: SchemaType<"Posts"> = {
     canCreate: ['admins'],
     canUpdate: ['admins'],
     control: 'select',
-    options: getCommentViewOptions(),
+    options: () => getCommentViewOptions(),
     optional: true,
     group: formGroups.adminOptions,
   },
@@ -2406,7 +2422,7 @@ const schema: SchemaType<"Posts"> = {
     type: Boolean,
     optional: true,
     canRead: ['guests'],
-    hidden: ({document}) => !!document.collabEditorDialogue,
+    hidden: ({document}) => !!document?.collabEditorDialogue,
     resolveAs: {
       type: 'Boolean',
       resolver: async (post: DbPost, args: void, context: ResolverContext): Promise<boolean> => {
@@ -2444,7 +2460,7 @@ const schema: SchemaType<"Posts"> = {
     canCreate: ['sunshineRegiment', 'admins'],
     blackbox: true,
     order: 55,
-    hidden: ({document}) => !!document.collabEditorDialogue,
+    hidden: ({document}) => !!document?.collabEditorDialogue,
     form: {
       options: function () { // options for the select form control
         return [
@@ -2461,7 +2477,7 @@ const schema: SchemaType<"Posts"> = {
     type: Boolean,
     optional: true,
     nullable: true,
-    hidden: ({document}) => isEAForum || !!document.collabEditorDialogue,
+    hidden: ({document}) => isEAForum || !!document?.collabEditorDialogue,
     tooltip: "Allow rate-limited users to comment freely on this post",
     group: formGroups.moderationGroup,
     canRead: ["guests"],

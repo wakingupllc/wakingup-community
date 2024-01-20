@@ -7,7 +7,7 @@ import {
   userOwns,
   userIsAdmin,
   userIsAdminOrMod,
-  isAdmin,
+  userHasntChangedName,
 } from '../../vulcan-users/permissions'
 import { formGroups } from './formGroups';
 import * as _ from 'underscore';
@@ -1465,7 +1465,7 @@ const schema: SchemaType<"Users"> = {
   },
   notificationNewDialogueChecks: {
     label: "You have new people interested in dialogue-ing with you",
-    ...notificationTypeSettingsField(),
+    ...notificationTypeSettingsField({ channel: "none" }),
     hidden: !isLW,
   },
   notificationYourTurnMatchForm: {
@@ -1606,17 +1606,6 @@ const schema: SchemaType<"Users"> = {
     canUpdate: [userOwns, 'admins'],
     canRead: [userOwns, 'admins'],
     logChanges: false,
-  },
-
-  // User wants to get notifications when giving season voting begins
-  givingSeasonNotifyForVoting: {
-    type: Boolean,
-    optional: true,
-    canRead: [userOwns, 'sunshineRegiment', 'admins'],
-    canCreate: ['members'],
-    canUpdate: [userOwns, 'sunshineRegiment', 'admins'],
-    hidden: true,
-    ...schemaDefaultValue(false),
   },
 
   // Email settings
@@ -1942,11 +1931,11 @@ const schema: SchemaType<"Users"> = {
 
   hideFrontpageBook2020Ad: {
     type: Boolean,
-    hidden: true,
     canRead: [userOwns, 'sunshineRegiment', 'admins'],
     canCreate: ['members'],
     canUpdate: [userOwns, 'sunshineRegiment', 'admins'],
     optional: true,
+    hidden: !isLWorAF,
     order: 47,
     group: formGroups.siteCustomizations,
     label: "Hide the frontpage book ad"
@@ -2437,6 +2426,7 @@ const schema: SchemaType<"Users"> = {
     canRead: ['guests'],
     canUpdate: ['admins'],
     group: formGroups.adminOptions,
+    hidden: !isLWorAF,
   },
   hideWalledGardenUI: {
     type: Boolean,
@@ -2476,6 +2466,7 @@ const schema: SchemaType<"Users"> = {
     label: "Payment Contact Email",
     tooltip: "An email you'll definitely check where you can receive information about receiving payments",
     group: formGroups.paymentInfo,
+    hidden: !isLWorAF,
   },
   paymentInfo: {
     type: String,
@@ -2485,6 +2476,7 @@ const schema: SchemaType<"Users"> = {
     label: "PayPal Info",
     tooltip: "Your PayPal account info, for sending small payments",
     group: formGroups.paymentInfo,
+    hidden: !isLWorAF,
   },
   
   // Cloudinary image id for the profile image (high resolution)
@@ -2940,7 +2932,8 @@ const schema: SchemaType<"Users"> = {
     canUpdate: ['alignmentForumAdmins', 'admins'],
     canCreate: ['alignmentForumAdmins', 'admins'],
     group: formGroups.adminOptions,
-    label: "AF Review UserId"
+    label: "AF Review UserId",
+    hidden: !isLWorAF,
   },
 
   afApplicationText: {
@@ -2982,33 +2975,26 @@ const schema: SchemaType<"Users"> = {
     optional: true
   },
 
-  // Giving season fields
-  givingSeason2023DonatedFlair: {
+  hideSunshineSidebar: {
     type: Boolean,
     optional: true,
-    canRead: ['guests'],
+    canRead: [userOwns],
     canUpdate: ['admins'],
     canCreate: ['admins'],
     group: formGroups.adminOptions,
-    label: '"I Donated" flair for 2023 giving season',
-    hidden: !isEAForum,
+    label: "Hide Sunshine Sidebar",
+    hidden: isEAForum,
     ...schemaDefaultValue(false),
   },
-  givingSeason2023VotedFlair: {
+
+  // EA Forum wrapped fields
+  wrapped2023Viewed: {
     type: Boolean,
-    optional: true,
-    canRead: ['guests'],
-    canUpdate: ['members'],
+    optional: false,
+    canRead: [userOwns, 'admins'],
+    canUpdate: [userOwns, 'admins'],
     canCreate: ['members'],
-    group: formGroups.adminOptions,
-    label: '"I Voted" flair for 2023 giving season',
-    hidden: ({ currentUser }) => {
-      if (!isEAForum) return true;
-      // Only admins can set this in the edit user form, but users can set it on themselves
-      // from the voting portal (if they have voted)
-      if (!isAdmin(currentUser)) return true;
-      return false;
-    },
+    hidden: true,
     ...schemaDefaultValue(false),
   },
 

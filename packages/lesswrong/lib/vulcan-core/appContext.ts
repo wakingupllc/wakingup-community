@@ -6,6 +6,7 @@ import qs from 'qs'
 import { captureException } from '@sentry/core';
 import { isClient } from '../executionEnvironment';
 import type { RouterLocation, Route } from '../vulcan-lib/routes';
+import type { History } from 'history'
 
 export interface ServerRequestStatusContextType {
   status?: number
@@ -20,7 +21,7 @@ interface SegmentedUrl {
 
 export const LocationContext = React.createContext<RouterLocation|null>(null);
 export const SubscribeLocationContext = React.createContext<RouterLocation|null>(null);
-export const NavigationContext = React.createContext<any>(null);
+export const NavigationContext = React.createContext<{ history: History<unknown> }|null>(null);
 export const ServerRequestStatusContext = React.createContext<ServerRequestStatusContextType|null>(null);
 
 // From react-router-v4
@@ -122,6 +123,10 @@ export function parseRoute({location, followRedirects=true, onError=null}: {
   return result;
 }
 
+/**
+ * Check if user can access given route, and if not - override the component we'll render to 404 page
+ * Also removes the "currentRoute" and "params" fields so downstream code treats this as a 404 (not rendering previews, etc)
+ */
 export const checkUserRouteAccess = (user: UsersCurrent | null, location: RouterLocation): RouterLocation => {
   if (userCanAccessRoute(user, location.currentRoute)) return location
 

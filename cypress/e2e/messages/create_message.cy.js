@@ -16,7 +16,7 @@ describe('Messages', function() {
     cy.contains('Test seeded message').should('exist');
     cy.contains('.banner-actions-container', 'Close').click() // close OneTrust banner
     cy.get('.ck-editor__editable').type(testReply);
-    cy.contains("Submit").click();
+    cy.get('#new-message-submit').click();
     cy.contains('.MessageItem-messageBody', testReply).should('exist');
   });
 });

@@ -297,7 +297,6 @@ interface UsersDefaultFragment { // fragment on Users
   },
   readonly karmaChangeLastOpened: Date,
   readonly karmaChangeBatchStart: Date,
-  readonly givingSeasonNotifyForVoting: boolean,
   readonly emailSubscribedToCurated: boolean,
   readonly subscribedToDigest: boolean,
   readonly subscribedToWelcomeEmails: boolean,
@@ -415,8 +414,8 @@ interface UsersDefaultFragment { // fragment on Users
   readonly rateLimitNextAbleToComment: any,
   readonly rateLimitNextAbleToPost: any,
   readonly recentKarmaInfo: any,
-  readonly givingSeason2023DonatedFlair: boolean,
-  readonly givingSeason2023VotedFlair: boolean,
+  readonly hideSunshineSidebar: boolean,
+  readonly wrapped2023Viewed: boolean,
   readonly wu_uuid: string | null,
   readonly first_name: string | null,
   readonly last_name: string | null,
@@ -1001,7 +1000,7 @@ interface SessionsDefaultFragment { // fragment on Sessions
 
 interface ModeratorActionsDefaultFragment { // fragment on ModeratorActions
   readonly userId: string,
-  readonly type: "rateLimitOnePerDay" | "rateLimitOnePerThreeDays" | "rateLimitOnePerWeek" | "rateLimitOnePerFortnight" | "rateLimitOnePerMonth" | "rateLimitThreeCommentsPerPost" | "recentlyDownvotedContentAlert" | "lowAverageKarmaCommentAlert" | "lowAverageKarmaPostAlert" | "negativeUserKarmaAlert" | "movedPostToDraft" | "sentModeratorMessage" | "manualFlag" | "votingPatternWarningDelivered" | "flaggedForNDMs" | "autoBlockedFromSendingDMs" | "rejectedPost" | "rejectedComment" | "potentialTargetedDownvoting",
+  readonly type: "rateLimitOnePerDay" | "rateLimitOnePerThreeDays" | "rateLimitOnePerWeek" | "rateLimitOnePerFortnight" | "rateLimitOnePerMonth" | "rateLimitThreeCommentsPerPost" | "recentlyDownvotedContentAlert" | "lowAverageKarmaCommentAlert" | "lowAverageKarmaPostAlert" | "negativeUserKarmaAlert" | "movedPostToDraft" | "sentModeratorMessage" | "manualFlag" | "votingPatternWarningDelivered" | "flaggedForNDMs" | "autoBlockedFromSendingDMs" | "rejectedPost" | "rejectedComment" | "potentialTargetedDownvoting" | "exemptFromRateLimits",
   readonly endedAt: Date | null,
 }
 
@@ -1187,6 +1186,7 @@ interface PostsListBase_customHighlight { // fragment on Revisions
 }
 
 interface PostsListBase_lastPromotedComment { // fragment on Comments
+  readonly _id: string,
   readonly user: UsersMinimumInfo|null,
 }
 
@@ -1281,6 +1281,7 @@ interface PostsDetails_podcastEpisode { // fragment on PodcastEpisodes
 }
 
 interface PostsDetails_podcastEpisode_podcast { // fragment on Podcasts
+  readonly _id: string,
   readonly title: string,
   readonly applePodcastLink: string | null,
   readonly spotifyPodcastLink: string | null,
@@ -1541,6 +1542,7 @@ interface PostsBestOfList_podcastEpisode { // fragment on PodcastEpisodes
 }
 
 interface PostsBestOfList_podcastEpisode_podcast { // fragment on Podcasts
+  readonly _id: string,
   readonly title: string,
   readonly applePodcastLink: string | null,
   readonly spotifyPodcastLink: string | null,
@@ -1552,7 +1554,7 @@ interface CommentsList { // fragment on Comments
   readonly tagId: string,
   readonly tag: CommentsList_tag|null,
   readonly relevantTagIds: Array<string>,
-  readonly relevantTags: Array<TagBasicInfo>,
+  readonly relevantTags: Array<TagPreviewFragment>,
   readonly tagCommentType: "SUBFORUM" | "DISCUSSION",
   readonly parentCommentId: string,
   readonly topLevelCommentId: string,
@@ -1804,29 +1806,6 @@ interface messageListFragment_user extends UsersMinimumInfo { // fragment on Use
 interface messageListFragment_contents { // fragment on Revisions
   readonly html: string,
   readonly plaintextMainText: string,
-}
-
-interface newConversationFragment { // fragment on Conversations
-  readonly _id: string,
-  readonly title: string,
-  readonly participantIds: Array<string>,
-}
-
-interface conversationsListFragment { // fragment on Conversations
-  readonly _id: string,
-  readonly title: string,
-  readonly createdAt: Date,
-  readonly latestActivity: Date,
-  readonly participantIds: Array<string>,
-  readonly participants: Array<UsersMinimumInfo>,
-  readonly latestMessage: messageListFragment|null,
-  readonly archivedByIds: Array<string>,
-  readonly messageCount: number,
-  readonly moderator: boolean | null,
-}
-
-interface conversationIdFragment { // fragment on Conversations
-  readonly _id: string,
 }
 
 interface ConversationsMinimumInfo { // fragment on Conversations
@@ -2161,6 +2140,7 @@ interface SequencesPageTitleFragment { // fragment on Sequences
 }
 
 interface SequencesPageTitleFragment_canonicalCollection { // fragment on Collections
+  readonly _id: string,
   readonly title: string,
 }
 
@@ -2544,6 +2524,7 @@ interface TagEditFragment extends TagDetailsFragment { // fragment on Tags
   readonly description: RevisionEdit|null,
   readonly subforumWelcomeText: RevisionEdit|null,
   readonly moderationGuidelines: RevisionEdit|null,
+  readonly canVoteOnRels: Array<"userOwns" | "userOwnsOnlyUpvote" | "guests" | "members" | "admins" | "sunshineRegiment" | "alignmentForumAdmins" | "alignmentForum" | "alignmentVoters" | "podcasters" | "canBypassPostRateLimit" | "trustLevel1" | "canModeratePersonal" | "canSuggestCuration" | "debaters" | "realAdmins">,
 }
 
 interface TagRecentDiscussion extends TagFragment { // fragment on Tags
@@ -2673,8 +2654,6 @@ interface UsersMinimumInfo { // fragment on Users
   readonly spamRiskScore: number,
   readonly tagRevisionCount: number,
   readonly reviewedByUserId: string,
-  readonly givingSeason2023DonatedFlair: boolean,
-  readonly givingSeason2023VotedFlair: boolean,
 }
 
 interface UsersProfile extends UsersMinimumInfo, SharedUserBooleans { // fragment on Users
@@ -2684,8 +2663,8 @@ interface UsersProfile extends UsersMinimumInfo, SharedUserBooleans { // fragmen
   readonly organization: string,
   readonly careerStage: Array<string>,
   readonly biography: RevisionDisplay|null,
-  readonly howOthersCanHelpMe: RevisionEdit|null,
-  readonly howICanHelpOthers: RevisionEdit|null,
+  readonly howOthersCanHelpMe: RevisionDisplay|null,
+  readonly howICanHelpOthers: RevisionDisplay|null,
   readonly profileTagIds: Array<string>,
   readonly profileTags: Array<TagBasicInfo>,
   readonly organizerOfGroupIds: Array<string>,
@@ -2771,9 +2750,7 @@ interface UsersCurrent extends UsersProfile, SharedUserBooleans { // fragment on
   readonly lastNotificationsCheck: Date,
   readonly bannedUserIds: Array<string>,
   readonly bannedPersonalUserIds: Array<string>,
-  readonly biography: RevisionEdit|null,
   readonly moderationStyle: string,
-  readonly moderationGuidelines: RevisionEdit|null,
   readonly noKibitz: boolean,
   readonly showHideKarmaOption: boolean,
   readonly markDownPostEditor: boolean,
@@ -2861,7 +2838,6 @@ interface UsersCurrent extends UsersProfile, SharedUserBooleans { // fragment on
   readonly hideTaggingProgressBar: boolean,
   readonly hideFrontpageBookAd: boolean,
   readonly hideFrontpageBook2019Ad: boolean,
-  readonly givingSeasonNotifyForVoting: boolean,
   readonly abTestKey: string,
   readonly abTestOverrides: any /*{"definitions":[{"type":"JSON","blackbox":true}]}*/,
   readonly sortDraftsBy: string,
@@ -2902,6 +2878,8 @@ interface UsersCurrent extends UsersProfile, SharedUserBooleans { // fragment on
   readonly showMatches: boolean,
   readonly showRecommendedPartners: boolean,
   readonly hideActiveDialogueUsers: boolean,
+  readonly wrapped2023Viewed: boolean,
+  readonly hideSunshineSidebar: boolean,
 }
 
 interface UsersCurrentCommentRateLimit { // fragment on Users
@@ -3178,7 +3156,6 @@ interface UsersEdit extends UsersProfile { // fragment on Users
     timeOfDayGMT: number,
     dayOfWeekGMT: string,
   },
-  readonly givingSeasonNotifyForVoting: boolean,
   readonly hideFrontpageMap: boolean,
   readonly hideTaggingProgressBar: boolean,
   readonly hideFrontpageBookAd: boolean,
@@ -3378,7 +3355,7 @@ interface ModeratorActionDisplay { // fragment on ModeratorActions
   readonly _id: string,
   readonly user: UsersMinimumInfo|null,
   readonly userId: string,
-  readonly type: "rateLimitOnePerDay" | "rateLimitOnePerThreeDays" | "rateLimitOnePerWeek" | "rateLimitOnePerFortnight" | "rateLimitOnePerMonth" | "rateLimitThreeCommentsPerPost" | "recentlyDownvotedContentAlert" | "lowAverageKarmaCommentAlert" | "lowAverageKarmaPostAlert" | "negativeUserKarmaAlert" | "movedPostToDraft" | "sentModeratorMessage" | "manualFlag" | "votingPatternWarningDelivered" | "flaggedForNDMs" | "autoBlockedFromSendingDMs" | "rejectedPost" | "rejectedComment" | "potentialTargetedDownvoting",
+  readonly type: "rateLimitOnePerDay" | "rateLimitOnePerThreeDays" | "rateLimitOnePerWeek" | "rateLimitOnePerFortnight" | "rateLimitOnePerMonth" | "rateLimitThreeCommentsPerPost" | "recentlyDownvotedContentAlert" | "lowAverageKarmaCommentAlert" | "lowAverageKarmaPostAlert" | "negativeUserKarmaAlert" | "movedPostToDraft" | "sentModeratorMessage" | "manualFlag" | "votingPatternWarningDelivered" | "flaggedForNDMs" | "autoBlockedFromSendingDMs" | "rejectedPost" | "rejectedComment" | "potentialTargetedDownvoting" | "exemptFromRateLimits",
   readonly active: boolean,
   readonly createdAt: Date,
   readonly endedAt: Date | null,
@@ -3676,9 +3653,6 @@ interface FragmentTypes {
   WithVoteRevision: WithVoteRevision
   NotificationsList: NotificationsList
   messageListFragment: messageListFragment
-  newConversationFragment: newConversationFragment
-  conversationsListFragment: conversationsListFragment
-  conversationIdFragment: conversationIdFragment
   ConversationsMinimumInfo: ConversationsMinimumInfo
   ConversationsList: ConversationsList
   RSSFeedsDefaultFragment: RSSFeedsDefaultFragment
@@ -3813,7 +3787,7 @@ interface FragmentTypes {
 }
 
 interface FragmentTypesByCollection {
-  Conversations: "ConversationsDefaultFragment"|"newConversationFragment"|"conversationsListFragment"|"conversationIdFragment"|"ConversationsMinimumInfo"|"ConversationsList"
+  Conversations: "ConversationsDefaultFragment"|"ConversationsMinimumInfo"|"ConversationsList"
   Collections: "CollectionsDefaultFragment"|"CollectionContinueReadingFragment"|"CollectionsPageFragment"|"CollectionsEditFragment"|"CollectionsBestOfFragment"
   Localgroups: "LocalgroupsDefaultFragment"|"localGroupsBase"|"localGroupsHomeFragment"|"localGroupsEdit"|"localGroupsIsOnline"
   Users: "UsersDefaultFragment"|"SuggestAlignmentUser"|"UsersMinimumInfo"|"UsersProfile"|"UsersCurrent"|"UsersCurrentCommentRateLimit"|"UsersCurrentPostRateLimit"|"UserBookmarkedPosts"|"UserKarmaChanges"|"UsersBannedFromUsersModerationLog"|"SunshineUsersList"|"UserAltAccountsFragment"|"SharedUserBooleans"|"UsersMapEntry"|"UsersEdit"|"UsersAdmin"|"UsersWithReviewInfo"|"UsersProfileEdit"|"UsersCrosspostInfo"|"UsersOptedInToDialogueFacilitation"
@@ -3958,9 +3932,6 @@ interface CollectionNamesByFragmentName {
   WithVoteRevision: "Revisions"
   NotificationsList: "Notifications"
   messageListFragment: "Messages"
-  newConversationFragment: "Conversations"
-  conversationsListFragment: "Conversations"
-  conversationIdFragment: "Conversations"
   ConversationsMinimumInfo: "Conversations"
   ConversationsList: "Conversations"
   RSSFeedsDefaultFragment: "RSSFeeds"

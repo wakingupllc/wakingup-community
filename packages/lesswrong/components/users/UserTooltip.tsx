@@ -20,13 +20,10 @@ const UserTooltip = ({user, placement, inlineBlock, showTooltip = true, children
   children: ReactNode,
   classes: ClassesType,
 }) => {
-  const {
-    EAHoverOver, EAUserTooltipContent, LWTooltip, LWUserTooltipContent,
-  } = Components;
-  const Tooltip = isFriendlyUI ? EAHoverOver : LWTooltip;
+  const {HoverOver, EAUserTooltipContent, LWUserTooltipContent} = Components;
   const Content = isFriendlyUI ? EAUserTooltipContent : LWUserTooltipContent;
   return (
-    <Tooltip
+    <HoverOver
       title={<Content user={user} />}
       placement={placement}
       inlineBlock={inlineBlock}
@@ -34,7 +31,7 @@ const UserTooltip = ({user, placement, inlineBlock, showTooltip = true, children
       popperClassName={classes.root}
     >
       {children}
-    </Tooltip>
+    </HoverOver>
   );
 }
 

@@ -460,9 +460,11 @@ export const wakingUpTheme: SiteThemeSpecification = {
           },
         },
         NewConversationDialog: {
-          searchHelp: {
-            display: 'none'
-          },
+          searchInputContents: {
+            '& #new-conversation-submit': {
+              display: 'none'
+            }
+          }
         },
         FormGroupLayout: {
           formSectionBody: {
