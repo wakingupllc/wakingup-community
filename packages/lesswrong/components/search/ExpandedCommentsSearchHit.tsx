@@ -15,6 +15,7 @@ const styles = (theme: ThemeType): JssStyles => ({
     backgroundColor: theme.palette.grey[100],
     borderRadius: 6,
     paddingBottom: "1.3em",
+    border: `1px solid ${theme.palette.grey[100]}`,
     '&:hover': {
       opacity: 0.5
     }
