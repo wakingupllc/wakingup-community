@@ -298,13 +298,13 @@ const EAUsersProfile = ({terms, slug, subscriptionsEnabled = true, postSortingEn
 
   const privateSectionTabs: Array<UserProfileTabType> = [{
     id: 'drafts',
-    label: `Drafts`,
+    label: `My Drafts`,
     secondaryNode: <LWTooltip title="This section is only visible to you and site admins.">
       <InfoIcon className={classes.privateSectionIcon} />
     </LWTooltip>,
     body: <>
       <div className={classes.sectionSubHeadingRow}>
-        <Typography variant="headline" className={classes.sectionSubHeading}>Draft/hidden posts</Typography>
+        <Typography variant="headline" className={classes.sectionSubHeading}>Posts</Typography>
         {ownPage && <Link to="/newPost">
           <SectionButton>
             <DescriptionIcon /> New post
