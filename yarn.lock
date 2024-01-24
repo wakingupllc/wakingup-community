@@ -2522,19 +2522,6 @@
     "@jridgewell/resolve-uri" "^3.0.3"
     "@jridgewell/sourcemap-codec" "^1.4.10"
 
-"@json2csv/formatters@^7.0.5":
-  version "7.0.5"
-  resolved "https://registry.yarnpkg.com/@json2csv/formatters/-/formatters-7.0.5.tgz#530193d4a584f9f6b410fd0a95a7f8185d15d759"
-  integrity sha512-ihONIB8S1ZG0ji5nDFpfCUPphVLnEKlLxDmDqRMjmPhzw8WCvyLX2trIrNHCf1t2IV8rx+1tNYaDb1dh87jHgA==
-
-"@json2csv/plainjs@^7.0.5":
-  version "7.0.5"
-  resolved "https://registry.yarnpkg.com/@json2csv/plainjs/-/plainjs-7.0.5.tgz#03ae99af741153ccc4422424a9d67d859f2dc9cc"
-  integrity sha512-iJsYEzgRZUhRb8LltCeuBQyexQVUbovRZFF73Lo0iIvi5SUWsfXGTtbriIROsOKgfZPtYxmkZV+FYlsnBu9ybQ==
-  dependencies:
-    "@json2csv/formatters" "^7.0.5"
-    "@streamparser/json" "^0.0.19"
-
 "@mapbox/geojson-area@0.2.2":
   version "0.2.2"
   resolved "https://registry.yarnpkg.com/@mapbox/geojson-area/-/geojson-area-0.2.2.tgz"
@@ -3018,11 +3005,6 @@
   version "0.26.0"
   resolved "https://registry.yarnpkg.com/@std/esm/-/esm-0.26.0.tgz"
   integrity sha512-g3RDuosSa5fZOzENtrZdx7Gevb3zabfn8qglug2aCJIVz/4woFpKoqm1yD3mG2RD0zJEZRnkkuPHsmNglKGl7g==
-
-"@streamparser/json@^0.0.19":
-  version "0.0.19"
-  resolved "https://registry.yarnpkg.com/@streamparser/json/-/json-0.0.19.tgz#d9c264b54e366186ea4459bbb16c10238dc9e2a4"
-  integrity sha512-VTxtZGME6ZSWNCSjZ0Zd2LNNodx62XvmARb/liHIwGlInuuvoDzioLuRP8ajV8iLBknsTrsqpRDGlvzKSzpNEw==
 
 "@stripe/stripe-js@^1.11.0":
   version "1.11.0"
@@ -6907,6 +6889,11 @@ dedent@^0.7.0:
   resolved "https://registry.yarnpkg.com/dedent/-/dedent-0.7.0.tgz#2495ddbaf6eb874abb0e1be9df22d2e5a544326c"
   integrity sha1-JJXduvbrh0q7Dhvp3yLS5aVEMmw=
 
+deeks@3.0.2:
+  version "3.0.2"
+  resolved "https://registry.yarnpkg.com/deeks/-/deeks-3.0.2.tgz#49d908fb2b797554a139aede17176b11679eb89f"
+  integrity sha512-c6OmjIygIB/avwXwEQOiODS+nw6fEX4cvOdDMqdL7dt3dicV/xykAJ9AeVc/8/JTVQDuacjRc9KCMmXafL1Y4A==
+
 deep-eql@^3.0.1:
   version "3.0.1"
   resolved "https://registry.yarnpkg.com/deep-eql/-/deep-eql-3.0.1.tgz"
@@ -7119,6 +7106,11 @@ discontinuous-range@1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/discontinuous-range/-/discontinuous-range-1.0.0.tgz"
   integrity sha1-44Mx8IRLukm5qctxx3FYWqsbxlo=
+
+doc-path@4.0.2:
+  version "4.0.2"
+  resolved "https://registry.yarnpkg.com/doc-path/-/doc-path-4.0.2.tgz#157ddd33b86282bdf58cf4b9979bf9483cf9a95f"
+  integrity sha512-OqZEk7EM1aP3JpO+mq0pv1msEJWrzZVXu4q3YjEYJKc+Wt3/chac4KJdaGueK5IGemOwfptrLctG9I8xkb59qQ==
 
 doctrine@^2.1.0:
   version "2.1.0"
@@ -11141,6 +11133,14 @@ jsesc@~0.5.0:
   version "0.5.0"
   resolved "https://registry.yarnpkg.com/jsesc/-/jsesc-0.5.0.tgz"
   integrity sha1-597mbjXW/Bb3EP6R1c9p9w8IkR0=
+
+json-2-csv@^5.0.1:
+  version "5.0.1"
+  resolved "https://registry.yarnpkg.com/json-2-csv/-/json-2-csv-5.0.1.tgz#ffbdd597cfdcfa7ec805a039cbdba752dc3d8af4"
+  integrity sha512-rP9ChyMskS0angbvFdQ43SwEe72mEvqcY1/V2OeukQWxtlreUuZWhMlTdWjtd4L6kJxq+HPFTI06yqLvZiEVIA==
+  dependencies:
+    deeks "3.0.2"
+    doc-path "4.0.2"
 
 json-buffer@3.0.0:
   version "3.0.0"

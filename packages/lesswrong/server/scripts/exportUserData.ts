@@ -5,7 +5,7 @@ import { Comments } from '../../lib/collections/comments'
 import {Votes} from '../../lib/collections/votes'
 import {htmlToTextDefault} from '../../lib/htmlToText.ts'
 import {writeFile} from 'fs/promises'
-import { Parser } from '@json2csv/plainjs';
+import { json2csv } from 'json-2-csv';
 
 const exportUserData = async ({email}: { email: string }) => {
   const user = await Users.findOne({email})
@@ -20,9 +20,9 @@ const exportUserData = async ({email}: { email: string }) => {
   // eslint-disable-next-line no-console
   console.log('Exported user data:', userData)
   
-  await writeFile(`${email}_profile.csv`, new Parser().parse([formatUserData(user)]))
-  await writeFile(`${email}_posts.csv`, new Parser().parse(userData.posts))
-  await writeFile(`${email}_comments.csv`, new Parser().parse(userData.comments))
+  await writeFile(`${email}_profile.csv`, json2csv([formatUserData(user)]))
+  await writeFile(`${email}_posts.csv`, json2csv(userData.posts))
+  await writeFile(`${email}_comments.csv`, json2csv(userData.comments))
 }
 
 const formatUserData = (user: DbUser) => ({
