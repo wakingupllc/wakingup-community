@@ -11,10 +11,14 @@ import {
   postCommentCountTruncateThresholdSetting,
   showCommentRenderExpandOptionsSetting,
 } from '../../lib/publicSettings'
+import classNames from 'classnames';
 
 const styles = (theme: ThemeType): JssStyles => ({
   button: {
     color: theme.palette.lwTertiary.main
+  },
+  commentsListLoadingSpacer: {
+    minHeight: '100vh',
   },
   commentsList: {
     backgroundColor: "#fff",
@@ -28,7 +32,7 @@ const styles = (theme: ThemeType): JssStyles => ({
 
 export const POST_COMMENT_COUNT_TRUNCATE_THRESHOLD = postCommentCountTruncateThresholdSetting.get()
 
-const CommentsListFn = ({treeOptions, comments, totalComments=0, startThreadTruncated, parentAnswerId, defaultNestingLevel=1, parentCommentId, classes}: {
+const CommentsListFn = ({treeOptions, comments, totalComments=0, startThreadTruncated, parentAnswerId, defaultNestingLevel=1, parentCommentId, loading, classes}: {
   treeOptions: CommentTreeOptions,
   comments: Array<CommentTreeNode<CommentsList>>,
   totalComments?: number,
@@ -36,11 +40,12 @@ const CommentsListFn = ({treeOptions, comments, totalComments=0, startThreadTrun
   parentAnswerId?: string,
   defaultNestingLevel?: number,
   parentCommentId?: string,
+  loading?: boolean,
   classes: ClassesType,
 }) => {
   const currentUser = useCurrentUser();
   const [expandAllThreads,setExpandAllThreads] = useState(false);
-  
+
   useOnSearchHotkey(() => setExpandAllThreads(true));
 
   const { CommentsNode, SettingsButton, CommentsListMeta, LoginPopupButton, LWTooltip } = Components
@@ -76,23 +81,27 @@ const CommentsListFn = ({treeOptions, comments, totalComments=0, startThreadTrun
   }
   return <Components.ErrorBoundary>
     {showCommentRenderExpandOptionsSetting.get() && renderExpandOptions()}
-    {comments.length > 0 && <div className={classes.commentsList}>
-      {comments.map(comment =>
-        <CommentsNode
-          treeOptions={treeOptions}
-          startThreadTruncated={startThreadTruncated || totalComments >= POST_COMMENT_COUNT_TRUNCATE_THRESHOLD}
-          expandAllThreads={expandAllThreads}
-          comment={comment.item}
-          childComments={comment.children}
-          key={comment.item._id}
-          parentCommentId={parentCommentId}
-          parentAnswerId={parentAnswerId}
-          shortform={(treeOptions.post as PostsBase)?.shortform}
-          nestingLevel={defaultNestingLevel}
-          isChild={defaultNestingLevel > 1}
-        />)
-      }
-    </div>}
+    {/* commentsListLoadingSpacer makes the comments list keep a minimum height while reloading a different comment
+        sorting view, so that the scroll position doesn't move. */}
+    <div className={classNames({[classes.commentsListLoadingSpacer]: loading})}>
+      {(comments.length > 0) && <div className={classes.commentsList}>
+        {comments.map(comment =>
+          <CommentsNode
+            treeOptions={treeOptions}
+            startThreadTruncated={startThreadTruncated || totalComments >= POST_COMMENT_COUNT_TRUNCATE_THRESHOLD}
+            expandAllThreads={expandAllThreads}
+            comment={comment.item}
+            childComments={comment.children}
+            key={comment.item._id}
+            parentCommentId={parentCommentId}
+            parentAnswerId={parentAnswerId}
+            shortform={(treeOptions.post as PostsBase)?.shortform}
+            nestingLevel={defaultNestingLevel}
+            isChild={defaultNestingLevel > 1}
+          />)
+        }
+      </div>}
+    </div>
   </Components.ErrorBoundary>
 }
 
