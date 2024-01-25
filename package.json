@@ -73,7 +73,8 @@
     "ea-replicate-dev-db": "./scripts/eaReplicateDevDb.sh",
     "local-cypress-run": "yarn cypress run",
     "local-cypress-open": "yarn cypress open",
-    "brigader-check": "ts-node scripts/brigaderCheck.ts"
+    "brigader-check": "ts-node scripts/brigaderCheck.ts",
+    "export-user-data": "ts-node ./scripts/exportUserData.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.5.4",
@@ -229,6 +230,7 @@
     "intl": "^1.2.4",
     "io-ts": "^2.2.19",
     "jsdom": "^16.5.0",
+    "json-2-csv": "^5.0.1",
     "json-stringify-deterministic": "^1.0.8",
     "jsonwebtoken": "^9.0.0",
     "juice": "^7.0.0",
