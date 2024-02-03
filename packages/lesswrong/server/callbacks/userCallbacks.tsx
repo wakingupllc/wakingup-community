@@ -465,6 +465,27 @@ if (isWakingUp) {
       }
     }
   })
+
+  getCollectionHooks('Users').editAsync.add(async function resubscribeSendgridOnUserEmailChange(newUser: DbUser, oldUser: DbUser) {
+    if (!newUser || !oldUser || newUser.email === oldUser.email) return
+
+    const sendgridWelcomeListId = sendgridWelcomeListIdSetting.get()!
+    const sendgridDigestListId = sendgridDigestListIdSetting.get()!
+
+    if (newUser.subscribedToDigest) {
+      void removeFromSendgridList(oldUser, sendgridDigestListId)
+      addToSendgridList(newUser, sendgridDigestListId)
+    }
+
+    /**
+     * If user updates email - unsubscribe them from welcome list.
+     * If we were to re-subscribe them - they'll get the welcome email series again.
+     */
+    if (newUser.subscribedToWelcomeEmails) {
+      void removeFromSendgridList(oldUser, sendgridWelcomeListId)
+      await Users.rawUpdateOne({_id: newUser._id}, {$set: {subscribedToWelcomeEmails: false}})
+    }
+  })
 }
 
 const welcomeMessageDelayer = new EventDebouncer({
