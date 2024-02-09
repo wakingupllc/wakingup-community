@@ -57,6 +57,7 @@ import './server/scripts/regenerateUnicodeSlugs';
 import './server/scripts/checkPostForSockpuppetVoting';
 import './server/scripts/convertAllPostsToEAEmojis';
 import './server/scripts/exportUserData';
+import './server/scripts/betterModeExport';
 
 import './server/scripts/oneOffBanSpammers'
 import './server/scripts/ensureEmailInEmails';

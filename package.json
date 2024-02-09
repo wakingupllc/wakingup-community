@@ -74,7 +74,8 @@
     "local-cypress-run": "yarn cypress run",
     "local-cypress-open": "yarn cypress open",
     "brigader-check": "ts-node scripts/brigaderCheck.ts",
-    "export-user-data": "ts-node ./scripts/exportUserData.ts"
+    "export-user-data": "ts-node ./scripts/exportUserData.ts",
+    "better-mode-export": "ts-node ./scripts/betterModeExport.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.5.4",
