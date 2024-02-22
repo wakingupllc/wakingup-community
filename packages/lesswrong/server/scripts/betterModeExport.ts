@@ -1,22 +1,38 @@
-/* eslint-disable no-console */
+/* esli-disable no-console */
 
 import {Vulcan} from '../vulcan-lib'
 import Users from '../../lib/collections/users/collection'
 import {Posts} from '../../lib/collections/posts'
 import { Comments } from '../../lib/collections/comments'
 import {Votes} from '../../lib/collections/votes'
+import { TagRels } from '../../lib/collections/tagRels/collection';
+import { Tags } from '../../lib/collections/tags/collection';
 import { truncatise } from '../../lib/truncatise.ts'
 import cheerio from 'cheerio';
+import { exec } from 'child_process';
+import * as fs from 'fs';
 
+const jwt = require("jsonwebtoken");
+const axios = require('axios');
 
-/* Overview:
+const JWT_KEY = 'JWT_KEY'; // TODO: this should be a setting or environment variable
+
+/* Overview of the export process:
   Get guest token
   Get member token
-  List spaces to find space names so we can generate a new name with an incremented suffix number
-  Create new space
-  Create the users
-    (might just be one user if we're in "keenan_user_only" mode)
+    (getting the guest and then member token is a prerequisite to every BetterMode GraphQL API call.)
+  Delete old test users
+    (though that's probably temporary and not going to be part of the actual production run)
+  List spaces, to find space names with numbers at the end so we can generate a new name with an incremented suffix number
+  Create new collections
+  Create new spaces
+    (Creating collections and spaces uses the collectionSpaces object and, importantly to note, mutates that object by adding the BM IDs for ollections and spaces to it)
+  Create the users by logging them in with JWT SSO
+    (If we're in "keenan_user_only" mode (useful for skipping the very long user creation process), it just creates one user)
     (might be all users, or if we're just testing the export of specific post/s, might be just the authors of the posts and comments we're exporting)
+  Get the users' BM user IDs and put them in the bmUserIds map (because the JWT SSO call doesn't return them)
+    (We get the users' BM user IDs by calling the spaceMembers query to list the members who are assigned to one of the new spaces.
+      As of Thursday February 22, something is weird with this, and about half were missing. This might be because I increased the batch size of the JWT SSO calls to 20, though they're supposed to retry if they fail so maybe that's only the problem if there's a bug with the retry code)
   Create the posts
   Create the comments of the posts, recursively so that parent comments are created before their replies
   Create post votes/reactions
@@ -26,17 +42,137 @@ import cheerio from 'cheerio';
 
 type CreatedDocument = { documentId?: string; bmPostId?: string; error?: boolean; }
 
-const SPACE_NAME_BASE = 'WU Test Migration';
+const KEENAN_BM_USER_ID = 'GEwYqQhauV';
+const KEENAN_WU_USER_ID = 'gAHQznaHCBb3ojWdw';
 
-const KEENAN_USER_ID = 'GEwYqQhauV';
+const bmUserIds = new Map<string, string>(); // a mapping of our user _ids to BM user IDs
 
-const bmUserIds = new Map<string, string[]>();
+const POST_POST_TYPE_ID = 'oR00uvx3sKdsgnb'; // '0bmyNGiG5igigc2'; // 'oR00uvx3sKdsgnb';
+const COMMENT_POST_TYPE_ID = 'IzOjciUpA0oGTT0'; // 'eR1hhMVkLBRERat'; // 'IzOjciUpA0oGTT0';
 
-const POST_POST_TYPE_ID = 'oR00uvx3sKdsgnb';
-const COMMENT_POST_TYPE_ID = 'IzOjciUpA0oGTT0';
+let tags: DbTag[] = [];
+
+let adminToken: string;
+
+let spaceIndex: number;
+let migrationNameSuffix: string;
 
 let startTime: Date;
 let endTime: Date;
+
+const TTS_ACTIVATED = true; // turning this off overnight
+
+function logFile() {
+  return `betterModeExport-${spaceIndex}.log`;
+}
+
+
+function logToFile(...args: any[]): void {
+  const message = args.map(arg => typeof arg === 'object' ? JSON.stringify(arg, null, 2) : arg).join(' ');
+  console.log(...args);
+
+  fs.appendFile(logFile(), message + '\n', (err) => {
+    if (err) {
+      console.error('Error writing to log file:', err);
+    }
+  });
+}
+
+const executeCommand = (command: string) => {
+  return new Promise((resolve, reject) => {
+    exec(command, (error, stdout, stderr) => {
+      if (error) {
+        console.error(`exec error: ${error}`);
+        return reject(error);
+      }
+      logToFile(`stdout: ${stdout}`);
+      console.error(`stderr: ${stderr}`);
+      resolve(stdout);
+    });
+  });
+};
+
+const say = async (message: string) => {
+  logToFile(`Saying: ${message}`);
+  if (TTS_ACTIVATED) {
+    try {
+      const result = await executeCommand(`say ${message}`);
+      logToFile(result);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+}
+
+const collectionSpaces = [
+  {
+    name: "Discussions",
+    id: undefined,
+    spaces: [
+      {
+        name: "Announcements",
+        description: "Read notes and announcements from the Waking Up team.",
+        id: undefined,
+      },
+      {
+        name: "Introductions",
+        description: "Introduce yourself and get started in the community.",
+        id: undefined,
+      },
+      {
+        name: "Questions",
+        description: "Ask questions about meditation and living an examined life.",
+        id: undefined,
+      },
+      {
+        name: "Insights",
+        description: "Share insights about meditation, life, and personal experiences.",
+        id: undefined,
+      },
+      {
+        name: "Recommendations",
+        description: "Share content and resources from the Waking Up app or elsewhere.",
+        id: undefined,
+      },
+      {
+        name: "Other",
+        description: "Start a discussion that doesn't fit in any other space.",
+        id: undefined,
+      }
+    ]
+  },
+  {
+    name: "Local Groups",
+    id: undefined,
+    spaces: [
+      {
+        name: "All Groups",
+        description: "Connect with Waking Up members and groups near you.",
+        id: undefined,
+      },
+      {
+        name: "London",
+        description: "A space for Waking Up members in London.",
+        id: undefined,
+      }
+    ]
+  },
+  {
+    name: "Resources",
+    id: undefined,
+    spaces: []
+  }
+]
+
+const spaceIds = function() {
+  const ids: string[] = [];
+  collectionSpaces.forEach(collectionSpace => {
+    collectionSpace.spaces.forEach(space => {
+      ids.push(space.id!);
+    });
+  });
+  return ids;
+}
 
 function formatDuration(startTime: Date, endTime: Date): { startTime: string; endTime: string; duration: string } {
   const duration: number = endTime.getTime() - startTime.getTime();
@@ -57,12 +193,144 @@ function formatDuration(startTime: Date, endTime: Date): { startTime: string; en
 
 const errors: any[] = []
 
-let spaceName: string;
-
 const options: {
   mk_password?: string,
   keenan_user_only?: boolean
 } = {};
+
+const deleteOldBetterModeUsers = async (
+  mk_password: string,
+  ) => {
+  startTime = new Date();
+  errors.length = 0;
+
+  /* deleting old test users */
+
+  options['mk_password'] = mk_password;
+
+  const guestToken =        await getGuestToken();
+  adminToken =              await getAdminToken(guestToken);
+
+  let iterations = 0;
+  const maxIterations = 5;
+  while (iterations < maxIterations) {
+    const query = {
+      "query": `{ members(limit: 1000, status: VERIFIED, offset: ${iterations * 1000}) { totalCount edges { cursor node { email id createdAt } } } }`
+    }
+
+    const resultJson = await callBmApi(query, adminToken);
+    logToFile({query})
+    logToFile({resultJson})
+    logToFile('resultJson.data.members.totalCount', resultJson.data.members.totalCount)
+    if (resultJson.data.members.edges.length === 0) return;
+
+    for (const edge of resultJson.data.members.edges) {
+      logToFile({edge})
+      const bmUserId = edge.node.id as string;
+      const email = edge.node.email as string;
+      const createdAt = edge.node.createdAt as string;
+      logToFile({email})
+      logToFile({createdAt})
+      if (email.match(/michael\.keenan\+/) || email.match(/spamgourmet/)) {
+        logToFile(`Deleting user ${bmUserId} with email ${email}`);
+        const deleteQuery = {
+          "query": `mutation { deleteMember(id: "${bmUserId}") { status } }`
+        }
+        const resultJson = await callBmApi(deleteQuery, adminToken);
+        logToFile({query})
+        logToFile({resultJson})
+        logToFile(resultJson?.data?.deleteMember)
+      }
+    }
+    iterations++;
+  };
+}
+
+function numberFromString(input: string): number|undefined {
+  const match = input.match(/\d+/);
+  return match ? parseInt(match[0]) : undefined;
+}
+
+const deleteOldBetterModeCollectionsAndSpaces = async (
+  mk_password: string,
+  ) => {
+  startTime = new Date();
+  errors.length = 0;
+
+  options['mk_password'] = mk_password;
+
+  const guestToken =        await getGuestToken();
+  adminToken =              await getAdminToken(guestToken);
+
+  await deleteOldBetterModeSpaces(200, 261);
+  await deleteOldBetterModeCollections(200, 261);
+}
+
+const deleteOldBetterModeSpaces = async (minIndex: number, maxIndex: number) => {
+  const query = {
+    "query": "{ spaces(limit: 1000) { nodes { id type slug name createdById } } }"
+  };
+
+  const resultJson = await callBmApi(query, adminToken);
+  logToFile({query})
+  logToFile({resultJson})
+  for (const node of resultJson.data.spaces.nodes) {
+    logToFile({node})
+    const name = node.name as string;
+    logToFile({name})
+    logToFile('!!!!!!!!!!!')
+    logToFile(node.createdById)
+
+    const spaceMigrationNumber = numberFromString(name);
+
+    if (node.createdById !== KEENAN_BM_USER_ID) continue;
+
+    if (spaceMigrationNumber && spaceMigrationNumber > minIndex && spaceMigrationNumber < maxIndex) {
+      const spaceId = node.id as string;
+      logToFile(`Deleting space ${spaceId} with name ${name}`);
+      const deleteQuery = {
+        "query": `mutation { deleteSpace(id: "${spaceId}") { status } }`
+      }
+      const resultJson = await callBmApi(deleteQuery, adminToken);
+      logToFile({query})
+      logToFile({resultJson})
+      logToFile(resultJson?.data?.deleteSpace)
+    }
+  }
+}
+
+const deleteOldBetterModeCollections = async (minIndex: number, maxIndex: number) => {
+  const query = {
+    "query": "{ collections { id name createdBy { id } } }"
+  };
+
+  const resultJson = await callBmApi(query, adminToken);
+  logToFile({query})
+  logToFile({resultJson})
+  for (const collection of resultJson.data.collections) {
+    const name = collection.name as string;
+    logToFile({name})
+    logToFile('!!!!!!!!!!!')
+    logToFile(collection.createdBy.id)
+
+    const migrationNumber = numberFromString(name);
+
+    if (collection.createdBy.id !== KEENAN_BM_USER_ID) continue;
+
+    if (migrationNumber && migrationNumber > minIndex && migrationNumber < maxIndex) {
+      const collectionId = collection.id as string;
+      logToFile(`Deleting collection ${collectionId} with name ${name}`);
+      const deleteQuery = {
+        "query": `mutation { deleteCollection(id: "${collectionId}") { status } }`
+      }
+      const resultJson = await callBmApi(deleteQuery, adminToken);
+      logToFile({query})
+      logToFile({resultJson})
+      logToFile(resultJson?.data?.deleteCollection)
+    }
+  }
+}
+
 
 const betterModeExport = async (
     mk_password: string,
@@ -72,55 +340,111 @@ const betterModeExport = async (
   startTime = new Date();
   errors.length = 0;
 
+  logToFile('betterModeExport starting')
+  await say("Export starting")
+
+  if (!keenan_user_only && (!postIdsToExport || postIdsToExport.length === 0)) {
+    logToFile("Exporting all posts and comments; this takes so long that we don't care about a quick feedback loop, so take the opportunity to delete old test users first")
+    await deleteOldBetterModeUsers(mk_password);
+  }
+
+  // const userDataFixKeenanAccount = {
+  //   sub: '0b7ebf61-739f-4ac3-a5bf-5f2f835054be',
+  //   email: 'michael.keenan@gmail.com',
+  //   name: 'Michael Keenan',
+  //   iat: Math.round(new Date().getTime() / 1000), // token issue time
+  //   exp: Math.round(new Date().getTime() / 1000) + 60
+  // }
+
+  // logToFile({userDataFixKeenanAccount})
+
+  // const token = jwt.sign(userDataFixKeenanAccount, JWT_KEY, { algorithm: "HS256" });
+  // logToFile("Got user SSO token", token);
+
+  // const url = `https://waking-up-new.bettermode.io/api/auth/sso?jwt=${token}`;
+
+  // logToFile('url', url)
+
+  // const response = await axios.get(url);
+  // logToFile('errored in the redirect way: ', !!response.request._redirectable._isRedirect)
+  // logToFile('SSO Token sent; response was:', String(response.data).slice(0, 200));
+  // if (response.data.startsWith && response.data.startsWith('<!DOCTYPE html')) {
+  //   throw "Received error response";
+  // }
+  
+  // logToFile('response.data', response.data);
+
+  // throw 'abort here'
+
+
+
   options['mk_password'] = mk_password;
   options['keenan_user_only'] = keenan_user_only;
 
   const guestToken =        await getGuestToken();
-  console.log('guestToken', guestToken);
-  const adminToken =        await getAdminToken(guestToken);
-  console.log('adminToken', adminToken);
+  logToFile('guestToken', guestToken);
+  adminToken =              await getAdminToken(guestToken);
+  logToFile('adminToken', adminToken);
   const spaces =            await listSpaces(adminToken);
-  console.log({spaces});
-  spaceName =               generateSpaceName(spaces);
-  console.log({spaceName});
-  const spaceId =           await initializeSpace(adminToken, spaceName);
-  console.log({spaceId});
+  logToFile({spaces});
+  spaceIndex =              getNextSpaceNameIndex(spaces);
+  logToFile({spaceIndex});
+  void say(`Export test ${spaceIndex}`)
+
+  migrationNameSuffix =               ` Test ${spaceIndex}`;
+
+  await createCollectionsAndSpaces();
+  
+  tags = await Tags.find().fetch();
+
+  // await deleteOldSpaces(spaces, spaceIndex);
 
   const users =             options['keenan_user_only'] ?
-                              await keenanUser() :
+                              [await keenanUser()] :
                               postIdsToExport ? 
                                 await usersFromPosts(postIdsToExport) :
                                 await wakingUpUsers();
 
-  await createUsers(adminToken, users);
+  logToFile('users', users.slice(0,3))
 
-  const bmPosts =           await createPosts(adminToken, spaceId, postIdsToExport);
+  await createUsers(users);
 
-  console.log({bmPosts});
+  await setBmUserIds(users);
+  
+  logToFile({bmUserIds});
+
+  await updateUsersFields(users);
+
+
+  const bmPosts =           await createPosts(postIdsToExport);
+
+  logToFile({bmPosts});
   const postIds =           bmPosts.map(createdPost => createdPost.documentId!);
 
   const comments =          await Comments.find({postId: {$in: bmPosts.map(createdPost => createdPost.documentId) }}).fetch();
-  console.log({comments});
+  logToFile({comments});
 
-  const bmComments =        await createComments(adminToken, comments, bmPosts);
-  console.log({bmComments});
+  const bmComments =        await createComments(comments, bmPosts);
+  logToFile({bmComments});
 
-  const postReactions =     await addReactions(adminToken, "Posts", postIds, bmPosts);
-  console.log({postReactions});
-  const commentReactions =  await addReactions(adminToken, "Comments", comments.map(c => c._id), bmComments);
-  console.log({commentReactions});
+  const postReactions =     await addReactions("Posts", postIds, bmPosts);
+  logToFile({postReactions});
+  const commentReactions =  await addReactions("Comments", comments.map(c => c._id), bmComments);
+  logToFile({commentReactions});
 
   endTime = new Date();
-  console.log('####################')
-  console.log(errors)
-  console.log(`${errors.length} errors`)
-  console.log(`Migration to ${spaceName} complete`);
-  console.log('')
+  logToFile('####################')
+  logToFile(errors)
+  logToFile(`${errors.length} errors`)
+  logToFile(`Migration to ${migrationNameSuffix} complete`);
+  logToFile('')
 
   const timeDetails = formatDuration(startTime, endTime);
-  console.log(`Start Time: ${timeDetails.startTime}`);
-  console.log(`End Time: ${timeDetails.endTime}`);
-  console.log(`Duration: ${timeDetails.duration}`);
+  logToFile(`Start Time: ${timeDetails.startTime}`);
+  logToFile(`End Time: ${timeDetails.endTime}`);
+  logToFile(`Duration: ${timeDetails.duration}`);
+
+  await say(`Export ${migrationNameSuffix} complete in ${timeDetails.duration.replace('0 hours, ', '').replace('0 minutes, and ', '')}`)
 }
 
 const getGuestToken = async () => {
@@ -138,7 +462,7 @@ const getAdminToken = async (guestToken: string) => {
   };
   
   const resultJson = await callBmApi(query, guestToken);
-  console.log('getAdminToken resultJson', resultJson);
+  logToFile('getAdminToken resultJson', resultJson);
   return resultJson.data.loginNetwork.accessToken;
 }
 
@@ -151,8 +475,8 @@ const listSpaces = async (adminToken: string) => {
   return resultJson.data.spaces.nodes.map((node: any) => node.name);
 }
 
-const generateSpaceName = (spaces: string[]) => {
-  const regex = new RegExp(`${SPACE_NAME_BASE} (\\d+)`); // assumes SPACE_NAME_BASE doesn't contain any regex special characters
+const getNextSpaceNameIndex = (spaces: string[]) => {
+  const regex = new RegExp(`Test (\\d+)`);
 
   let maxNumber = 0;
   spaces.forEach(space => {
@@ -165,35 +489,102 @@ const generateSpaceName = (spaces: string[]) => {
     }
   });
 
-  return `${SPACE_NAME_BASE} ${maxNumber + 1}`;
+  return maxNumber + 1;
 }
 
-const initializeSpace = async (adminToken: string, name: string) => {
-  const spaceId = await createSpace(adminToken, name);
-  await updateSpacePostTypes(adminToken, spaceId);
-  return spaceId;
+const createCollectionsAndSpaces = async () => {
+  await createCollections();
+  await createSpaces();
 }
 
-const createSpace = async (adminToken: string, name: string) => {
+const createCollections = async () => {
+  for (const collectionSpace of collectionSpaces) {
+    const collectionName = collectionSpace.name + migrationNameSuffix;
+    
+    const query = {
+      "query": `mutation { createCollection(input: { name: "${collectionName}" }) { name id slug } }`
+    }
+    try {
+      const resultJson = await callBmApi(query, adminToken);
+      collectionSpace.id = resultJson.data.createCollection.id;
+    } catch (error) {
+      errors.push(error);
+      logToFile('createSpace error', error);
+      throw error;
+    }
+  }
+}
+
+const createSpaces = async () => {
+  for (const collectionSpace of collectionSpaces) {
+    for (const space of collectionSpace.spaces) {
+      space.id = await createSpace(space.name + migrationNameSuffix, space.description + migrationNameSuffix);
+      await updateSpacePostTypes(space.id!);
+    }
+  }
+}
+
+// const deleteOldSpaces = async (spaces: any, spaceIndex: number) => {
+//   for (const space of spaces) {
+//     const query = `mutation { deleteSpace(id: "${spaceId}") { status } }`;
+
+//     const resultJson = await callBmApi(query, adminToken);
+//   }
+  
+//   logToFile({query})
+//   logToFile({resultJson})
+//   for (const edge of resultJson.data.members.edges) {
+//     logToFile({edge})
+//     const bmUserId = edge.node.id as string;
+//     const email = edge.node.email as string;
+//     logToFile({email})
+//     logToFile(!!email.match(/keenan/))
+//     if (email.match(/keenan/) && email !== 'michael.keenan@gmail.com') {
+//       logToFile(`Deleting user ${bmUserId} with email ${email}`);
+//       const deleteQuery = {
+//         "query": `mutation { deleteMember(id: "${bmUserId}") { status } }`
+//       }
+//       const resultJson = await callBmApi(deleteQuery, adminToken);
+//       logToFile({query})
+//       logToFile({resultJson})
+//       logToFile(resultJson?.data?.deleteMember)
+//     }
+//   }
+// }
+
+const collectionIdFromSpaceName = (name: string) => {
+  for (const collection of collectionSpaces) {
+    for (const space of collection.spaces) {
+      if (space.name + migrationNameSuffix === name) {
+        return collection.id!;
+      }
+    }
+  }
+  throw `No collection found for space name ${name}`;
+}
+
+const createSpace = async (name: string, description: string) => {
+  const collectionId = collectionIdFromSpaceName(name);
+
   const query = {
-    "query": `mutation { createSpace(input: { name: "${name}", whoCanPost: [member admin] }) { name id url } }`
+    "query": `mutation { createSpace(input: { name: "${name}", description: "${description}", collectionId: "${collectionId}", whoCanPost: [member admin] }) { name id url } }`
   }
   try {
     const resultJson = await callBmApi(query, adminToken);
     return resultJson.data.createSpace.id;
   } catch (error) {
     errors.push(error);
-    console.log('createSpace error', error);
+    logToFile('createSpace error', error);
     throw error;
   }
 }
 
-const updateSpacePostTypes = async (adminToken: string, spaceId: string) => {
+const updateSpacePostTypes = async (spaceId: string) => {
   const query = {
     "query": `mutation { updateSpacePostTypes(input: [{ postTypeId: "${POST_POST_TYPE_ID}" }], spaceId: "${spaceId}" ) { postTypeId } }`
   };
 
-  const maxAttempts = 3;
+  const maxAttempts = 30;
   let attempts = 0;
   while (attempts < maxAttempts) {
     try {
@@ -202,10 +593,10 @@ const updateSpacePostTypes = async (adminToken: string, spaceId: string) => {
         // Sometimes this has an error, despite it being the same input each time
         // (except the spaceId, though the space is created the same way each
         // time). It is most perplexing.
-        console.log('!!!!!!');
-        console.log(resultJson.errors);
+        logToFile('!!!!!!');
+        logToFile(resultJson.errors);
         errors.push(resultJson.errors);
-        console.log("updateSpacePostTypes failed, trying again.")
+        logToFile("updateSpacePostTypes failed, trying again.")
         attempts++;
       } else {
         return true;
@@ -213,8 +604,9 @@ const updateSpacePostTypes = async (adminToken: string, spaceId: string) => {
     } catch (error) {
       attempts++;
       errors.push(error);
-      console.log('updateSpacePostTypes error', error);
-      throw error;
+      logToFile('updateSpacePostTypes error', error);
+      logToFile("Trying again in two seconds.")
+      await new Promise(resolve => setTimeout(resolve, 2000));
     }
   }
 
@@ -234,31 +626,300 @@ const usersFromPosts = async (postIds: string[]) => {
   const allUserIds = userIds.concat(commentUserIds, postVoterIds, commentVoterIds);
   const uniqueUserIds = [...new Set(allUserIds)];
 
-  const users = await Users.find({_id: {$in: uniqueUserIds}}).fetch();
+  const users = await Users.find({_id: {$in: uniqueUserIds}, deleted: {$ne: true}, deleteContent: {$ne: true}, banned: {$exists: false}, username: {$exists: true}}).fetch();
   return users;
 }
 
 const wakingUpUsers = async () => {
-  return await Users.find({deleted: {$ne: true}, banned: {$exists: false}}).fetch();
+  return await Users.find({deleted: {$ne: true}, deleteContent: {$ne: true}, banned: {$exists: false}, username: {$exists: true}}).fetch();
 }
 
 const keenanUser = async () => {
-  return await Users.find({_id: KEENAN_USER_ID}).fetch();
+  // return (await Users.findOne({email: 'jeremy@wakingup.com'})) as DbUser;
+  return (await Users.findOne({_id: KEENAN_WU_USER_ID})) as DbUser;
 }
 
-const createUsers = async (adminToken: string, users: DbUser[]) => {
+// const createUsers = async (users: DbUser[]) => {
+//   logToFile(`Creating ${users.length} users`)
+//   for (const user of users) {
+//     if (user.deleteContent || user.deleted || !user.username) continue;
+//     await createUser(user);
+//   }
+// }
+
+
+// This more-complex version of createUsers (provided by ChatGPT) runs up to 8
+// createUser calls concurrently. It waits for each batch of 8 to complete
+// before starting the next batch.
+const createUsers = async (users: DbUser[]) => {
+  logToFile(`Creating ${users.length} users`);
+
+  const createUserPromises = [];
+  let concurrency = 0;
+  const maxConcurrency = 8;
+
   for (const user of users) {
-    await createUser(adminToken, user);
+    if (!user.username) continue;
+
+    // Limit concurrency
+    if (concurrency >= maxConcurrency) {
+      await Promise.all(createUserPromises);
+      createUserPromises.length = 0;
+      concurrency = 0;
+    }
+
+    const createUserPromise = createUser(user)
+      .then(() => {
+        // After the createUser call is complete, decrement concurrency
+        concurrency--;
+      })
+      .catch((error) => {
+        // Handle errors here if needed
+        console.error('Error creating user:', error);
+      });
+
+    createUserPromises.push(createUserPromise);
+    concurrency++;
+  }
+
+  // Ensure that any remaining createUser calls are completed
+  await Promise.all(createUserPromises);
+};
+
+
+function createUserSSOToken(user: DbUser, privateKey: string) {
+  const email = mangleEmailAsKeenanEmail(user.email, 0);
+
+  const name = user.first_name?.length && user.last_name?.length ?
+    user.first_name.trim() + ' ' + user.last_name.trim():
+    user.username?.trim();
+  
+  logToFile(`Creating SSO token for ${name} (${email})`)
+
+  const $ = cheerio.load(user.biography?.html || '');
+  const bio = $.root().text()
+
+  const joinedWakingUp = user.wu_created_at?.toLocaleDateString('en-US', { month: '2-digit', year: 'numeric' });
+
+  const userData = {
+    sub: user.wu_uuid,
+    email,
+    name,
+    bio,
+    city: user.mapLocation?.vicinity,
+    joinedWakingUp,
+    picture: user.avatar,
+    iat: Math.round(new Date().getTime() / 1000), // token issue time
+    exp: Math.round(new Date().getTime() / 1000) + 60, // token expiration time
+    spaceIds: spaceIds(),
+  };
+
+  logToFile({userData})
+
+  return jwt.sign(userData, privateKey, { algorithm: "HS256" });
+}
+
+async function sendSSOToken(token: string): Promise<void> {
+  const url = `https://waking-up-new.bettermode.io/api/auth/sso?jwt=${token}`;
+
+  try {
+    const response = await axios.get(url);
+    logToFile('SSO Token sent; response was:', String(response.data).slice(0, 100));
+    if (response.request._redirectable._isRedirect) {
+      await say("Dreaded redirect error occurred")
+      throw "Received redirect-to-HTML response";
+    } else {
+      return response.data;
+    }
+  } catch (error) {
+    console.error('Error:', error);
+    throw error;
   }
 }
 
-const createUser = async (adminToken: string, user: DbUser) => {
+async function setBmUserIds(users: DbUser[]) {
+  logToFile(`Setting bmUserIds for ${users.length} users`)
+
+  const maxPages = 10;
+  let pages = 0;
+
+  while (pages < maxPages) {
+    const query = {
+      "query": `{ spaceMembers(limit: 1000, spaceId: "${spaceIds()[0]}", offset: ${pages * 1000}) { totalCount edges { cursor node { member { id email name username } } } } }`
+    }
+
+    const resultJson = await callBmApi(query, adminToken);
+    logToFile({query})
+    logToFile({resultJson})
+    logToFile('resultJson.data.spaceMembers.totalCount', resultJson.data.spaceMembers.totalCount)
+    if (resultJson.data.spaceMembers.totalCount === '0') return;
+
+    for (const edge of resultJson.data.spaceMembers.edges) {
+      logToFile(JSON.stringify(edge?.node?.member, null, 2));
+      const bmUserId = edge.node.member.id as string;
+      if (options['keenan_user_only']) {
+        const kUser = await keenanUser();
+        bmUserIds.set(kUser._id, bmUserId);
+      } else {
+        const email = edge.node.member.email;
+        const user = users.find(user => mangleEmailAsKeenanEmail(user.email, 0) === email);
+        if (!user) {
+          if (email !== 'michael.keenan@gmail.com') {
+            logToFile(`no user with email ${email}. Concerning.`);
+            logToFile(edge.node.member);
+            throw(`no user with email ${email}. Fix.`);
+          }
+          continue;
+        }
+
+        bmUserIds.set(user._id, bmUserId);
+      }
+    };
+
+    pages++;
+  }
+}
+
+// Users can be created with JWT SSO logins, which allow only a few fields to be sent. We update the remaining ones here.
+async function updateUsersFields(users: DbUser[]) {
+  logToFile(`updating users in bmUserIds`, JSON.stringify(Array.from(bmUserIds.entries())));
+  for (const user of users) {
+    if (!user.username) continue;
+
+    await updateUserFields(user);
+  }
+}
+
+const getBmUserIdByEmail = async (user: DbUser) => {
+  const email = mangleEmailAsKeenanEmail(user.email, 0);
+  const query = {
+    "query": `{ members(limit: 1, filterBy: { key: "email", operator: equals, value: "\\"${email}\\""}) { totalCount edges { cursor node { id email name } } } }`
+  };
+
+  const resultJson = await callBmApi(query, adminToken);
+  return resultJson.data.members.edges[0].node.id;
+}
+
+// Sometimes we don't user have the bmUserId, which I currently think is because
+// the JWT SSO method doesn't work 100% of the time. So, we'll give it another
+// shot (or rather, ten shots).
+async function createUserIfMissing(user: DbUser) {
+  if (bmUserIds.has(user._id)) return;
+
+  logToFile(`Creating user ${user.username} ${user._id} because they're missing from bmUserIds`)
+  const maxAttempts = 10;
+  let attempts = 0;
+  while (attempts < maxAttempts) {
+    await createUser(user)
+    const bmUserId = await getBmUserIdByEmail(user);
+    if (bmUserId) {
+      bmUserIds.set(user._id, bmUserId);
+      return;
+    } else {
+      attempts++;
+      logToFile("Waiting two seconds");
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      logToFile("Continuing...");
+    }
+  }
+}
+
+async function updateUserFields(user: DbUser) {
+  await createUserIfMissing(user);
+
+  const trimmedUsername = user.username?.trim() || '';
+  const fullName = user.first_name?.trim() + ' ' + user.last_name?.trim();
+  const username = trimmedUsername.length > 3 ?
+                      user.username?.trim() :
+                      fullName.length > 3 ? 
+                      fullName :
+                        '[no username]';
+
+  const maxAttempts = 5;
+  let attempts = 0;
+  while (attempts < maxAttempts) {
+    try {
+      const usernameSuffix = attempts === 0 ? '' : `-${spaceIndex}-${attempts}`;
+      const query = {
+        "query": `mutation { updateMember(id: "${bmUserIds.get(user._id)}", input: { username: "${username + usernameSuffix}", settings: { privateMessaging: { privateMessagingEnabled: ${!user.disableUnsolicitedMessages} } } } ) { id } }`
+      }
+      
+      const resultJson = await callBmApi(query, adminToken);
+      logToFile({query})
+      logToFile({resultJson})
+      
+      if (resultJson.errors?.[0]?.message === "Username already taken.") {
+        logToFile(`Username ${username + usernameSuffix} already taken. Trying another.`);
+        attempts++;
+        continue;
+      } else {
+        return;
+      }
+    } catch (error) {
+      attempts++;
+      logToFile({error})
+      logToFile('Waiting two seconds');
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      logToFile('Continuing...');
+    }
+  }
+  
+}
+
+const createUser = async (user: DbUser) => {
+  /* The following commented-out code is the old way of creating users, using
+  the GraphQL API. It's been replaced by the JWT SSO method, which creates users
+  as already verified and doesn't send them verification emails. */
+
+  // const bmUserId = await createUserWithJoinNetworkApiCall(user);
+
+  // const query = {
+  //   "query": `mutation { updateMember(id: "${bmUserId}", input: { username: "${spaceId}${randomString(3)}${user.username}", externalId: "${user.wu_uuid + '-' + spaceId.slice(0, 5)}", settings: { privateMessaging: { privateMessagingEnabled: ${!user.disableUnsolicitedMessages} } } } ) { id } }`
+  // }
+  
+  // const resultJson = await callBmApi(query, adminToken);
+  // logToFile({query})
+  // logToFile({resultJson})
+
+  // if (resultJson.errors) {
+  //   logToFile(resultJson.errors)
+  //   logToFile(JSON.stringify(resultJson.errors, null, 2));
+  //   throw 'updateMember failed';
+  // }
+
+  logToFile("Getting user SSO token");
+
+  const maxAttempts = 5;
+  let attempts = 0;
+  while (attempts < maxAttempts) {
+    try {
+      const token = createUserSSOToken(user, JWT_KEY);
+      logToFile("Got user SSO token", token);
+
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      const retVal = await sendSSOToken(token);
+      logToFile({retVal});
+
+      return retVal;
+    } catch (error) {
+      attempts++;
+      logToFile({error})
+      logToFile('Waiting two seconds');
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      logToFile(`Continuing to attempt ${attempts+1}...`);
+    }
+  }
+  throw "sendSSOToken failed too many times";
+}
+
+const createUserWithJoinNetworkApiCall = async (user: DbUser) => {
   const name = user.first_name?.length && user.last_name?.length ?
     user.first_name + ' ' + user.last_name :
     null
   
   const password = passwordForTest(user);
-  const spaceIndex = spaceName.match(/\d+$/);
+
   let suffix = 0;
 
   while (suffix < 100) {
@@ -267,28 +928,32 @@ const createUser = async (adminToken: string, user: DbUser) => {
     const query = {
       "query": `mutation { joinNetwork(input: { name: "${name}", ${usernameParam} email: "${email}", password: "${password}" }) { accessToken member { id locale networkId roleId teammate username email } } }`
     }
-    
+
     const resultJson = await callBmApi(query, adminToken);
+    logToFile('ran joinNetwork', {query}, {resultJson})
     if (resultJson.errors) {
       if (resultJson.errors.some((e: any) => e.errors.some((e2: any) => e2.message = "This username's already taken"))) {
-        console.log(`createUser ${user.username}WUTM${spaceIndex}-${suffix} already taken`);
+        logToFile(`createUser ${user.username}WUTM${spaceIndex}-${suffix} already taken`);
       }
       if (resultJson.errors.some((e: any) => e.errors.some((e2: any) => e2.message = "This email's already taken"))) {
-        console.log(`createUser ${email} already taken`);
+        logToFile(`createUser ${email} already taken`);
       }
       suffix++;
     } else {
       if (resultJson.data?.joinNetwork) {
+        logToFile('got user', resultJson.data.joinNetwork.member.id);
+        logToFile(JSON.stringify(resultJson.data.joinNetwork.member, null, 2));
+        logToFile(JSON.stringify(resultJson.data.joinNetwork, null, 2));
         bmUserIds.set(user._id, resultJson.data.joinNetwork.member.id);
-        return true;
+        return resultJson.data.joinNetwork.member.id;
       } else {
-        console.log('createUser resultJson', resultJson);
-        console.log({query});
+        logToFile('createUser resultJson', resultJson);
+        logToFile({query});
         throw "no joinNetwork resultJson";
       }
     }
   }
-  console.log(`createUser couldn't find a unique username for ${user.username}, id ${user._id} after 100 tries`);
+  logToFile(`createUser couldn't find a unique username for ${user.username}, id ${user._id} after 100 tries`);
   throw `createUser couldn't find a unique username for ${user.username}, id ${user._id} after 100 tries`;
 }
 
@@ -300,56 +965,102 @@ function extractDomainPrefix(domain: string) {
   return domain.substring(0, 3);
 }
 
-// mangleEmailForTest sends all the signup emails to my spamgourmet account, using the ".0." suffix, which instructs it to accept zero of them, i.e. discard them all.
+// mangleEmailForTest usually sends all the signup emails to my spamgourmet
+// account, using the ".0." suffix, which instructs it to accept zero of them,
+// i.e. discard them all.
+// If we're importing thousands of users, we'll send them
+// all there. If we're in "keenan_user_only" mode, we'll send it to Keenan's
+// gmail.
 const mangleEmailForTest = (email: string|null, suffix: number) => {
-  const spaceIndex = spaceName.match(/\d+$/);
-  // if (!email) return `michael.keenan+noemail.${spaceIndex}-${suffix}@gmail.com`;
-  if (!email) return `noemail${spaceIndex}-${suffix}.0.michaelkeenan@spamgourmet.com`;
+  if (!email) return `michael.keenan+noemail.${spaceIndex}-${suffix}@gmail.com`;
+  // if (!email) return `noemail${spaceIndex}-${suffix}.0.michaelkeenan@spamgourmet.com`;
+
+  const [name, domain] = email.split('@');
+  const domainPrefix = extractDomainPrefix(domain);
+  const abbreviatedEmailPart = `${name}.${domainPrefix}.${spaceIndex}-${suffix}`;
+  // return `michael.keenan+${name}.${domainPrefix}.${spaceIndex}-${suffix}@gmail.com`;
+  return options['keenan_user_only'] ?
+    `michael.keenan+${abbreviatedEmailPart}@gmail.com` :
+    `${abbreviatedEmailPart}.0.michaelkeenan@spamgourmet.com`;
+}
+
+const mangleEmailAsKeenanEmail = (email: string|null, suffix: number) => {
+  if (email === 'michael.keenan@gmail.com') return email;
+
+  if (!email) return `michael.keenan+noemail.${spaceIndex}-${suffix}@gmail.com`;
   
   const [name, domain] = email.split('@');
   const domainPrefix = extractDomainPrefix(domain);
-  // return `michael.keenan+${name}.${domainPrefix}.${spaceIndex}-${suffix}@gmail.com`;
-  return `${name}.${domainPrefix}.${spaceIndex}-${suffix}.0.michaelkeenan@spamgourmet.com`;
+  const abbreviatedEmailPart = `${name}.${domainPrefix}.${spaceIndex}-${suffix}`;
+  return `michael.keenan+${abbreviatedEmailPart}@gmail.com`;
 }
 
 const passwordForTest = (user: DbUser) => {
   return 'b3foreYouG0G0!';
 }
 
-const getUser = async (adminToken: string, userId: string) => {
-  const query = {
-    "query": `{ member(id: "${KEENAN_USER_ID}") { username displayName name status email id score url createdAt } }`
-  };
-
-  const resultJson = await callBmApi(query, adminToken);
-  return resultJson.data.member;
-}
-
-const createPosts = async (adminToken: string, spaceId: string, postIds?: string[]) => {
-  console.log({postIds})
+const createPosts = async (postIds?: string[]) => {
+  logToFile({postIds})
   const posts = postIds
     ? await Posts.find({_id: {$in: postIds}}).fetch()
-    : await Posts.find({baseScore: {$gte: 10}, deletedDraft: false, status: 2}).fetch();
+    : await Posts.find({ deletedDraft: false, status: 2}).fetch();
+    // : await Posts.find({baseScore: {$gte: 21}, deletedDraft: false, status: 2}).fetch();
 
   let createdPosts: CreatedDocument[] = [];
   // using for...of instead of forEach because forEach won't wait for the
   // setTimeout, so it'll get rate limited
 
   for (const post of posts) {// for (const post of posts.slice(0, 1)) {
-    createdPosts.push(await createPost(adminToken, post, spaceId));
+    createdPosts.push(await createPost(post));
   }
 
   return createdPosts;
 }
 
-const createPost = async (adminToken: string, post: DbPost, spaceId: string) => {
+
+const spaceIdByName = (name: string) => {
+  for (const collectionSpace of collectionSpaces) {
+    const space = collectionSpace.spaces.find(space => space.name === name);
+    if (space) return space.id!;
+  }
+
+  throw `no space with name ${name}`;
+}
+
+const spaceIdFromPost = async (post: DbPost) => {
+  // It's inefficient to do one db call at a time like this; maybe fix that by querying all TagRels at once
+  const tagRel = await TagRels.findOne({postId: post._id, deleted: false});
+
+  if (!tagRel) return spaceIdByName("Other");
+
+  const tag = tags.find(tag => tag._id === tagRel.tagId)!;
+
+  if (tag.name === 'Announcements') return spaceIdByName("Announcements");
+  if (tag.name === 'Recommendations') return spaceIdByName("Recommendations");
+  if (tag.name === 'Quotes') return spaceIdByName("Other");
+  if (tag.name === 'Casual') return spaceIdByName("Other");
+  if (tag.name === 'Local') return spaceIdByName("All Groups");
+
+  if (post.title.indexOf('?') >= 0) return spaceIdByName("Questions");
+
+  return spaceIdByName("Insights");
+}
+
+const createPost = async (post: DbPost) => {
   const title = post.title;
-  const content = post.contents.html.replace(/"/g, '\\\\\\"');
+  const content = post.contents.html
+    .replace(/<a href="[^"]*community.wakingup.com[^"]*">(.*?)(?:<\/a>)/g, '$1 [link removed]')
+    .replace(/"/g, '\\\\\\"');
   const publishedAt = post.postedAt;
 
+  logToFile({bmUserIds})
   const bmUserId = options['keenan_user_only'] ?
-                    bmUserIds.get(KEENAN_USER_ID) :
+                    bmUserIds.values().next().value :
                     bmUserIds.get(post.userId);
+  logToFile({bmUserId})
+
+  const spaceId = await spaceIdFromPost(post);
+
   const query = {
     "query": `mutation {
       createPost(
@@ -373,20 +1084,20 @@ const createPost = async (adminToken: string, post: DbPost, spaceId: string) => 
   const resultJson = await callBmApi(query, adminToken);
 
   try {
-    console.log('createPost resultJson', resultJson);
+    logToFile('createPost resultJson', resultJson);
     return {
       documentId: post._id,
       bmPostId: resultJson.data.createPost.id as string
     }
   } catch (e) {
-    console.log("error occurred with this query", query);
+    logToFile("error occurred with this query", query);
     return {
       error: true,
     };
   }
 }
 
-const createComments = async (adminToken: string, comments: DbComment[], bmPosts: CreatedDocument[]) => {
+const createComments = async (comments: DbComment[], bmPosts: CreatedDocument[]) => {
   let bmComments: CreatedDocument[] = [];
 
   // Iterate through top-level ones (the ones with no parentCommentId);
@@ -396,7 +1107,7 @@ const createComments = async (adminToken: string, comments: DbComment[], bmPosts
   for (const comment of comments) {
     if (comment.parentCommentId) continue;
 
-    await createCommentRecursive(adminToken, comment, comments, bmPosts, bmComments);
+    await createCommentRecursive(comment, comments, bmPosts, bmComments);
   }
 
   return bmComments;
@@ -405,18 +1116,18 @@ const createComments = async (adminToken: string, comments: DbComment[], bmPosts
 const parentCommentQuote = (commentId: string, comments: DbComment[]) => {
   const comment = comments.find(c => c._id === commentId);
   if (!comment) throw `no comment with id ${commentId}`;
-  return truncatise(comment.contents.html.replace(/"/g, '\\\\\\"'), { TruncateBy: 'characters', TruncateLength: 50 })
+  return truncatise(comment.contents.html.replace(/\\/g, '\\\\\\\\').replace(/"/g, '\\\\\\"'), { TruncateBy: 'characters', TruncateLength: 50 })
             .replace(/<\/p><p>.*/, '') // if there's a paragraph break inside the truncation threshold, just take the first paragraph
             .replace(/\\*\.\.\.<\/p>$/, '...</p>') // remove trailing backslashes (so we don't cut off in the middle of an escape sequence)
             .replace(/^<p>(.*)<\/p>$/g, '<blockquote>$1</blockquote>');
 }
 
-const createCommentRecursive = async (adminToken: string, comment: DbComment, comments: DbComment[], bmPosts: CreatedDocument[], bmComments: CreatedDocument[]) => {
+const createCommentRecursive = async (comment: DbComment, comments: DbComment[], bmPosts: CreatedDocument[], bmComments: CreatedDocument[]) => {
   if (comment!.contents.html.length === 0) {
     // This comment has no contents, which is strange but happens at least once. If it has no children, we'll skip it. If it has children, we'll give it the contents "[empty comment]" and continue.
     const commentChildren = comments.filter(c => c.parentCommentId === comment._id);
     if (commentChildren.length === 0) {
-      console.log('createCommentRecursive skipping comment with no contents and no children', comment._id);
+      logToFile('createCommentRecursive skipping comment with no contents and no children', comment._id);
       return;
     }
   }
@@ -424,9 +1135,11 @@ const createCommentRecursive = async (adminToken: string, comment: DbComment, co
   const $ = cheerio.load(comment.contents.html);
   $('style').remove(); // Remove all <style> tags
   const cleanedContents = $.html()?.slice(25, -14) || ''; // slice off the <html><head></head><body> and </body></html> tags
-  console.log({cleanedContents});
+  // logToFile({cleanedContents});
 
-  const contents = cleanedContents === '' ? '[empty comment]' : cleanedContents.replace(/"/g, '\\\\\\"');
+  const contents = cleanedContents === '' ? '[empty comment]' : cleanedContents.replace(/<a href="[^"]*community.wakingup.com[^"]*">(.*?)(?:<\/a>)/g, '$1 [link removed]')
+                                                                               .replace(/\\/g, '\\\\\\\\')
+                                                                               .replace(/"/g, '\\\\\\"');
 
   const publishedAt = comment.postedAt;
 
@@ -439,11 +1152,11 @@ const createCommentRecursive = async (adminToken: string, comment: DbComment, co
     bmComments.find(bmComment => bmComment.documentId === comment.topLevelCommentId)?.bmPostId :
     bmPosts.find(bmPost => bmPost.documentId === comment.postId)?.bmPostId;
 
-  console.log({bmPostId})
+  logToFile({bmPostId})
 
   if (!bmPostId) {
-    console.log({comment})
-    console.log({bmComments})
+    logToFile({comment})
+    logToFile({bmComments})
     throw `no bmPostId for ${comment._id}`;
   }
 
@@ -451,22 +1164,25 @@ const createCommentRecursive = async (adminToken: string, comment: DbComment, co
     contents :
     parentCommentQuote(comment.parentCommentId, comments) + ' ' + contents;
 
-  const bmUserId = options['keenan_user_only'] ?
-                    bmUserIds.get(KEENAN_USER_ID) :
-                    bmUserIds.get(comment.userId);
+  const quotedEscapedContent = quotedContent.replace(/"/g, '\\\\\\"');
 
+  const bmUserId = options['keenan_user_only'] ?
+                    bmUserIds.values().next().value :
+                    bmUserIds.get(comment.userId);
+logToFile(`creating reply from user ${bmUserId}`)
   const query = {
     "query": `mutation {
       createReply(
         input: {
           postTypeId: "${COMMENT_POST_TYPE_ID}",
           mappingFields: [
-            { type: text, key: "content", value: "\\"${quotedContent}\\"" },
+            { type: text, key: "content", value: "\\"${quotedContent}\\"" }
           ],
           tagNames: [],
           attachmentIds: [],
           publish: true,
           ownerId: "${bmUserId}",
+          createdAt: "${publishedAt}",
           publishedAt: "${publishedAt}"
         },
         postId: "${bmPostId}")
@@ -477,21 +1193,27 @@ const createCommentRecursive = async (adminToken: string, comment: DbComment, co
   const resultJson = await callBmApi(query, adminToken);
 
   try {
-    console.log('createComment resultJson', resultJson);
+    logToFile('createComment resultJson', resultJson);
     if (resultJson.errors) {
-      console.log('createComment errors', resultJson.errors);
-      console.log(JSON.stringify(resultJson));
-      console.log(resultJson.errors[0].message);
-      console.log(resultJson.errors[0].errors);
-      console.log(JSON.stringify(resultJson.errors[0].errors, null, 2));
-      console.log('createComment query', query);
-      console.log('comment id', comment._id);
-      console.log('comment contents.html', comment.contents.html);
+      logToFile('!!!!!!!!!!')
+      logToFile('createComment errors', resultJson.errors);
+      logToFile(JSON.stringify(resultJson));
+      logToFile(resultJson.errors[0].message);
+      logToFile(resultJson.errors[0].errors);
+      logToFile(JSON.stringify(resultJson.errors[0].errors, null, 2));
+      logToFile('createComment query', query);
+      logToFile('comment id', comment._id);
+      logToFile('comment contents.html', comment.contents.html);
+    }
+    if (!resultJson.data?.createReply) {
+      logToFile('@@@@@@@@@@@');
+      logToFile({resultJson});
+      logToFile(JSON.stringify(resultJson, null, 2));
     }
     const bmCommentId = resultJson.data.createReply.id as string;
 
     if (!bmCommentId) {
-      console.log({comment})
+      logToFile({comment})
       throw `no bmCommentId for ${comment._id}`;
     }
 
@@ -502,18 +1224,20 @@ const createCommentRecursive = async (adminToken: string, comment: DbComment, co
 
     const commentChildren = comments.filter(c => c.parentCommentId === comment._id);
     for (const commentChild of commentChildren) {
-      await createCommentRecursive(adminToken, commentChild, comments, bmPosts, bmComments);
+      await createCommentRecursive(commentChild, comments, bmPosts, bmComments);
     }
   } catch (e) {
     errors.push(e);
-    console.log({e})
-    console.log("error occurred with this query", query);
+    logToFile({e})
+    logToFile("error occurred with this query", query);
+    logToFile({resultJson})
   }
 }
 
-const addReactions = async (adminToken: string, type: string, ids: string[], bmPosts: CreatedDocument[]) => {
+const addReactions = async (type: string, ids: string[], bmPosts: CreatedDocument[]) => {
+  logToFile('addReactions', {type}, {ids}, {bmPosts})
   if (options['keenan_user_only']) {
-    console.log("keenan_user_only mode; skipping reactions")
+    logToFile("keenan_user_only mode; skipping reactions")
     return;
   }
 
@@ -527,23 +1251,22 @@ const addReactions = async (adminToken: string, type: string, ids: string[], bmP
     // @ts-ignore (TypeScript is upset that it doesn't know whether it's posts or comments, but it's fine)
     const document = documents.find(d => d._id === vote.documentId);
     if (!document) {
-      console.log(`no document for vote ${vote._id}, type ${type}, ids: ${ids}`);
+      logToFile(`no document for vote ${vote._id}, type ${type}, ids: ${ids}`);
       throw `no document for vote ${vote._id}`;
     }
     const bmPost = bmPosts.find(bmPost => bmPost.documentId === document._id);
 
     if (!bmPost) {
       errors.push(`no bmPost for vote ${vote._id}, type ${type}, ids: ${ids}`);
-      console.log(`no bmPost for vote ${vote._id}, type ${type}, ids: ${ids}`);
+      logToFile(`no bmPost for vote ${vote._id}, type ${type}, ids: ${ids}`);
       return;
     }
 
-    await addReaction(adminToken, bmPost.bmPostId!, document, vote);
+    await addReaction(bmPost.bmPostId!, document, vote, 'like');
   }
-
 }
 
-const addReaction = async (adminToken: string, bmPostId: string, document: DbPost|DbComment, vote: DbVote) => {
+const addReaction = async (bmPostId: string, document: DbPost|DbComment, vote: DbVote, reactionType: string) => {
   const voterId = bmUserIds.get(vote.userId);
 
   const query = {
@@ -551,7 +1274,7 @@ const addReaction = async (adminToken: string, bmPostId: string, document: DbPos
       addReaction(
         input: {
           participantId: "${voterId}",
-          reaction: "+1",
+          reaction: "${reactionType}",
         },
         postId: "${bmPostId}")
       { status }
@@ -559,7 +1282,8 @@ const addReaction = async (adminToken: string, bmPostId: string, document: DbPos
   };
 
   const resultJson = await callBmApi(query, adminToken);
-  console.log({resultJson});
+  logToFile(JSON.stringify(resultJson, null, 2));
+
 }
 
 function headers(token?: string|undefined) {
@@ -578,32 +1302,32 @@ function requestOptions(raw: string, token?: string|undefined) {
   };
 }
 
-function mutationNameFromQuery(query: any) {
-  const regex = /mutation\s*\{\s*([a-zA-Z]+)\(/s;
-  const match = query.query.match(regex);
+function apiCallNameFromQuery(query: any) {
+  const mutationRegex = /mutation\s*\{\s*([a-zA-Z]+)\(/s;
+  const match = query.query.match(mutationRegex);
   const mutationName = match ? match[1] : null;
-  return mutationName;
+  if (mutationName) return mutationName;
 
+  const queryRegex = /\{([^(]*)(?:\(| \{)/s;
+  const queryMatch = query.query.match(queryRegex);
+  const queryName = queryMatch ? queryMatch[1].trim() : null;
+  
+  if (queryName) return queryName;
+
+  logToFile("couldn't find mutation or query name for", query);
+  throw "couldn't find mutation or query name";
 }
 
 async function callBmApi(query: any, token?: string|undefined) {
-  // If you want to bail on any error:
-  // if (errors.length > 0) {
-  //   console.log('Stopping due to error');
-  //   console.log('!!!!!!!!!!')
-  //   console.log(JSON.stringify(errors, null, 2));
-  //   console.log('!!!!!!!!!!')
-  //   throw 'Stopping due to errors';
-  // }
+  logToFile('waiting a tenth of a second'); // BetterMode rate limits to 10 requests per second
+  await new Promise(resolve => setTimeout(resolve, 100));
 
-  console.log('waiting a ninth of a second'); // BetterMode rate limits to 10 requests per second
-  await new Promise(resolve => setTimeout(resolve, 111));
-
-  console.log(`Running ${mutationNameFromQuery(query)}`);
+  logToFile(`Running ${apiCallNameFromQuery(query)}`);
 
   const raw = JSON.stringify(query);
 
-  // Re-attempts are only for 502: Bad gateway errors. Other errors are not retried.  
+  // Re-attempts are only for 502: Bad gateway errors and socket errors. Other errors are not retried.  
+  // (Though maybe we should retry everything? Maybe especially 500 internal server errors?)
   const maxAttempts = 5;
   let attempts = 0;
   while (attempts < maxAttempts) {
@@ -614,30 +1338,41 @@ async function callBmApi(query: any, token?: string|undefined) {
       try {
         resultJson = JSON.parse(result);
       } catch (e) {
-        console.log('callBmApi JSON parse error', e);
-        console.log('result', result);
+        logToFile('####################')
+        logToFile('callBmApi JSON parse error', e);
+        logToFile('result', result);
         if (result.startsWith('<!DOCTYPE html>') && result.includes('502: Bad gateway')) {
           attempts++;
-          console.log('502: Bad gateway');
-          console.log('We can just try again');
-          console.log('Waiting five seconds for their server to recover');
+          logToFile('502: Bad gateway');
+          logToFile('We can just try again');
+          logToFile('Waiting five seconds for their server to recover');
           await new Promise(resolve => setTimeout(resolve, 5000));
-          console.log('Continuing...');
+          logToFile('Continuing...');
           continue;
         }
         throw e;
       }
-      if (resultJson.errors?.length === 1 && resultJson.errors[0]?.code === "INTERNAL_SERVER_ERROR") {
+      if (resultJson.errors?.length > 0) {
         const loggableErrors = JSON.stringify(resultJson.errors, null, 2)
         errors.push([loggableErrors, query]);
-        console.log('callBmApi errors', loggableErrors);
-        console.log('query', query);
+        logToFile('callBmApi errors', loggableErrors);
+        logToFile('query', query);
         throw loggableErrors
       }
 
-      return JSON.parse(result);
+      return resultJson;
     } catch (error) {
-      console.log('callBmApi error', error);
+      logToFile('callBmApi error', error);
+      if (error.message === 'fetch failed') {
+        logToFile('Retrying due to fetch failed');
+        attempts++;
+        continue;
+      }
+      if (apiCallNameFromQuery(query) === 'updateSpacePostTypes') {
+        logToFile('updateSpacePostTypes error');
+        logToFile({query});
+        throw error;
+      }
       errors.push(error);
       return {};
     }
@@ -645,3 +1380,5 @@ async function callBmApi(query: any, token?: string|undefined) {
 }
 
 Vulcan.wuBetterModeExport = betterModeExport
+Vulcan.wuDeleteOldBetterModeUsers = deleteOldBetterModeUsers
+Vulcan.wuDeleteOldBetterModeCollectionsAndSpaces = deleteOldBetterModeCollectionsAndSpaces

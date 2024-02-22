@@ -27,8 +27,11 @@ function outputPostIds() {
   console.log('KemiWtrqQanJtykYq (Awakened Life)');
   console.log('tzmseRmmeefYBWDTg (Grateful) - has deep-nested comments');
   console.log('pj6HekLJnbxTk5tnS (Listening Week) - two comments, few votes');
+  console.log('8LRkmEdjnHz5FY9TH (Reluctant search for meaning) - has a comment with double backslash escape character problem');
   console.log('');
 }
+
+const KEENAN_PASSWORD = 'PASSWORD';
 
 /**
  * To use this script, run:
@@ -36,34 +39,48 @@ function outputPostIds() {
  * `yarn better-mode-export`
  */
 (async () => {
-  const mkPasswordInput = await getInput("Enter the password for the Keenan admin account that'll call the API:\n") as string;
-
   let postIdsInput: string;
-  while (true) {
-    postIdsInput = await getInput("\nEnter a comma-delimited list of post IDs to export, or type 'l' to list some candidate post ids, or just hit enter to export all posts:\n") as string;
-    if (postIdsInput === 'l') {
-      outputPostIds()
-      continue;
+  const commandLineArgs = process.argv.slice(2); // Get command line arguments, excluding the first two elements
+
+  if (commandLineArgs.length > 0) {
+    postIdsInput = commandLineArgs[0] === 'all' ? '' : commandLineArgs[0]; // First argument used for postIdsInput
+  } else {
+    // Prompt for input if no command line argument is provided
+    while (true) {
+      postIdsInput = await getInput("\nEnter a comma-delimited list of post IDs to export, or type 'l' to list some candidate post ids, or just hit enter to export all posts:\n") as string;
+      if (postIdsInput === 'l') {
+        outputPostIds()
+        continue;
+      }
+      break;
     }
-    break;
   }
 
   // Split the input into an array of strings, and then map each string to a string wrapped in double quotes, and then join the array of strings with commas
-
   const postIdsArray = postIdsInput.split(',').map((id: string) => `'${id.trim()}'`);
 
-  if (postIdsArray.length > 0) {
+  if (postIdsInput.length > 0) {
     console.log('\nExporting only specific post/s: ', postIdsInput);
   }
 
   const postIdsParam = (postIdsInput.length > 0) ? `, [${postIdsArray.join(',')}]` : '';
 
-  console.log("\nDo you want to skip exporting all 4000 users, and just assign every post and comment to one single user (Keenan)? (Use this option if you just want to test post and comment exports, and don't want to wait the 8 minutes it takes to export all the users.)");
-  const singleUserInput = await getInput("Enter 'y' for yes, or any other input for no:\n") as string;
+  let singleUserInput: string;
+  if (commandLineArgs.length > 1) {
+    singleUserInput = commandLineArgs[1]; // Second argument used for singleUserInput
+  } else {
+    // prompt for singleUserInput if no second argument is provided
+    console.log("\nDo you want to skip exporting all 4000 users, and just assign every post and comment to one single user (Keenan)? (Use this option if you just want to test post and comment exports, and don't want to wait the 8 minutes it takes to export all the users.)");
+    singleUserInput = await getInput("Enter 'y' for yes, or any other input for no:\n") as string;
+  }
 
   const singleUserParam = String(singleUserInput === 'y');
 
-  const execStr = `./scripts/serverShellCommand.sh --wait "Vulcan.wuBetterModeExport('${mkPasswordInput}', ${singleUserParam}${postIdsParam})" > /dev/tty 2>&1`;
+  const execStr = `./scripts/serverShellCommand.sh --wait "Vulcan.wuBetterModeExport('${KEENAN_PASSWORD}', ${singleUserParam}${postIdsParam})" > /dev/tty 2>&1`;
+
+  // const execStr = `./scripts/serverShellCommand.sh --wait "Vulcan.wuDeleteOldBetterModeUsers('${KEENAN_PASSWORD}')" > /dev/tty 2>&1`;
+
+  // const execStr = `./scripts/serverShellCommand.sh --wait "Vulcan.wuDeleteOldBetterModeCollectionsAndSpaces('${KEENAN_PASSWORD}')" > /dev/tty 2>&1`;
 
   console.log('\nRunning this command: ', execStr)
 
