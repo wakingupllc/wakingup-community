@@ -1048,8 +1048,7 @@ const spaceIdFromPost = async (post: DbPost) => {
 
 const createPost = async (post: DbPost) => {
   const title = post.title;
-  const content = post.contents.html
-    .replace(/<a href="[^"]*community.wakingup.com[^"]*">(.*?)(?:<\/a>)/g, '$1 [link removed]')
+  const content = removeInternalLinks(post.contents.html)
     .replace(/"/g, '\\\\\\"');
   const publishedAt = post.postedAt;
 
@@ -1137,7 +1136,7 @@ const createCommentRecursive = async (comment: DbComment, comments: DbComment[],
   const cleanedContents = $.html()?.slice(25, -14) || ''; // slice off the <html><head></head><body> and </body></html> tags
   // logToFile({cleanedContents});
 
-  const contents = cleanedContents === '' ? '[empty comment]' : cleanedContents.replace(/<a href="[^"]*community.wakingup.com[^"]*">(.*?)(?:<\/a>)/g, '$1 [link removed]')
+  const contents = cleanedContents === '' ? '[empty comment]' : removeInternalLinks(cleanedContents)
                                                                                .replace(/\\/g, '\\\\\\\\')
                                                                                .replace(/"/g, '\\\\\\"');
 
@@ -1378,6 +1377,15 @@ async function callBmApi(query: any, token?: string|undefined) {
     }
   }
 }
+
+const removeInternalLinks = (html: string) =>
+  html.replace(/<a href="[^"]*community.wakingup.com[^"]*">(.*?)(?:<\/a>)/g,
+    (match, linkText) => {
+      if (linkText.includes('community.wakingup.com')) {
+        return '[link removed]'
+      }
+      return linkText
+    })
 
 Vulcan.wuBetterModeExport = betterModeExport
 Vulcan.wuDeleteOldBetterModeUsers = deleteOldBetterModeUsers
