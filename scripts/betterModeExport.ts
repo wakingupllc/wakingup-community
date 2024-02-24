@@ -70,7 +70,7 @@ const KEENAN_PASSWORD = 'PASSWORD';
     singleUserInput = commandLineArgs[1]; // Second argument used for singleUserInput
   } else {
     // prompt for singleUserInput if no second argument is provided
-    console.log("\nDo you want to skip exporting all 4000 users, and just assign every post and comment to one single user (Keenan)? (Use this option if you just want to test post and comment exports, and don't want to wait the 8 minutes it takes to export all the users.)");
+    console.log("\nDo you want to skip exporting all 4000 users, and just assign every post and comment to one single user (Keenan)? (Use this option if you just want to test post and comment exports, and don't want to wait for the slow user creation export to finish.)");
     singleUserInput = await getInput("Enter 'y' for yes, or any other input for no:\n") as string;
   }
 

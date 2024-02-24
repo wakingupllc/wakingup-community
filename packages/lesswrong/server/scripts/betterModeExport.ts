@@ -42,6 +42,8 @@ const JWT_KEY = 'JWT_KEY'; // TODO: this should be a setting or environment vari
 
 type CreatedDocument = { documentId?: string; bmPostId?: string; error?: boolean; }
 
+const CREATE_TEST_COLLECTIONS_AND_SPACES = false;
+
 const KEENAN_BM_USER_ID = 'GEwYqQhauV';
 const KEENAN_WU_USER_ID = 'gAHQznaHCBb3ojWdw';
 
@@ -49,6 +51,26 @@ const bmUserIds = new Map<string, string>(); // a mapping of our user _ids to BM
 
 const POST_POST_TYPE_ID = 'oR00uvx3sKdsgnb'; // '0bmyNGiG5igigc2'; // 'oR00uvx3sKdsgnb';
 const COMMENT_POST_TYPE_ID = 'IzOjciUpA0oGTT0'; // 'eR1hhMVkLBRERat'; // 'IzOjciUpA0oGTT0';
+
+const WHITE_LISTED_EMAILS = [
+  'michael.keenan@gmail.com',
+  'vlad@sitalo.org',
+  'jeremy@wakingup.com',
+  'arthur@wakingup.com',
+  'gary@wakingup.com',
+  'jose@fivekoalas.com',
+  'ruud@lassomoderation.com',
+  'samr@wakingup.com',
+  'community@wakingup.com',
+  'arthur@ombaseproductions.com',
+  'alberto@fivekoalas.com',
+  'fernando+new-user-community@fivekoalas.com',
+  'jcharlescarter+262024@gmail.com',
+  'fernando@fivekoalas.com',
+  'sergio@fivekoalas.com',
+  'seth@wakingup.com',
+  'ruud+testmember@lassomoderation.com',
+]
 
 let tags: DbTag[] = [];
 
@@ -60,12 +82,15 @@ let migrationNameSuffix: string;
 let startTime: Date;
 let endTime: Date;
 
-const TTS_ACTIVATED = true; // turning this off overnight
+const TTS_ACTIVATED = true; // turn this off overnight
 
 function logFile() {
   return `betterModeExport-${spaceIndex}.log`;
 }
 
+function logJsonToFile(obj: any) {
+  logToFile(JSON.stringify(obj, null, 2));
+}
 
 function logToFile(...args: any[]): void {
   const message = args.map(arg => typeof arg === 'object' ? JSON.stringify(arg, null, 2) : arg).join(' ');
@@ -106,7 +131,7 @@ const say = async (message: string) => {
 
 const collectionSpaces = [
   {
-    name: "Discussions",
+    name: "Discussion",
     id: undefined,
     spaces: [
       {
@@ -146,7 +171,7 @@ const collectionSpaces = [
     id: undefined,
     spaces: [
       {
-        name: "All Groups",
+        name: "Connect",
         description: "Connect with Waking Up members and groups near you.",
         id: undefined,
       },
@@ -182,12 +207,16 @@ function formatDuration(startTime: Date, endTime: Date): { startTime: string; en
 
   const durationHours: number = Math.floor(duration / 3600000);
   const durationMinutes: number = Math.floor((duration % 3600000) / 60000);
-  const durationSeconds: string = ((duration % 60000) / 1000).toFixed(0);
+  const durationSeconds: number = Math.floor((duration % 60000) / 1000);
+
+  let durationStr = durationHours > 0 ? `${durationHours} hours` : '';
+  durationStr += durationMinutes > 0 ? `${durationStr.length > 0 ? ', ' : ''}${durationMinutes} minutes` : '';
+  durationStr += durationSeconds > 0 ? `${durationStr.length > 0 ? ', and ' : ''}${durationSeconds} seconds` : '';
 
   return {
     startTime: formattedStartTime,
     endTime: formattedEndTime,
-    duration: `${durationHours} hours, ${durationMinutes} minutes, and ${durationSeconds} seconds`
+    duration: durationStr
   };
 }
 
@@ -215,7 +244,7 @@ const deleteOldBetterModeUsers = async (
   const maxIterations = 5;
   while (iterations < maxIterations) {
     const query = {
-      "query": `{ members(limit: 1000, status: VERIFIED, offset: ${iterations * 1000}) { totalCount edges { cursor node { email id createdAt } } } }`
+      "query": `{ members(limit: 1000, status: VERIFIED) { totalCount edges { cursor node { email id createdAt } } } }`
     }
 
     const resultJson = await callBmApi(query, adminToken);
@@ -262,8 +291,8 @@ const deleteOldBetterModeCollectionsAndSpaces = async (
   const guestToken =        await getGuestToken();
   adminToken =              await getAdminToken(guestToken);
 
-  await deleteOldBetterModeSpaces(200, 261);
-  await deleteOldBetterModeCollections(200, 261);
+  await deleteOldBetterModeSpaces(200, 265);
+  await deleteOldBetterModeCollections(200, 265);
 }
 
 const deleteOldBetterModeSpaces = async (minIndex: number, maxIndex: number) => {
@@ -344,8 +373,10 @@ const betterModeExport = async (
   await say("Export starting")
 
   if (!keenan_user_only && (!postIdsToExport || postIdsToExport.length === 0)) {
-    logToFile("Exporting all posts and comments; this takes so long that we don't care about a quick feedback loop, so take the opportunity to delete old test users first")
-    await deleteOldBetterModeUsers(mk_password);
+    if (CREATE_TEST_COLLECTIONS_AND_SPACES) {
+      logToFile("Exporting all posts and comments; this takes so long that we don't care about a quick feedback loop, so take the opportunity to delete old test users first")
+      await deleteOldBetterModeUsers(mk_password);
+    }
   }
 
   // const userDataFixKeenanAccount = {
@@ -385,19 +416,20 @@ const betterModeExport = async (
   logToFile('guestToken', guestToken);
   adminToken =              await getAdminToken(guestToken);
   logToFile('adminToken', adminToken);
-  const spaces =            await listSpaces(adminToken);
-  logToFile({spaces});
-  spaceIndex =              getNextSpaceNameIndex(spaces);
-  logToFile({spaceIndex});
-  void say(`Export test ${spaceIndex}`)
+  if (CREATE_TEST_COLLECTIONS_AND_SPACES) {
+    const spaces =          await listSpaces(adminToken);
+    logToFile({spaces});
+    spaceIndex =            getNextSpaceNameIndex(spaces);
+    logToFile({spaceIndex});
+    void say(`Export test ${spaceIndex}`)
+    migrationNameSuffix = ` Test ${spaceIndex}`;
+    await createCollectionsAndSpaces();
+  } else {
+    await listFinalCollectionsAndSpaces();
+    migrationNameSuffix = '';
+  }
 
-  migrationNameSuffix =               ` Test ${spaceIndex}`;
-
-  await createCollectionsAndSpaces();
-  
   tags = await Tags.find().fetch();
-
-  // await deleteOldSpaces(spaces, spaceIndex);
 
   const users =             options['keenan_user_only'] ?
                               [await keenanUser()] :
@@ -436,7 +468,7 @@ const betterModeExport = async (
   logToFile('####################')
   logToFile(errors)
   logToFile(`${errors.length} errors`)
-  logToFile(`Migration to ${migrationNameSuffix} complete`);
+  logToFile(`Migration${migrationNameSuffix} complete`);
   logToFile('')
 
   const timeDetails = formatDuration(startTime, endTime);
@@ -444,7 +476,7 @@ const betterModeExport = async (
   logToFile(`End Time: ${timeDetails.endTime}`);
   logToFile(`Duration: ${timeDetails.duration}`);
 
-  await say(`Export ${migrationNameSuffix} complete in ${timeDetails.duration.replace('0 hours, ', '').replace('0 minutes, and ', '')}`)
+  await say(`Export ${migrationNameSuffix} complete in ${timeDetails.duration}`)
 }
 
 const getGuestToken = async () => {
@@ -520,6 +552,47 @@ const createSpaces = async () => {
     for (const space of collectionSpace.spaces) {
       space.id = await createSpace(space.name + migrationNameSuffix, space.description + migrationNameSuffix);
       await updateSpacePostTypes(space.id!);
+    }
+  }
+}
+
+const listFinalCollectionsAndSpaces = async () => {
+  await listFinalCollections();
+  await listFinalSpaces();
+}
+
+const listFinalCollections = async () => {
+  const query = {
+    "query": "{ collections { id name } }"
+  };
+
+  const resultJson = await callBmApi(query, adminToken);
+  logToFile({query})
+  logToFile({resultJson})
+  for (const collection of resultJson.data.collections) {
+    for (const collectionSpace of collectionSpaces) {
+      if (collection.name === collectionSpace.name) {
+        collectionSpace.id = collection.id;
+      }
+    }
+  }
+}
+
+const listFinalSpaces = async () => {
+  const query = {
+    "query": "{ spaces(limit: 1000) { nodes { id name } } }"
+  };
+
+  const resultJson = await callBmApi(query, adminToken);
+  logToFile({query})
+  logToFile({resultJson})
+  for (const node of resultJson.data.spaces.nodes) {
+    for (const collectionSpace of collectionSpaces) {
+      for (const space of collectionSpace.spaces) {
+        if (node.name === space.name) {
+          space.id = node.id;
+        }
+      }
     }
   }
 }
@@ -755,7 +828,7 @@ async function setBmUserIds(users: DbUser[]) {
     if (resultJson.data.spaceMembers.totalCount === '0') return;
 
     for (const edge of resultJson.data.spaceMembers.edges) {
-      logToFile(JSON.stringify(edge?.node?.member, null, 2));
+      logJsonToFile(edge?.node?.member);
       const bmUserId = edge.node.member.id as string;
       if (options['keenan_user_only']) {
         const kUser = await keenanUser();
@@ -765,9 +838,8 @@ async function setBmUserIds(users: DbUser[]) {
         const user = users.find(user => mangleEmailAsKeenanEmail(user.email, 0) === email);
         if (!user) {
           if (email !== 'michael.keenan@gmail.com') {
-            logToFile(`no user with email ${email}. Concerning.`);
+            logToFile(`Found space member with ${email} but there's no WU forum user with that email. (Probably fine if CREATE_TEST_COLLECTIONS_AND_SPACES is false. CREATE_TEST_COLLECTIONS_AND_SPACES: ${CREATE_TEST_COLLECTIONS_AND_SPACES})`);
             logToFile(edge.node.member);
-            throw(`no user with email ${email}. Fix.`);
           }
           continue;
         }
@@ -829,8 +901,11 @@ async function updateUserFields(user: DbUser) {
 
   const trimmedUsername = user.username?.trim() || '';
   const fullName = user.first_name?.trim() + ' ' + user.last_name?.trim();
+  // usernames must be between 3 and 50 characters long
+  // (though there's a problem guy with emojis in his username, and different computers sometimes count emoji lengths differently, so watch out for further problems)
+  // "Stef Raharjo-Gunawan Zhou-Lin 🇦🇺🇮🇩🇨🇳 / Sage Shawaman 🏳️‍🌈\"
   const username = trimmedUsername.length > 3 ?
-                      user.username?.trim() :
+                      user.username?.trim().slice(0, 50) :
                       fullName.length > 3 ? 
                       fullName :
                         '[no username]';
@@ -985,9 +1060,9 @@ const mangleEmailForTest = (email: string|null, suffix: number) => {
 }
 
 const mangleEmailAsKeenanEmail = (email: string|null, suffix: number) => {
-  if (email === 'michael.keenan@gmail.com') return email;
-
   if (!email) return `michael.keenan+noemail.${spaceIndex}-${suffix}@gmail.com`;
+
+  if (WHITE_LISTED_EMAILS.includes(email)) return email;
   
   const [name, domain] = email.split('@');
   const domainPrefix = extractDomainPrefix(domain);
@@ -1039,7 +1114,7 @@ const spaceIdFromPost = async (post: DbPost) => {
   if (tag.name === 'Recommendations') return spaceIdByName("Recommendations");
   if (tag.name === 'Quotes') return spaceIdByName("Other");
   if (tag.name === 'Casual') return spaceIdByName("Other");
-  if (tag.name === 'Local') return spaceIdByName("All Groups");
+  if (tag.name === 'Local') return spaceIdByName("Connect");
 
   if (post.title.indexOf('?') >= 0) return spaceIdByName("Questions");
 
@@ -1356,7 +1431,6 @@ async function callBmApi(query: any, token?: string|undefined) {
         errors.push([loggableErrors, query]);
         logToFile('callBmApi errors', loggableErrors);
         logToFile('query', query);
-        throw loggableErrors
       }
 
       return resultJson;
