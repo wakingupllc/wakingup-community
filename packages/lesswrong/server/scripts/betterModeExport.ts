@@ -11,6 +11,7 @@ import { truncatise } from '../../lib/truncatise.ts'
 import cheerio from 'cheerio';
 import { exec } from 'child_process';
 import * as fs from 'fs';
+import {CloudinaryPropsType, makeCloudinaryImageUrl} from '../../components/common/CloudinaryImage2.tsx'
 
 const jwt = require("jsonwebtoken");
 const axios = require('axios');
@@ -781,7 +782,7 @@ function createUserSSOToken(user: DbUser, privateKey: string) {
     bio,
     city: user.mapLocation?.vicinity,
     joinedWakingUp,
-    picture: user.avatar,
+    picture: getProfileImageUrl(user),
     iat: Math.round(new Date().getTime() / 1000), // token issue time
     exp: Math.round(new Date().getTime() / 1000) + 60, // token expiration time
     spaceIds: spaceIds(),
@@ -790,6 +791,20 @@ function createUserSSOToken(user: DbUser, privateKey: string) {
   logToFile({userData})
 
   return jwt.sign(userData, privateKey, { algorithm: "HS256" });
+}
+
+function getProfileImageUrl(user: DbUser) {
+  if (!user.profileImageId) return user.avatar
+  
+  let cloudinaryProps: CloudinaryPropsType = {
+    c: "fill",
+    dpr: "auto",
+    q: "auto",
+    f: "auto",
+    g: "auto:faces"
+  };
+
+  return makeCloudinaryImageUrl(user.profileImageId, cloudinaryProps)
 }
 
 async function sendSSOToken(token: string): Promise<void> {
