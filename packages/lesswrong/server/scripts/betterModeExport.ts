@@ -1456,7 +1456,7 @@ const removeInternalLinks = (html: string) =>
   html.replace(/<a href="[^"]*community.wakingup.com[^"]*">(.*?)(?:<\/a>)/g,
     (match, linkText) => {
       if (linkText.includes('community.wakingup.com')) {
-        return '[link removed]'
+        return '(inactive link)'
       }
       return linkText
     })
