@@ -1,5 +1,9 @@
 import {promisify} from 'util'
 import {exec} from 'child_process'
+import * as fs from 'fs';
+
+const secretsJson = fs.readFileSync('./exportSecrets.json').toString();
+const secrets = JSON.parse(secretsJson);
 
 const readline = require('readline');
 
@@ -31,7 +35,7 @@ function outputPostIds() {
   console.log('');
 }
 
-const KEENAN_PASSWORD = 'PASSWORD';
+const KEENAN_PASSWORD = secrets['KEENAN_PASSWORD'];
 
 /**
  * To use this script, run:

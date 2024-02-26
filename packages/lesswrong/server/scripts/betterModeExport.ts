@@ -16,7 +16,10 @@ import {CloudinaryPropsType, makeCloudinaryImageUrl} from '../../components/comm
 const jwt = require("jsonwebtoken");
 const axios = require('axios');
 
-const JWT_KEY = 'JWT_KEY'; // TODO: this should be a setting or environment variable
+const secretsJson = fs.readFileSync('./exportSecrets.json').toString();
+const secrets = JSON.parse(secretsJson);
+
+const JWT_KEY = secrets['JWT_KEY'];
 
 /* Overview of the export process:
   Get guest token
@@ -34,6 +37,7 @@ const JWT_KEY = 'JWT_KEY'; // TODO: this should be a setting or environment vari
   Get the users' BM user IDs and put them in the bmUserIds map (because the JWT SSO call doesn't return them)
     (We get the users' BM user IDs by calling the spaceMembers query to list the members who are assigned to one of the new spaces.
       As of Thursday February 22, something is weird with this, and about half were missing. This might be because I increased the batch size of the JWT SSO calls to 20, though they're supposed to retry if they fail so maybe that's only the problem if there's a bug with the retry code)
+  Call updateMember for each user to set their fields that can't be sent in the JWT SSO call
   Create the posts
   Create the comments of the posts, recursively so that parent comments are created before their replies
   Create post votes/reactions
@@ -43,7 +47,8 @@ const JWT_KEY = 'JWT_KEY'; // TODO: this should be a setting or environment vari
 
 type CreatedDocument = { documentId?: string; bmPostId?: string; error?: boolean; }
 
-const CREATE_TEST_COLLECTIONS_AND_SPACES = false;
+const CREATE_TEST_COLLECTIONS_AND_SPACES = true;
+const DELETE_OLD_USERS = false;
 
 const KEENAN_BM_USER_ID = 'GEwYqQhauV';
 const KEENAN_WU_USER_ID = 'gAHQznaHCBb3ojWdw';
@@ -83,7 +88,7 @@ let migrationNameSuffix: string;
 let startTime: Date;
 let endTime: Date;
 
-const TTS_ACTIVATED = true; // turn this off overnight
+const TTS_ACTIVATED = false; // turn this off overnight
 
 function logFile() {
   return `betterModeExport-${spaceIndex}.log`;
@@ -374,8 +379,7 @@ const betterModeExport = async (
   await say("Export starting")
 
   if (!keenan_user_only && (!postIdsToExport || postIdsToExport.length === 0)) {
-    if (CREATE_TEST_COLLECTIONS_AND_SPACES) {
-      logToFile("Exporting all posts and comments; this takes so long that we don't care about a quick feedback loop, so take the opportunity to delete old test users first")
+    if (DELETE_OLD_USERS) {
       await deleteOldBetterModeUsers(mk_password);
     }
   }
@@ -1348,7 +1352,7 @@ const addReactions = async (type: string, ids: string[], bmPosts: CreatedDocumen
     if (!bmPost) {
       errors.push(`no bmPost for vote ${vote._id}, type ${type}, ids: ${ids}`);
       logToFile(`no bmPost for vote ${vote._id}, type ${type}, ids: ${ids}`);
-      return;
+      continue;
     }
 
     await addReaction(bmPost.bmPostId!, document, vote, 'like');
@@ -1407,6 +1411,16 @@ function apiCallNameFromQuery(query: any) {
   throw "couldn't find mutation or query name";
 }
 
+function logBmApiError(errors: any, query: any) {
+  // don't record "Username already taken" errors; they're caught and retried with different usernames
+  if (errors?.[0]?.message === "Username already taken.") return;
+
+  const loggableErrors = JSON.stringify(errors, null, 2)
+  errors.push([loggableErrors, query]);
+  logToFile('callBmApi errors', loggableErrors);
+  logToFile('query', query);
+}
+
 async function callBmApi(query: any, token?: string|undefined) {
   logToFile('waiting a tenth of a second'); // BetterMode rate limits to 10 requests per second
   await new Promise(resolve => setTimeout(resolve, 100));
@@ -1442,10 +1456,7 @@ async function callBmApi(query: any, token?: string|undefined) {
         throw e;
       }
       if (resultJson.errors?.length > 0) {
-        const loggableErrors = JSON.stringify(resultJson.errors, null, 2)
-        errors.push([loggableErrors, query]);
-        logToFile('callBmApi errors', loggableErrors);
-        logToFile('query', query);
+        logBmApiError(resultJson.errors, query);
       }
 
       return resultJson;
