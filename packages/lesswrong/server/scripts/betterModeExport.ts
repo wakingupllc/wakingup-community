@@ -468,6 +468,7 @@ const betterModeExport = async (
   logToFile({postReactions});
   const commentReactions =  await addReactions("Comments", comments.map(c => c._id), bmComments);
   logToFile({commentReactions});
+  await hideNonFrontpagePosts(postIds, bmPosts);
 
   endTime = new Date();
   logToFile('####################')
@@ -482,6 +483,27 @@ const betterModeExport = async (
   logToFile(`Duration: ${timeDetails.duration}`);
 
   await say(`Export ${migrationNameSuffix} complete in ${timeDetails.duration}`)
+}
+
+const hideNonFrontpagePosts = async (postIds: string[], bmPosts: CreatedDocument[]) => {
+  logToFile("Hiding non-frontpage posts")
+  const postsToHide = await Posts.find({_id: {$in: postIds}, frontpageDate: null}).fetch();
+  logToFile({postsToHide});
+  
+  for (const post of postsToHide) {
+    const bmPost = bmPosts.find(bmPost => bmPost.documentId === post._id);
+    if (bmPost) {
+      const query = {
+        "query": `mutation { hidePost(id: "${bmPost.bmPostId}") { status } }`
+      }
+      const resultJson = await callBmApi(query, adminToken);
+      logToFile({resultJson})
+      logToFile(resultJson?.data?.hidePost)
+    } else {
+      errors.push(`no bmPost for non-frontpage post ${post._id}`);
+      logToFile(`no bmPost for non-frontpage post ${post._id}`);
+    }
+  }
 }
 
 const getGuestToken = async () => {
