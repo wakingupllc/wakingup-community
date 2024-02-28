@@ -1119,8 +1119,7 @@ const createPosts = async (postIds?: string[]) => {
   logToFile({postIds})
   const posts = postIds
     ? await Posts.find({_id: {$in: postIds}}).fetch()
-    : await Posts.find({ deletedDraft: false, status: 2}).fetch();
-    // : await Posts.find({baseScore: {$gte: 21}, deletedDraft: false, status: 2}).fetch();
+    : await Posts.find({ deletedDraft: false, draft: false,  status: 2}).fetch();
 
   let createdPosts: CreatedDocument[] = [];
   // using for...of instead of forEach because forEach won't wait for the
