@@ -213,3 +213,4 @@ export const hasSideCommentsSetting = new PublicInstanceSetting<boolean>("commen
 export const hasCommentsTableOfContentSetting = new PublicInstanceSetting<boolean>("comments.tableOfContentsEnabled", isLWorAF, "optional");
 export const hasDialoguesSetting = new PublicInstanceSetting<boolean>("dialogues.enabled", true, "optional");
 export const hasPostInlineReactionsSetting = new PublicInstanceSetting<boolean>("posts.inlineReactionsEnabled", isLWorAF, "optional");
+export const migrationModeEnabledSetting = new PublicInstanceSetting<boolean>('migrationModeEnabled', false, "optional");

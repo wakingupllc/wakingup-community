@@ -1046,6 +1046,7 @@ importComponent("HomeTagBar", () => require('../components/common/HomeTagBar'));
 
 importComponent("WULoginForm", () => require('../components/users/WULoginForm'));
 importComponent("WakingUpHome", () => require('../components/common/WakingUpHome'));
+importComponent("WUMigrationPage", () => require('../components/common/WUMigrationPage'));
 importComponent("WUHomeLatestPosts", () => require('../components/common/WUHomeLatestPosts'));
 importComponent("WUEmojiPalette", () => require('../components/votes/WUEmojiPalette'));
 importComponent("WUUsersMetaInfo", () => require('../components/ea-forum/users/WUUsersMetaInfo'))
