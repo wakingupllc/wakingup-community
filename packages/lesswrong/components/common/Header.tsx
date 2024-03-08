@@ -11,7 +11,7 @@ import { SidebarsContext } from './SidebarsWrapper';
 import withErrorBoundary from '../common/withErrorBoundary';
 import classNames from 'classnames';
 import { AnalyticsContext, useTracking } from '../../lib/analyticsEvents';
-import { PublicInstanceSetting, isEAForum } from '../../lib/instanceSettings';
+import {PublicInstanceSetting, isEAForum, migrationModeEnabledSetting} from '../../lib/instanceSettings'
 import { useUnreadNotifications } from '../hooks/useUnreadNotifications';
 import { isBookUI, isFriendlyUI } from '../../themes/forumTheme';
 import { hasProminentLogoSetting } from '../../lib/publicSettings';
@@ -397,6 +397,7 @@ const Header = ({
     setIsOpen={handleSetNotificationDrawerOpen}
   />
 
+  const migrationGuard = !migrationModeEnabledSetting.get() || currentUser?.isAdmin
   return (
     <AnalyticsContext pageSectionContext="header">
       <div className={classes.root}>
@@ -413,7 +414,7 @@ const Header = ({
         >
           <header className={classNames(classes.appBar, {[classes.appBarDarkBackground]: !!backgroundColor})} style={backgroundColor ? {backgroundColor} : {}}>
             <Toolbar disableGutters={isFriendlyUI}>
-              {currentUser && <NavigationMenuButton />}
+              {migrationGuard && currentUser && <NavigationMenuButton />}
               <Typography className={classes.title} variant="title">
                 <div className={classes.hideSmDown}>
                   <div className={classes.titleSubtitleContainer}>
@@ -426,13 +427,13 @@ const Header = ({
                 </div>
                 <div className={classes.hideMdUp}>
                   <Link to="/" className={classes.titleLink}>
-                    {hasProminentLogoSetting.get() && <div className={classNames(classes.siteLogo, {[classes.extraMargin]: !currentUser})}><SiteLogo eaWhite={!!backgroundColor}/></div>}
+                    {hasProminentLogoSetting.get() && <div className={classNames(classes.siteLogo, {[classes.extraMargin]: !currentUser || migrationModeEnabledSetting.get()})}><SiteLogo eaWhite={!!backgroundColor}/></div>}
                     {forumShortTitleSetting.get()}
                   </Link>
                 </div>
               </Typography>
               {!isEAForum &&<ActiveDialogues />}
-              {rightHeaderItemsNode}
+              {migrationGuard && rightHeaderItemsNode}
             </Toolbar>
           </header>
           <HeaderNavigationDrawer />

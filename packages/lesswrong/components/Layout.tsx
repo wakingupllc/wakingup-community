@@ -13,7 +13,7 @@ import { CommentBoxManager } from './hooks/useCommentBox';
 import { ItemsReadContextWrapper } from './hooks/useRecordPostView';
 import { pBodyStyle } from '../themes/stylePiping';
 import {DatabasePublicSetting, googleTagManagerIdSetting, onetrustDomainScriptSetting} from '../lib/publicSettings'
-import { isAF, isLW, isLWorAF } from '../lib/instanceSettings';
+import {isAF, isLW, isLWorAF, migrationModeEnabledSetting} from '../lib/instanceSettings'
 import { globalStyles } from '../themes/globalStyles/globalStyles';
 import { ForumOptions, forumSelect } from '../lib/forumTypeUtils';
 import { userCanDo } from '../lib/vulcan-users/permissions';
@@ -256,7 +256,7 @@ const Layout = ({currentUser, children, classes}: {
 }) => {
   const searchResultsAreaRef = useRef<HTMLDivElement|null>(null);
   const [disableNoKibitz, setDisableNoKibitz] = useState(false);
-  const hideNavigationSidebarDefault = currentUser ? !!(currentUser?.hideNavigationSidebar) : (reviewIsActive() && isLW)
+  const hideNavigationSidebarDefault = (migrationModeEnabledSetting.get() && !currentUser?.isAdmin) || (currentUser ? !!(currentUser?.hideNavigationSidebar) : (reviewIsActive() && isLW))
   const [hideNavigationSidebar,setHideNavigationSidebar] = useState(hideNavigationSidebarDefault);
   const theme = useTheme();
   const {currentRoute, pathname} = useLocation();

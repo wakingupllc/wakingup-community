@@ -1,4 +1,15 @@
-import { forumTypeSetting, PublicInstanceSetting, hasEventsSetting, taggingNamePluralSetting, taggingNameIsSet, taggingNamePluralCapitalSetting, taggingNameCapitalSetting, isEAForum, taggingNameSetting } from './instanceSettings';
+import {
+  forumTypeSetting,
+  PublicInstanceSetting,
+  hasEventsSetting,
+  taggingNamePluralSetting,
+  taggingNameIsSet,
+  taggingNamePluralCapitalSetting,
+  taggingNameCapitalSetting,
+  isEAForum,
+  taggingNameSetting,
+  migrationModeEnabledSetting,
+} from './instanceSettings'
 import { legacyRouteAcronymSetting } from './publicSettings';
 import { addRoute, RouterLocation, Route } from './vulcan-lib/routes';
 import { onStartup } from './executionEnvironment';
@@ -1131,9 +1142,15 @@ const eaLwAfForumSpecificRoutes = forumSelect<Route[]>({
     {
       name:'home',
       path:'/',
-      componentName: 'WakingUpHome',
+      componentName: migrationModeEnabledSetting.get() ? 'WUMigrationPage': 'WakingUpHome',
       enableResourcePrefetch: true,
-      sunshineSidebar: true //TODO: remove this in production?
+      sunshineSidebar: true, //TODO: remove this in production?
+    },
+    {
+      name:'adminLogin',
+      path:'/adminLogin',
+      componentName: "WULoginForm",
+      sunshineSidebar: true,
     },
     {
       name:'about',

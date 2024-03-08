@@ -26,6 +26,7 @@ import { CODE_ENTRY_LIMIT, CODE_ENTRY_LIMIT_EXCEEDED_MSG, CODE_REQUEST_LIMIT_EXC
 import { codeEntryLockExpiresAt, codeRequestLimitActive, codeRequestLimitExpiresAt, isCodeEntryLocked, isCodeRequestLocked } from '../../lib/collections/users/helpers.tsx'
 import {usernameIsBadWord} from '../../lib/collections/users/username'
 import { getCookieFromReq, setCookieOnResponse } from '../utils/httpUtil.ts';
+import {migrationModeEnabledSetting} from '../../lib/instanceSettings.ts'
 
 // This file has middleware for redirecting logged-out users to the login page,
 // but it also manages authentication with the Waking Up app. This latter thing
@@ -36,9 +37,9 @@ const authMessageWithEmail = (email: string) => `Sorry, the email ${email} doesn
 const deletedAccountMessage = (email: string) => `The community account for ${email} has been deactivated. Please email us at community@wakingup.com if you think this is a mistake.`
 
 function urlDisallowedForLoggedOutUsers(req: express.Request) {
-  if (req.user) return false;
+  if ((!migrationModeEnabledSetting.get() && req.user) || req?.user?.isAdmin) return false;
 
-  const whiteListPaths = ['/', '/code', '/graphql', '/analyticsEvent', '/browserconfig.xml', '/site.webmanifest']
+  const whiteListPaths = ['/', '/code', '/graphql', '/analyticsEvent', '/browserconfig.xml', '/site.webmanifest', '/adminLogin', '/migration-box.svg']
   const whiteListPathStarts = ['/js/bundle.js', '/allStyles', '/dev-favicon']
   if (whiteListPaths.includes(req.path)) return false
   if (whiteListPathStarts.some(path => req.path.startsWith(path))) return false
