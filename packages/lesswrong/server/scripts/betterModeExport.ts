@@ -47,8 +47,9 @@ const JWT_KEY = secrets['JWT_KEY'];
 
 type CreatedDocument = { documentId?: string; bmPostId?: string; error?: boolean; }
 
-const CREATE_TEST_COLLECTIONS_AND_SPACES = true;
-const DELETE_OLD_USERS = false;
+const CREATE_TEST_COLLECTIONS_AND_SPACES = false;
+const DELETE_OLD_USERS = true;
+const DELETE_OLD_POSTS = true;
 
 const KEENAN_BM_USER_ID = 'GEwYqQhauV';
 const KEENAN_WU_USER_ID = 'gAHQznaHCBb3ojWdw';
@@ -56,7 +57,7 @@ const KEENAN_WU_USER_ID = 'gAHQznaHCBb3ojWdw';
 const bmUserIds = new Map<string, string>(); // a mapping of our user _ids to BM user IDs
 
 const POST_POST_TYPE_ID = 'oR00uvx3sKdsgnb'; // '0bmyNGiG5igigc2'; // 'oR00uvx3sKdsgnb';
-const COMMENT_POST_TYPE_ID = 'IzOjciUpA0oGTT0'; // 'eR1hhMVkLBRERat'; // 'IzOjciUpA0oGTT0';
+const COMMENT_POST_TYPE_ID = 'IzOjciUpA0oGTT0'; // 'IzOjciUpA0oGTT0'; // 'eR1hhMVkLBRERat'; // 'IzOjciUpA0oGTT0';
 
 const WHITE_LISTED_EMAILS = [
   'michael.keenan@gmail.com',
@@ -85,10 +86,12 @@ let adminToken: string;
 let spaceIndex: number;
 let migrationNameSuffix: string;
 
+let comments: DbComment[] = [];
+
 let startTime: Date;
 let endTime: Date;
 
-const TTS_ACTIVATED = false; // turn this off overnight
+const TTS_ACTIVATED: 'ALWAYS'|'NEVER'|'DAYTIME' = 'DAYTIME';
 
 function logFile() {
   return `betterModeExport-${spaceIndex}.log`;
@@ -99,14 +102,16 @@ function logJsonToFile(obj: any) {
 }
 
 function logToFile(...args: any[]): void {
-  const message = args.map(arg => typeof arg === 'object' ? JSON.stringify(arg, null, 2) : arg).join(' ');
-  console.log(...args);
+  try {
+    const message = args.map(arg => typeof arg === 'object' ? JSON.stringify(arg, null, 2) : arg).join(' ');
+    console.log(...args);
 
-  fs.appendFile(logFile(), message + '\n', (err) => {
-    if (err) {
-      console.error('Error writing to log file:', err);
-    }
-  });
+    // This used to be the async version, which was faster, but it was so annoying to have the logs out of order
+    fs.appendFileSync(logFile(), message + '\n');
+  } catch (error) {
+    console.error('Error writing to log file:', error);
+    console.log({args});
+  }
 }
 
 const executeCommand = (command: string) => {
@@ -123,9 +128,28 @@ const executeCommand = (command: string) => {
   });
 };
 
+const shouldSpeakAloud = function() {
+  // @ts-ignore
+  if (TTS_ACTIVATED === 'ALWAYS') {
+    return true;
+    // @ts-ignore
+  } else if (TTS_ACTIVATED === 'NEVER') {
+    return false;
+  } else {
+    const now = new Date();
+    const hours = now.getHours();
+
+    if (hours >= 23 || hours < 9) {
+      return false;
+    } else {
+      return true;
+    }
+  }
+}
+
 const say = async (message: string) => {
   logToFile(`Saying: ${message}`);
-  if (TTS_ACTIVATED) {
+  if (shouldSpeakAloud()) {
     try {
       const result = await executeCommand(`say ${message}`);
       logToFile(result);
@@ -227,55 +251,155 @@ function formatDuration(startTime: Date, endTime: Date): { startTime: string; en
 }
 
 const errors: any[] = []
+const imagelessUsers: DbUser[] = []
 
 const options: {
   mk_password?: string,
   keenan_user_only?: boolean
 } = {};
 
-const deleteOldBetterModeUsers = async (
-  mk_password: string,
-  ) => {
-  startTime = new Date();
-  errors.length = 0;
-
-  /* deleting old test users */
-
+const reconcilePosts = async (mk_password: string) => {
   options['mk_password'] = mk_password;
 
   const guestToken =        await getGuestToken();
   adminToken =              await getAdminToken(guestToken);
 
+  const query = {
+    "query": `{ posts(limit: 1000) { totalCount nodes { id title shortContent } } }`
+  }
+
+  const resultJson = await callBmApi(query, adminToken);
+
+  /* Example data:
+  {
+    "data": {
+        "posts": {
+            "totalCount": 580,
+            "nodes": [
+                {
+                    "id": "mnHGApLkBOvd25M",
+                    "title": "Meditation at 86",
+                    "shortContent": "<p>At a &nbsp;gym I once belonged to there was a picture of an unusually fit guy in his mid 80’s holding two 20 pound weights in each hand with this in bold letters: GROWING OLD AINT FOR SISSIES! ...</p>"
+                },
+                {
+                    "id": "14BJtd7bF74UYBq",
+                    "title": "I struggle with non-duality",
+                    "shortContent": "<p>Hi, I’m Dennis from Gold Coast, Australia. I have had a daily meditation practice for over six years now. The Waking Up app was a serendipitous discovery for me several years ago. And what an amazing ...</p>"
+                },
+            ]
+          }
+      }
+    }
+  */
+
+  const processTitle = (title: string) => {
+    return title.replace(/["’‘ ]/g, '').replace(/\r?\n/g, '').trim()
+  }
+
+  const bmPosts = resultJson.data.posts.nodes;
+
+  const wuPosts = await Posts.find({ deletedDraft: false, draft: false,  status: 2}).fetch();
+
+  /* Find the posts that are in Waking Up but not in BetterMode */
+  const missingPosts = wuPosts.filter(wuPost => !bmPosts.find((bmPost: any) => processTitle(bmPost.title) === processTitle(wuPost.title)));
+
+  // sets spaceIndex to today's date in the format "YYYYMMDD"
+  spaceIndex = parseInt(new Date().toISOString().slice(0, 10).replace(/-/g, ''));
+
+  logToFile('########');
+  logToFile(missingPosts.map((post: DbPost) => [post.title, post._id, post.createdAt]));
+
+  logToFile(`missingPosts count: ${missingPosts.length}`);
+  logToFile(`wuPosts count: ${wuPosts.length}`);
+  logToFile(`bmPosts count: ${bmPosts.length}`);
+  logToFile('Difference: ', wuPosts.length - bmPosts.length);
+  logToFile('########');
+}
+
+const deleteOldBetterModeUsers = async (adminToken: string) => {
+  startTime = new Date();
+  errors.length = 0;
+
+  /* deleting old test users */
+
+  let iterations = 0;
+  const maxIterations = 5;
+  while (iterations < maxIterations) {
+    const maxAttempts = 5;
+    let attempts = 0;
+    let lastMembersCount = -1;
+
+    while (attempts < maxAttempts) {
+      attempts++;
+      try {
+        const query = {
+          "query": `{ members(limit: 1000, status: VERIFIED) { totalCount edges { cursor node { email id createdAt } } } }`
+        }
+
+        const resultJson = await callBmApi(query, adminToken);
+        logToFile({query})
+        logToFile({resultJson})
+        logToFile('resultJson.data.members.totalCount', resultJson.data.members.totalCount)
+
+        if (resultJson.data.members.edges.length === lastMembersCount) return;
+        lastMembersCount = resultJson.data.members.edges.length;
+
+        for (const edge of resultJson.data.members.edges) {
+          logToFile({edge})
+          const bmUserId = edge.node.id as string;
+          const email = edge.node.email as string;
+          const createdAt = edge.node.createdAt as string;
+          logToFile({email})
+          logToFile({createdAt})
+          if (email.match(/michael\.keenan\+/) || email.match(/spamgourmet/)) {
+            logToFile(`Deleting user ${bmUserId} with email ${email}`);
+            const deleteQuery = {
+              "query": `mutation { deleteMember(id: "${bmUserId}") { status } }`
+            }
+            const deleteResultJson = await callBmApi(deleteQuery, adminToken);
+            logToFile({deleteQuery})
+            logToFile({deleteResultJson})
+            logToFile(deleteResultJson?.data?.deleteMember)
+          }
+        }
+      } catch (error) {
+        logToFile('Error in deleteOldBetterModeUsers', {error})
+        errors.push(error);
+        if (attempts < maxAttempts) logToFile('Retrying...');
+      }
+    }
+    iterations++;
+  };
+}
+
+const deleteBetterModePosts = async (adminToken: string) => {
+  startTime = new Date();
+  errors.length = 0;
+
   let iterations = 0;
   const maxIterations = 5;
   while (iterations < maxIterations) {
     const query = {
-      "query": `{ members(limit: 1000, status: VERIFIED) { totalCount edges { cursor node { email id createdAt } } } }`
+      "query": `{ posts(limit: 1000, spaceIds: [${spaceIds().map(spaceId => `"${spaceId}"`)}]) { totalCount nodes { id } } }`
     }
 
     const resultJson = await callBmApi(query, adminToken);
     logToFile({query})
     logToFile({resultJson})
-    logToFile('resultJson.data.members.totalCount', resultJson.data.members.totalCount)
-    if (resultJson.data.members.edges.length === 0) return;
+    logToFile('resultJson.data.posts.totalCount', resultJson.data.posts.totalCount)
+    if (resultJson.data.posts.nodes.length === 0) return;
 
-    for (const edge of resultJson.data.members.edges) {
-      logToFile({edge})
-      const bmUserId = edge.node.id as string;
-      const email = edge.node.email as string;
-      const createdAt = edge.node.createdAt as string;
-      logToFile({email})
-      logToFile({createdAt})
-      if (email.match(/michael\.keenan\+/) || email.match(/spamgourmet/)) {
-        logToFile(`Deleting user ${bmUserId} with email ${email}`);
-        const deleteQuery = {
-          "query": `mutation { deleteMember(id: "${bmUserId}") { status } }`
-        }
-        const resultJson = await callBmApi(deleteQuery, adminToken);
-        logToFile({query})
-        logToFile({resultJson})
-        logToFile(resultJson?.data?.deleteMember)
+    for (const post of resultJson.data.posts.nodes) {
+      logToFile({post})
+      const bmPostId = post.id as string;
+      logToFile({bmPostId})
+      const deleteQuery = {
+        "query": `mutation { deletePost(id: "${bmPostId}") { status } }`
       }
+      const resultJson = await callBmApi(deleteQuery, adminToken);
+      logToFile({query})
+      logToFile({resultJson})
+      logToFile(resultJson?.data?.deletePost)
     }
     iterations++;
   };
@@ -297,8 +421,8 @@ const deleteOldBetterModeCollectionsAndSpaces = async (
   const guestToken =        await getGuestToken();
   adminToken =              await getAdminToken(guestToken);
 
-  await deleteOldBetterModeSpaces(200, 265);
-  await deleteOldBetterModeCollections(200, 265);
+  await deleteOldBetterModeSpaces(1, 100);
+  await deleteOldBetterModeCollections(1, 100);
 }
 
 const deleteOldBetterModeSpaces = async (minIndex: number, maxIndex: number) => {
@@ -313,14 +437,26 @@ const deleteOldBetterModeSpaces = async (minIndex: number, maxIndex: number) => 
     logToFile({node})
     const name = node.name as string;
     logToFile({name})
-    logToFile('!!!!!!!!!!!')
     logToFile(node.createdById)
 
     const spaceMigrationNumber = numberFromString(name);
 
-    if (node.createdById !== KEENAN_BM_USER_ID) continue;
+    if (node.createdById !== KEENAN_BM_USER_ID) {
+      logToFile(`Skipping ${name} because it wasn't created by Keenan`)
+      continue;
+    }
 
-    if (spaceMigrationNumber && spaceMigrationNumber > minIndex && spaceMigrationNumber < maxIndex) {
+    if (!spaceMigrationNumber) {
+      logToFile(`Skipping ${name} because it doesn't have a number at the end`)
+      continue;
+    }
+
+    if (spaceMigrationNumber < minIndex || spaceMigrationNumber > maxIndex) {
+      logToFile(`Skipping ${name} because it's not in the range`)
+      continue;
+    }
+
+    if (spaceMigrationNumber && spaceMigrationNumber >= minIndex && spaceMigrationNumber <= maxIndex) {
       const spaceId = node.id as string;
       logToFile(`Deleting space ${spaceId} with name ${name}`);
       const deleteQuery = {
@@ -345,14 +481,26 @@ const deleteOldBetterModeCollections = async (minIndex: number, maxIndex: number
   for (const collection of resultJson.data.collections) {
     const name = collection.name as string;
     logToFile({name})
-    logToFile('!!!!!!!!!!!')
     logToFile(collection.createdBy.id)
 
     const migrationNumber = numberFromString(name);
 
-    if (collection.createdBy.id !== KEENAN_BM_USER_ID) continue;
+    if (collection?.createdBy?.id !== KEENAN_BM_USER_ID) {
+      logToFile(`Skipping ${name} collection because it wasn't created by Keenan`)
+      continue;
+    }
 
-    if (migrationNumber && migrationNumber > minIndex && migrationNumber < maxIndex) {
+    if (!migrationNumber) {
+      logToFile(`Skipping ${name} collection because it doesn't have a number at the end`)
+      continue;
+    }
+
+    if (migrationNumber < minIndex || migrationNumber > maxIndex) {
+      logToFile(`Skipping ${name} collection because it's not in the range`)
+      continue;
+    }
+
+    if (migrationNumber && migrationNumber >= minIndex && migrationNumber <= maxIndex) {
       const collectionId = collection.id as string;
       logToFile(`Deleting collection ${collectionId} with name ${name}`);
       const deleteQuery = {
@@ -367,6 +515,10 @@ const deleteOldBetterModeCollections = async (minIndex: number, maxIndex: number
 }
 
 
+/* ########################################################## */
+/* ############## The Actual Export Starts Here ############# */
+/* ########################################################## */
+
 const betterModeExport = async (
     mk_password: string,
     keenan_user_only?: boolean,
@@ -375,14 +527,17 @@ const betterModeExport = async (
   startTime = new Date();
   errors.length = 0;
 
+  options['mk_password'] = mk_password;
+  options['keenan_user_only'] = keenan_user_only;
+
   logToFile('betterModeExport starting')
   await say("Export starting")
 
-  if (!keenan_user_only && (!postIdsToExport || postIdsToExport.length === 0)) {
-    if (DELETE_OLD_USERS) {
-      await deleteOldBetterModeUsers(mk_password);
-    }
-  }
+
+  /*
+    If you change the email address of your account by logging in with SSO, you'll need the following code to fix it.
+    If the sub, i.e. the WU UUID, matches, then it'll find the account and update the email address.
+  */
 
   // const userDataFixKeenanAccount = {
   //   sub: '0b7ebf61-739f-4ac3-a5bf-5f2f835054be',
@@ -413,14 +568,11 @@ const betterModeExport = async (
   // throw 'abort here'
 
 
-
-  options['mk_password'] = mk_password;
-  options['keenan_user_only'] = keenan_user_only;
-
   const guestToken =        await getGuestToken();
   logToFile('guestToken', guestToken);
   adminToken =              await getAdminToken(guestToken);
   logToFile('adminToken', adminToken);
+
   if (CREATE_TEST_COLLECTIONS_AND_SPACES) {
     const spaces =          await listSpaces(adminToken);
     logToFile({spaces});
@@ -432,6 +584,14 @@ const betterModeExport = async (
   } else {
     await listFinalCollectionsAndSpaces();
     migrationNameSuffix = '';
+  }
+
+  if (DELETE_OLD_POSTS) {
+    await deleteBetterModePosts(adminToken);
+  }
+
+  if (DELETE_OLD_USERS) {
+    await deleteOldBetterModeUsers(adminToken);
   }
 
   tags = await Tags.find().fetch();
@@ -447,7 +607,7 @@ const betterModeExport = async (
   await createUsers(users);
 
   await setBmUserIds(users);
-  
+
   logToFile({bmUserIds});
 
   await updateUsersFields(users);
@@ -458,7 +618,11 @@ const betterModeExport = async (
   logToFile({bmPosts});
   const postIds =           bmPosts.map(createdPost => createdPost.documentId!);
 
-  const comments =          await Comments.find({postId: {$in: bmPosts.map(createdPost => createdPost.documentId) }}).fetch();
+  comments =                await Comments.find({
+    postId: {$in: bmPosts.map(createdPost => createdPost.documentId) },
+    deleted: {$ne: true},
+    deletedPublic: {$ne: true}
+  }).fetch();
   logToFile({comments});
 
   const bmComments =        await createComments(comments, bmPosts);
@@ -474,6 +638,8 @@ const betterModeExport = async (
   logToFile('####################')
   logToFile(errors)
   logToFile(`${errors.length} errors`)
+  logToFile('Imageless Users for manual correction:', imagelessUsers.map(user => user.username))
+  logToFile(imagelessUsers.map(user => [user._id, user.username, user.email, user.first_name, user.last_name]))
   logToFile(`Migration${migrationNameSuffix} complete`);
   logToFile('')
 
@@ -624,34 +790,6 @@ const listFinalSpaces = async () => {
   }
 }
 
-// const deleteOldSpaces = async (spaces: any, spaceIndex: number) => {
-//   for (const space of spaces) {
-//     const query = `mutation { deleteSpace(id: "${spaceId}") { status } }`;
-
-//     const resultJson = await callBmApi(query, adminToken);
-//   }
-  
-//   logToFile({query})
-//   logToFile({resultJson})
-//   for (const edge of resultJson.data.members.edges) {
-//     logToFile({edge})
-//     const bmUserId = edge.node.id as string;
-//     const email = edge.node.email as string;
-//     logToFile({email})
-//     logToFile(!!email.match(/keenan/))
-//     if (email.match(/keenan/) && email !== 'michael.keenan@gmail.com') {
-//       logToFile(`Deleting user ${bmUserId} with email ${email}`);
-//       const deleteQuery = {
-//         "query": `mutation { deleteMember(id: "${bmUserId}") { status } }`
-//       }
-//       const resultJson = await callBmApi(deleteQuery, adminToken);
-//       logToFile({query})
-//       logToFile({resultJson})
-//       logToFile(resultJson?.data?.deleteMember)
-//     }
-//   }
-// }
-
 const collectionIdFromSpaceName = (name: string) => {
   for (const collection of collectionSpaces) {
     for (const space of collection.spaces) {
@@ -693,7 +831,6 @@ const updateSpacePostTypes = async (spaceId: string) => {
         // Sometimes this has an error, despite it being the same input each time
         // (except the spaceId, though the space is created the same way each
         // time). It is most perplexing.
-        logToFile('!!!!!!');
         logToFile(resultJson.errors);
         errors.push(resultJson.errors);
         logToFile("updateSpacePostTypes failed, trying again.")
@@ -731,11 +868,10 @@ const usersFromPosts = async (postIds: string[]) => {
 }
 
 const wakingUpUsers = async () => {
-  return await Users.find({deleted: {$ne: true}, deleteContent: {$ne: true}, banned: {$exists: false}, username: {$exists: true}}).fetch();
+  return await Users.find({deleted: {$ne: true}, deleteContent: {$ne: true}, banned: {$exists: false}, username: {$exists: true}, acceptedTos: true}).fetch();
 }
 
 const keenanUser = async () => {
-  // return (await Users.findOne({email: 'jeremy@wakingup.com'})) as DbUser;
   return (await Users.findOne({_id: KEENAN_WU_USER_ID})) as DbUser;
 }
 
@@ -774,8 +910,7 @@ const createUsers = async (users: DbUser[]) => {
         concurrency--;
       })
       .catch((error) => {
-        // Handle errors here if needed
-        console.error('Error creating user:', error);
+        void logToFile('Error creating user:', error);
       });
 
     createUserPromises.push(createUserPromise);
@@ -787,7 +922,7 @@ const createUsers = async (users: DbUser[]) => {
 };
 
 
-function createUserSSOToken(user: DbUser, privateKey: string) {
+async function createUserSSOToken(user: DbUser, privateKey: string) {
   const email = mangleEmailAsKeenanEmail(user.email, 0);
 
   const name = user.first_name?.length && user.last_name?.length ?
@@ -801,7 +936,7 @@ function createUserSSOToken(user: DbUser, privateKey: string) {
 
   const joinedWakingUp = user.wu_created_at?.toLocaleDateString('en-US', { month: '2-digit', year: 'numeric' });
 
-  const userData = {
+  const userData: any = {
     sub: user.wu_uuid,
     email,
     name,
@@ -811,7 +946,7 @@ function createUserSSOToken(user: DbUser, privateKey: string) {
     picture: getProfileImageUrl(user),
     iat: Math.round(new Date().getTime() / 1000), // token issue time
     exp: Math.round(new Date().getTime() / 1000) + 60, // token expiration time
-    spaceIds: spaceIds(),
+    /* Don't assign spaceIds, so they get assigned to the default spaces */
   };
 
   logToFile({userData})
@@ -851,15 +986,44 @@ async function sendSSOToken(token: string): Promise<void> {
   }
 }
 
+async function createUserUntilProfilePictureIdIsSet(user: DbUser) {
+  logToFile(`Creating user ${user.username} ${user._id} until profilePictureId is set`)
+  const maxAttempts = 10;
+  let attempts = 0;
+  while (attempts < maxAttempts) {
+    try {
+      attempts++;
+      await createUser(user);
+
+      await new Promise(resolve => setTimeout(resolve, 2000)); // give Bettermode a chance to process the image
+
+      const bmUser = await getBmUserByEmail(user);
+      if (bmUser.profilePictureId) {
+        logToFile(`User ${user.username} ${user._id} now has profilePictureId`, bmUser.profilePictureId);
+        return true;
+      }
+    } catch (error) {
+      logToFile('Waiting two seconds');
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      logToFile('Continuing...');
+    }
+  }
+  logToFile(`!!!!!!!!!!!!`);
+  logToFile(`Failed to set profilePictureId for user ${user.username}`);
+  imagelessUsers.push(user);
+}
+
 async function setBmUserIds(users: DbUser[]) {
   logToFile(`Setting bmUserIds for ${users.length} users`)
+
+  const insightSpaceId = collectionSpaces.find(collection => collection.name === 'Discussion')?.spaces.find(space => space.name === 'Insights')!.id;
 
   const maxPages = 10;
   let pages = 0;
 
   while (pages < maxPages) {
     const query = {
-      "query": `{ spaceMembers(limit: 1000, spaceId: "${spaceIds()[0]}", offset: ${pages * 1000}) { totalCount edges { cursor node { member { id email name username } } } } }`
+      "query": `{ spaceMembers(limit: 1000, spaceId: "${insightSpaceId}", offset: ${pages * 1000}) { totalCount edges { cursor node { member { id email name username profilePictureId } } } } }`
     }
 
     const resultJson = await callBmApi(query, adminToken);
@@ -869,7 +1033,7 @@ async function setBmUserIds(users: DbUser[]) {
     if (resultJson.data.spaceMembers.totalCount === '0') return;
 
     for (const edge of resultJson.data.spaceMembers.edges) {
-      logJsonToFile(edge?.node?.member);
+      await logJsonToFile(edge?.node?.member);
       const bmUserId = edge.node.member.id as string;
       if (options['keenan_user_only']) {
         const kUser = await keenanUser();
@@ -877,7 +1041,11 @@ async function setBmUserIds(users: DbUser[]) {
       } else {
         const email = edge.node.member.email;
         const user = users.find(user => mangleEmailAsKeenanEmail(user.email, 0) === email);
-        if (!user) {
+        if (user) {
+          if (!edge.node.member.profilePictureId) {
+            await createUserUntilProfilePictureIdIsSet(user);
+          }
+        } else {
           if (email !== 'michael.keenan@gmail.com') {
             logToFile(`Found space member with ${email} but there's no WU forum user with that email. (Probably fine if CREATE_TEST_COLLECTIONS_AND_SPACES is false. CREATE_TEST_COLLECTIONS_AND_SPACES: ${CREATE_TEST_COLLECTIONS_AND_SPACES})`);
             logToFile(edge.node.member);
@@ -893,7 +1061,7 @@ async function setBmUserIds(users: DbUser[]) {
   }
 }
 
-// Users can be created with JWT SSO logins, which allow only a few fields to be sent. We update the remaining ones here.
+// Users can be created with JWT SSO logins, which allow only a few fields to be sent. We update the remaining fields here.
 async function updateUsersFields(users: DbUser[]) {
   logToFile(`updating users in bmUserIds`, JSON.stringify(Array.from(bmUserIds.entries())));
   for (const user of users) {
@@ -903,17 +1071,17 @@ async function updateUsersFields(users: DbUser[]) {
   }
 }
 
-const getBmUserIdByEmail = async (user: DbUser) => {
+const getBmUserByEmail = async (user: DbUser) => {
   const email = mangleEmailAsKeenanEmail(user.email, 0);
   const query = {
-    "query": `{ members(limit: 1, filterBy: { key: "email", operator: equals, value: "\\"${email}\\""}) { totalCount edges { cursor node { id email name } } } }`
+    "query": `{ members(limit: 1, filterBy: { key: "email", operator: equals, value: "\\"${email}\\""}) { totalCount edges { cursor node { id email name profilePictureId } } } }`
   };
 
   const resultJson = await callBmApi(query, adminToken);
-  return resultJson.data.members.edges[0].node.id;
+  return resultJson.data.members.edges[0].node;
 }
 
-// Sometimes we don't user have the bmUserId, which I currently think is because
+// Sometimes we don't have the bmUserId, which I currently think is because
 // the JWT SSO method doesn't work 100% of the time. So, we'll give it another
 // shot (or rather, ten shots).
 async function createUserIfMissing(user: DbUser) {
@@ -923,10 +1091,10 @@ async function createUserIfMissing(user: DbUser) {
   const maxAttempts = 10;
   let attempts = 0;
   while (attempts < maxAttempts) {
-    await createUser(user)
-    const bmUserId = await getBmUserIdByEmail(user);
-    if (bmUserId) {
-      bmUserIds.set(user._id, bmUserId);
+    await createUser(user);
+    const bmUser = await getBmUserByEmail(user);
+    if (bmUser?.id) {
+      bmUserIds.set(user._id, bmUser.id);
       return;
     } else {
       attempts++;
@@ -940,16 +1108,19 @@ async function createUserIfMissing(user: DbUser) {
 async function updateUserFields(user: DbUser) {
   await createUserIfMissing(user);
 
-  const trimmedUsername = user.username?.trim() || '';
-  const fullName = user.first_name?.trim() + ' ' + user.last_name?.trim();
+  /* We just assign the username to be the WU UUID; the following comments are no longer relevant...unless we change that decision.*/
+
+  // const trimmedUsername = user.username?.trim() || '';
+  // const fullName = user.first_name?.trim() + ' ' + user.last_name?.trim();
   // usernames must be between 3 and 50 characters long
   // (though there's a problem guy with emojis in his username, and different computers sometimes count emoji lengths differently, so watch out for further problems)
   // "Stef Raharjo-Gunawan Zhou-Lin 🇦🇺🇮🇩🇨🇳 / Sage Shawaman 🏳️‍🌈\"
-  const username = trimmedUsername.length > 3 ?
-                      user.username?.trim().slice(0, 50) :
-                      fullName.length > 3 ? 
-                      fullName :
-                        '[no username]';
+  // const username = trimmedUsername.length > 3 ?
+  //                     user.username?.trim().slice(0, 50) :
+  //                     fullName.length > 3 ? 
+  //                     fullName :
+  //                       '[no username]';
+  const username = user.wu_uuid!;
 
   const maxAttempts = 5;
   let attempts = 0;
@@ -1005,21 +1176,19 @@ const createUser = async (user: DbUser) => {
 
   logToFile("Getting user SSO token");
 
-  const maxAttempts = 5;
+  const maxAttempts = 10;
   let attempts = 0;
   while (attempts < maxAttempts) {
     try {
-      const token = createUserSSOToken(user, JWT_KEY);
-      logToFile("Got user SSO token", token);
-
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      attempts++;
+      const token = await createUserSSOToken(user, JWT_KEY);
+      logToFile("Created user SSO token", token);
 
       const retVal = await sendSSOToken(token);
       logToFile({retVal});
 
       return retVal;
     } catch (error) {
-      attempts++;
       logToFile({error})
       logToFile('Waiting two seconds');
       await new Promise(resolve => setTimeout(resolve, 2000));
@@ -1146,7 +1315,13 @@ const spaceIdFromPost = async (post: DbPost) => {
   // It's inefficient to do one db call at a time like this; maybe fix that by querying all TagRels at once
   const tagRel = await TagRels.findOne({postId: post._id, deleted: false});
 
-  if (!tagRel) return spaceIdByName("Other");
+  if (!tagRel) {
+    if (post.title.indexOf('?') >= 0) {
+      return spaceIdByName("Questions");
+    } else {
+      return spaceIdByName("Other");
+    }
+  }
 
   const tag = tags.find(tag => tag._id === tagRel.tagId)!;
 
@@ -1162,7 +1337,8 @@ const spaceIdFromPost = async (post: DbPost) => {
 }
 
 const createPost = async (post: DbPost) => {
-  const title = post.title;
+  const title = post.title.replace(/"/g, '\\\\\\"')
+                          .replace(/\r?\n/g, ''); // removes line breaks
   const content = removeInternalLinks(post.contents.html)
     .replace(/"/g, '\\\\\\"');
   const publishedAt = post.postedAt;
@@ -1230,10 +1406,14 @@ const createComments = async (comments: DbComment[], bmPosts: CreatedDocument[])
 const parentCommentQuote = (commentId: string, comments: DbComment[]) => {
   const comment = comments.find(c => c._id === commentId);
   if (!comment) throw `no comment with id ${commentId}`;
-  return truncatise(comment.contents.html.replace(/\\/g, '\\\\\\\\').replace(/"/g, '\\\\\\"'), { TruncateBy: 'characters', TruncateLength: 50 })
-            .replace(/<\/p><p>.*/, '') // if there's a paragraph break inside the truncation threshold, just take the first paragraph
-            .replace(/\\*\.\.\.<\/p>$/, '...</p>') // remove trailing backslashes (so we don't cut off in the middle of an escape sequence)
-            .replace(/^<p>(.*)<\/p>$/g, '<blockquote>$1</blockquote>');
+  return truncatise(
+              comment.contents.html
+              .replace(/\\/g, '\\\\\\\\')
+              .replace(/"/g, '\\\\\\"'), { TruncateBy: 'characters', TruncateLength: 50 }
+            ).replace(/<\/p><p>.*/, '') // if there's a paragraph break inside the truncation threshold, just take the first paragraph
+             .replace(/\\*\.\.\.<\/p>$/, '...</p>') // remove trailing backslashes (so we don't cut off in the middle of an escape sequence)
+             .replace(/^<p>(.*)<\/p>$/g, '<blockquote>$1</blockquote>')
+             .replace(/\r?\n/g, ''); // removes line breaks
 }
 
 const createCommentRecursive = async (comment: DbComment, comments: DbComment[], bmPosts: CreatedDocument[], bmComments: CreatedDocument[]) => {
@@ -1251,9 +1431,14 @@ const createCommentRecursive = async (comment: DbComment, comments: DbComment[],
   const cleanedContents = $.html()?.slice(25, -14) || ''; // slice off the <html><head></head><body> and </body></html> tags
   // logToFile({cleanedContents});
 
-  const contents = cleanedContents === '' ? '[empty comment]' : removeInternalLinks(cleanedContents)
-                                                                               .replace(/\\/g, '\\\\\\\\')
-                                                                               .replace(/"/g, '\\\\\\"');
+  if (cleanedContents === '') {
+    logToFile('createCommentRecursive skipping comment with no contents', comment._id)
+    return;
+  }
+
+  const contents = removeInternalLinks(cleanedContents).replace(/\\/g, '\\\\\\\\')
+                                                       .replace(/"/g, '\\\\\\"')
+                                                       .replace(/\r?\n/g, ''); // removes line breaks
 
   const publishedAt = comment.postedAt;
 
@@ -1278,12 +1463,16 @@ const createCommentRecursive = async (comment: DbComment, comments: DbComment[],
     contents :
     parentCommentQuote(comment.parentCommentId, comments) + ' ' + contents;
 
-  const quotedEscapedContent = quotedContent.replace(/"/g, '\\\\\\"');
-
   const bmUserId = options['keenan_user_only'] ?
                     bmUserIds.values().next().value :
                     bmUserIds.get(comment.userId);
-logToFile(`creating reply from user ${bmUserId}`)
+
+  if (!bmUserId) {
+    logToFile(`no bmUserId for ${comment._id}. comment.userId: ${comment.userId}.`);
+    return
+  }
+
+  logToFile(`creating reply from user ${bmUserId}`)
   const query = {
     "query": `mutation {
       createReply(
@@ -1309,7 +1498,6 @@ logToFile(`creating reply from user ${bmUserId}`)
   try {
     logToFile('createComment resultJson', resultJson);
     if (resultJson.errors) {
-      logToFile('!!!!!!!!!!')
       logToFile('createComment errors', resultJson.errors);
       logToFile(JSON.stringify(resultJson));
       logToFile(resultJson.errors[0].message);
@@ -1348,6 +1536,26 @@ logToFile(`creating reply from user ${bmUserId}`)
   }
 }
 
+const commentOrAncestorDeleted = async (comment: DbComment): Promise<boolean> => {
+  const $ = cheerio.load(comment.contents.html);
+  $('style').remove(); // Remove all <style> tags
+  const cleanedContents = $.html()?.slice(25, -14) || '';
+  if (comment.deleted || comment.deletedPublic || cleanedContents === '') {
+    logToFile(`comment ${comment._id} is deleted or empty`);
+    return true;
+  }
+
+  if (!comment.parentCommentId) return false;
+
+  const parentComment = await Comments.findOne(comment.parentCommentId);
+  if (parentComment) {
+    return await commentOrAncestorDeleted(parentComment);
+  } else {
+    logToFile(`no parent comment for comment ${comment._id} (this should not happen)`);
+    return true;
+  }
+}
+
 const addReactions = async (type: string, ids: string[], bmPosts: CreatedDocument[]) => {
   logToFile('addReactions', {type}, {ids}, {bmPosts})
   if (options['keenan_user_only']) {
@@ -1362,21 +1570,37 @@ const addReactions = async (type: string, ids: string[], bmPosts: CreatedDocumen
     await Comments.find({_id: {$in: ids}}).fetch();
 
   for (const vote of votes) {
-    // @ts-ignore (TypeScript is upset that it doesn't know whether it's posts or comments, but it's fine)
+    if (vote.authorIds?.includes(vote.userId)) continue; // skip self-votes
+
+    if (type === "Comments") {
+      const comment = comments.find(c => c._id === vote.documentId);
+      if (!comment) {
+        logToFile(`no comment for vote ${vote._id}, commentId ${vote.documentId} (this should not happen)`);
+        continue
+      }
+      if (await commentOrAncestorDeleted(comment)) {
+        logToFile(`comment ${comment._id} (or its ancestor) is deleted or empty; skipping reaction`);
+        continue;
+      }
+    }
+
+    // @ts-ignore - TypeScript gets upset (not in VS Code, but when running the server) because it doesn't know whether it's a DbPost find or a DbComment find, but it's fine
     const document = documents.find(d => d._id === vote.documentId);
     if (!document) {
-      logToFile(`no document for vote ${vote._id}, type ${type}, ids: ${ids}`);
+      logToFile(`no document for vote ${vote._id}, type ${type}`);
       throw `no document for vote ${vote._id}`;
     }
     const bmPost = bmPosts.find(bmPost => bmPost.documentId === document._id);
 
     if (!bmPost) {
-      errors.push(`no bmPost for vote ${vote._id}, type ${type}, ids: ${ids}`);
-      logToFile(`no bmPost for vote ${vote._id}, type ${type}, ids: ${ids}`);
+      errors.push(`no bmPost for vote ${vote._id}, type ${type}`);
+      logToFile(`no bmPost for vote ${vote._id}, type ${type}`);
       continue;
     }
 
-    await addReaction(bmPost.bmPostId!, document, vote, 'like');
+    const reactionType = type === "Posts" ? 'like' : '+1';
+
+    await addReaction(bmPost.bmPostId!, document, vote, reactionType);
   }
 }
 
@@ -1428,11 +1652,11 @@ function apiCallNameFromQuery(query: any) {
   
   if (queryName) return queryName;
 
-  logToFile("couldn't find mutation or query name for", query);
+  void logToFile("couldn't find mutation or query name for", query);
   throw "couldn't find mutation or query name";
 }
 
-function logBmApiError(errors: any, query: any) {
+async function logBmApiError(errors: any, query: any) {
   // don't record "Username already taken" errors; they're caught and retried with different usernames
   if (errors?.[0]?.message === "Username already taken.") return;
 
@@ -1456,6 +1680,7 @@ async function callBmApi(query: any, token?: string|undefined) {
   let attempts = 0;
   while (attempts < maxAttempts) {
     try {
+      attempts++;
       const response = await fetch("https://api.bettermode.com", requestOptions(raw, token));
       const result = await response.text();
       let resultJson;
@@ -1466,7 +1691,6 @@ async function callBmApi(query: any, token?: string|undefined) {
         logToFile('callBmApi JSON parse error', e);
         logToFile('result', result);
         if (result.startsWith('<!DOCTYPE html>') && result.includes('502: Bad gateway')) {
-          attempts++;
           logToFile('502: Bad gateway');
           logToFile('We can just try again');
           logToFile('Waiting five seconds for their server to recover');
@@ -1477,7 +1701,8 @@ async function callBmApi(query: any, token?: string|undefined) {
         throw e;
       }
       if (resultJson.errors?.length > 0) {
-        logBmApiError(resultJson.errors, query);
+        await logBmApiError(resultJson.errors, query);
+        errors.push(resultJson.errors);
       }
 
       return resultJson;
@@ -1485,7 +1710,6 @@ async function callBmApi(query: any, token?: string|undefined) {
       logToFile('callBmApi error', error);
       if (error.message === 'fetch failed') {
         logToFile('Retrying due to fetch failed');
-        attempts++;
         continue;
       }
       if (apiCallNameFromQuery(query) === 'updateSpacePostTypes') {
@@ -1511,3 +1735,4 @@ const removeInternalLinks = (html: string) =>
 Vulcan.wuBetterModeExport = betterModeExport
 Vulcan.wuDeleteOldBetterModeUsers = deleteOldBetterModeUsers
 Vulcan.wuDeleteOldBetterModeCollectionsAndSpaces = deleteOldBetterModeCollectionsAndSpaces
+Vulcan.wuReconcilePosts = reconcilePosts
