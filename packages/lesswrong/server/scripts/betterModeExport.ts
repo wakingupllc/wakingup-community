@@ -48,7 +48,7 @@ const JWT_KEY = secrets['JWT_KEY'];
 type CreatedDocument = { documentId?: string; bmPostId?: string; error?: boolean; }
 
 const CREATE_TEST_COLLECTIONS_AND_SPACES = false;
-const DELETE_OLD_USERS = true;
+const DELETE_OLD_USERS = false;
 const DELETE_OLD_POSTS = true;
 
 const KEENAN_BM_USER_ID = 'GEwYqQhauV';
@@ -209,13 +209,24 @@ const collectionSpaces = [
         name: "London",
         description: "A space for Waking Up members in London.",
         id: undefined,
+      },
+      {
+        name: "Los Angeles",
+        description: "A space for Waking Up members in Los Angeles.",
+        id: undefined,
       }
     ]
   },
   {
     name: "Resources",
     id: undefined,
-    spaces: []
+    spaces: [
+      {
+        name: "Support & Feedback",
+        description: "Get help and share feedback with the community team.",
+        id: undefined,
+      },
+    ]
   }
 ]
 
@@ -323,7 +334,7 @@ const deleteOldBetterModeUsers = async (adminToken: string) => {
   /* deleting old test users */
 
   let iterations = 0;
-  const maxIterations = 5;
+  const maxIterations = 7;
   while (iterations < maxIterations) {
     const maxAttempts = 5;
     let attempts = 0;
@@ -333,7 +344,7 @@ const deleteOldBetterModeUsers = async (adminToken: string) => {
       attempts++;
       try {
         const query = {
-          "query": `{ members(limit: 1000, status: VERIFIED) { totalCount edges { cursor node { email id createdAt } } } }`
+          "query": `{ members(limit: 1000, status: VERIFIED) { totalCount edges { cursor node { email id createdAt role { name } } } } }`
         }
 
         const resultJson = await callBmApi(query, adminToken);
@@ -341,7 +352,7 @@ const deleteOldBetterModeUsers = async (adminToken: string) => {
         logToFile({resultJson})
         logToFile('resultJson.data.members.totalCount', resultJson.data.members.totalCount)
 
-        if (resultJson.data.members.edges.length === lastMembersCount) return;
+        if (resultJson.data.members.edges.length === lastMembersCount && resultJson.data.members.edges.length < 50) return;
         lastMembersCount = resultJson.data.members.edges.length;
 
         for (const edge of resultJson.data.members.edges) {
@@ -351,7 +362,7 @@ const deleteOldBetterModeUsers = async (adminToken: string) => {
           const createdAt = edge.node.createdAt as string;
           logToFile({email})
           logToFile({createdAt})
-          if (email.match(/michael\.keenan\+/) || email.match(/spamgourmet/)) {
+          if (edge.node.role.name === 'Member') {
             logToFile(`Deleting user ${bmUserId} with email ${email}`);
             const deleteQuery = {
               "query": `mutation { deleteMember(id: "${bmUserId}") { status } }`
@@ -365,6 +376,7 @@ const deleteOldBetterModeUsers = async (adminToken: string) => {
       } catch (error) {
         logToFile('Error in deleteOldBetterModeUsers', {error})
         errors.push(error);
+        lastMembersCount = -1;
         if (attempts < maxAttempts) logToFile('Retrying...');
       }
     }
@@ -533,7 +545,6 @@ const betterModeExport = async (
   logToFile('betterModeExport starting')
   await say("Export starting")
 
-
   /*
     If you change the email address of your account by logging in with SSO, you'll need the following code to fix it.
     If the sub, i.e. the WU UUID, matches, then it'll find the account and update the email address.
@@ -594,6 +605,8 @@ const betterModeExport = async (
     await deleteOldBetterModeUsers(adminToken);
   }
 
+  say("Done deleting users");
+
   tags = await Tags.find().fetch();
 
   const users =             options['keenan_user_only'] ?
@@ -606,14 +619,22 @@ const betterModeExport = async (
 
   await createUsers(users);
 
+  say("Done creating users");
+
   await setBmUserIds(users);
+
+  say("Done setting BetterMode user IDs");
 
   logToFile({bmUserIds});
 
   await updateUsersFields(users);
 
+  say("Done updating user fields");
+
 
   const bmPosts =           await createPosts(postIdsToExport);
+
+  say("Done creating posts");
 
   logToFile({bmPosts});
   const postIds =           bmPosts.map(createdPost => createdPost.documentId!);
@@ -628,11 +649,21 @@ const betterModeExport = async (
   const bmComments =        await createComments(comments, bmPosts);
   logToFile({bmComments});
 
+  say("Done creating comments");
+
   const postReactions =     await addReactions("Posts", postIds, bmPosts);
   logToFile({postReactions});
+
+  say("Done creating post reactions");
+
   const commentReactions =  await addReactions("Comments", comments.map(c => c._id), bmComments);
   logToFile({commentReactions});
+
+  say("Done creating comment reactions");
+
   await hideNonFrontpagePosts(postIds, bmPosts);
+
+  say("Done hiding non-front page posts");
 
   endTime = new Date();
   logToFile('####################')
@@ -1126,9 +1157,13 @@ async function updateUserFields(user: DbUser) {
   let attempts = 0;
   while (attempts < maxAttempts) {
     try {
-      const usernameSuffix = attempts === 0 ? '' : `-${spaceIndex}-${attempts}`;
+      let usernameWithSuffix = username;
+      if (CREATE_TEST_COLLECTIONS_AND_SPACES) {
+        const usernameSuffix = attempts === 0 ? '' : `-${spaceIndex}-${attempts}`;
+        usernameWithSuffix = username + usernameSuffix;
+      }
       const query = {
-        "query": `mutation { updateMember(id: "${bmUserIds.get(user._id)}", input: { username: "${username + usernameSuffix}", settings: { privateMessaging: { privateMessagingEnabled: ${!user.disableUnsolicitedMessages} } } } ) { id } }`
+        "query": `mutation { updateMember(id: "${bmUserIds.get(user._id)}", input: { username: "${usernameWithSuffix}", settings: { privateMessaging: { privateMessagingEnabled: ${!user.disableUnsolicitedMessages} } } } ) { id } }`
       }
       
       const resultJson = await callBmApi(query, adminToken);
@@ -1136,7 +1171,7 @@ async function updateUserFields(user: DbUser) {
       logToFile({resultJson})
       
       if (resultJson.errors?.[0]?.message === "Username already taken.") {
-        logToFile(`Username ${username + usernameSuffix} already taken. Trying another.`);
+        logToFile(`Username ${usernameWithSuffix} already taken. Trying another.`);
         attempts++;
         continue;
       } else {
@@ -1270,14 +1305,17 @@ const mangleEmailForTest = (email: string|null, suffix: number) => {
 }
 
 const mangleEmailAsKeenanEmail = (email: string|null, suffix: number) => {
-  if (!email) return `michael.keenan+noemail.${spaceIndex}-${suffix}@gmail.com`;
+  // Change as of migration day! We're using real emails now.
+  return email;
 
-  if (WHITE_LISTED_EMAILS.includes(email)) return email;
+  // if (!email) return `michael.keenan+noemail.${spaceIndex}-${suffix}@gmail.com`;
+
+  // if (WHITE_LISTED_EMAILS.includes(email)) return email;
   
-  const [name, domain] = email.split('@');
-  const domainPrefix = extractDomainPrefix(domain);
-  const abbreviatedEmailPart = `${name}.${domainPrefix}.${spaceIndex}-${suffix}`;
-  return `michael.keenan+${abbreviatedEmailPart}@gmail.com`;
+  // const [name, domain] = email.split('@');
+  // const domainPrefix = extractDomainPrefix(domain);
+  // const abbreviatedEmailPart = `${name}.${domainPrefix}.${spaceIndex}-${suffix}`;
+  // return `michael.keenan+${abbreviatedEmailPart}@gmail.com`;
 }
 
 const passwordForTest = (user: DbUser) => {
@@ -1337,13 +1375,14 @@ const spaceIdFromPost = async (post: DbPost) => {
 }
 
 const createPost = async (post: DbPost) => {
+  logToFile(`Creating post ${post._id}: ${post.title}`);
+
   const title = post.title.replace(/"/g, '\\\\\\"')
                           .replace(/\r?\n/g, ''); // removes line breaks
   const content = removeInternalLinks(post.contents.html)
     .replace(/"/g, '\\\\\\"');
   const publishedAt = post.postedAt;
 
-  logToFile({bmUserIds})
   const bmUserId = options['keenan_user_only'] ?
                     bmUserIds.values().next().value :
                     bmUserIds.get(post.userId);
@@ -1364,7 +1403,8 @@ const createPost = async (post: DbPost) => {
           attachmentIds: [],
           publish: true,
           ownerId: "${bmUserId}",
-          publishedAt: "${publishedAt}"
+          publishedAt: "${publishedAt}",
+          createdAt: "${post.createdAt}",
         },
         spaceId: "${spaceId}")
             { attachmentIds createdAt hasMoreContent id imageIds isAnonymous isHidden pinnedInto postTypeId repliedToIds repliesCount shortContent slug totalRepliesCount status }
@@ -1417,8 +1457,10 @@ const parentCommentQuote = (commentId: string, comments: DbComment[]) => {
 }
 
 const createCommentRecursive = async (comment: DbComment, comments: DbComment[], bmPosts: CreatedDocument[], bmComments: CreatedDocument[]) => {
+  logToFile(`createCommentRecursive - migrating comment ${comment._id}`);
+
   if (comment!.contents.html.length === 0) {
-    // This comment has no contents, which is strange but happens at least once. If it has no children, we'll skip it. If it has children, we'll give it the contents "[empty comment]" and continue.
+    // This comment has no contents, which is strange but happens at least once. We skip these ones, and their children.
     const commentChildren = comments.filter(c => c.parentCommentId === comment._id);
     if (commentChildren.length === 0) {
       logToFile('createCommentRecursive skipping comment with no contents and no children', comment._id);
@@ -1472,7 +1514,7 @@ const createCommentRecursive = async (comment: DbComment, comments: DbComment[],
     return
   }
 
-  logToFile(`creating reply from user ${bmUserId}`)
+  logToFile(`creating reply from user (WU _id: ${comment.userId}, BM id: ${bmUserId})`)
   const query = {
     "query": `mutation {
       createReply(

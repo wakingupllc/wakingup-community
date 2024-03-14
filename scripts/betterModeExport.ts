@@ -80,11 +80,15 @@ const KEENAN_PASSWORD = secrets['KEENAN_PASSWORD'];
 
   const singleUserParam = String(singleUserInput === 'y');
 
-  // const execStr = `./scripts/serverShellCommand.sh --wait "Vulcan.wuBetterModeExport('${KEENAN_PASSWORD}', ${singleUserParam}${postIdsParam})" > /dev/tty 2>&1`;
+  const execStr = `./scripts/serverShellCommand.sh --wait "Vulcan.wuBetterModeExport('${KEENAN_PASSWORD}', ${singleUserParam}${postIdsParam})" > /dev/tty 2>&1`;
 
   // const execStr = `./scripts/serverShellCommand.sh --wait "Vulcan.wuDeleteOldBetterModeCollectionsAndSpaces('${KEENAN_PASSWORD}')" > /dev/tty 2>&1`;
 
-  const execStr = `./scripts/serverShellCommand.sh --wait "Vulcan.wuReconcilePosts('${KEENAN_PASSWORD}')" > /dev/tty 2>&1`;
+  // const execStr = `./scripts/serverShellCommand.sh --wait "Vulcan.wuReconcilePosts('${KEENAN_PASSWORD}')" > /dev/tty 2>&1`;
+
+  // const execStr = `./scripts/serverShellCommand.sh --wait "Vulcan.wuBetterModeNotificationsDeletion('${KEENAN_PASSWORD}')" > /dev/tty 2>&1`;
+
+  // const execStr = `./scripts/serverShellCommand.sh --wait "Vulcan.wuBetterModeDuplicateRepliesDeletion('${KEENAN_PASSWORD}')" > /dev/tty 2>&1`;
 
   console.log('\nRunning this command: ', execStr)
 

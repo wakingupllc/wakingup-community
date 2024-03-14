@@ -58,6 +58,8 @@ import './server/scripts/checkPostForSockpuppetVoting';
 import './server/scripts/convertAllPostsToEAEmojis';
 import './server/scripts/exportUserData';
 import './server/scripts/betterModeExport';
+import './server/scripts/betterModeNotificationsDeletion';
+import './server/scripts/betterModeDeleteDuplicateReplies';
 
 import './server/scripts/oneOffBanSpammers'
 import './server/scripts/ensureEmailInEmails';
